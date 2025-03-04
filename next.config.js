@@ -1,15 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  // This setting is required for static export
   images: {
-    unoptimized: true,
+    domains: ['localhost', 'codelingo.app'],
   },
-  // Disable server components for static export
-  experimental: {
-    appDir: true,
-  },
-  // Ensure trailing slashes for better compatibility with static hosting
+  // Ensure trailing slashes for better compatibility
   trailingSlash: true,
   // Disable strict mode for compatibility
   reactStrictMode: false,

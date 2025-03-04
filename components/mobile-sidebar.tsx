@@ -1,5 +1,5 @@
 import { Menu } from "lucide-react";
-
+import { useI18n } from "@/app/i18n/client";
 import {
   Sheet,
   SheetContent,
@@ -8,12 +8,15 @@ import {
 import { Sidebar } from "@/components/sidebar";
 
 export const MobileSidebar = () => {
+  const { dir } = useI18n();
+  const isRtl = dir === "rtl";
+  
   return (
     <Sheet>
       <SheetTrigger>
         <Menu className="text-white" />
       </SheetTrigger>
-      <SheetContent className="p-0 z-[100]" side="left">
+      <SheetContent className="p-0 z-[100]" side={isRtl ? "right" : "left"}>
         <Sidebar />
       </SheetContent>
     </Sheet>

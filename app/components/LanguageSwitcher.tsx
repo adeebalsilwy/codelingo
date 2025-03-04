@@ -13,8 +13,7 @@ import { cn } from "@/lib/utils";
 
 export const LanguageSwitcher = () => {
   const { language, setLanguage, t, dir } = useI18n();
-//  const isRtl = dir === "rtl
-const isRtl = dir === "ltr";
+  const isRtl = dir === "rtl";
 
   const languages: { code: Language; name: string; flag: string }[] = [
     { code: "en", name: "English", flag: "🇺🇸" },

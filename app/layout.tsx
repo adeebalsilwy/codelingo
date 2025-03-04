@@ -17,8 +17,11 @@ const font = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "كودلينجو - تعلم البرمجة",
-  description: "تعلم لغات البرمجة بسهولة مع كودلينجو",
+  title: {
+    template: '%s | CodeLingo',
+    default: 'CodeLingo - Learn Programming',
+  },
+  description: 'Learn programming languages easily with CodeLingo',
   manifest: "/manifest.json",
   icons: {
     apple: [
@@ -26,17 +29,23 @@ export const metadata: Metadata = {
       { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
   },
-  applicationName: "كودلينجو",
+  applicationName: "CodeLingo",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "كودلينجو",
+    title: "CodeLingo",
   },
   formatDetection: {
     telephone: false,
   },
   other: {
     "google-play-app": "app-id=com.codelingo.app",
+  },
+  alternates: {
+    languages: {
+      'en': '/en',
+      'ar': '/ar',
+    },
   },
 };
 
@@ -56,16 +65,35 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <I18nProvider>
-        <html className={font.variable} lang="ar" dir="rtl">
+        <html className={font.variable}>
           <head>
-            <link rel="manifest" href="/manifest.json" />
+            <link rel="manifest" href="/manifest.json" id="manifest-link" />
             <meta name="theme-color" content="#22c55e" />
             <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
             <meta name="apple-mobile-web-app-capable" content="yes" />
             <meta name="apple-mobile-web-app-status-bar-style" content="default" />
             <meta name="mobile-web-app-capable" content="yes" />
-            <meta name="application-name" content="كودلينجو" />
-            <meta name="apple-mobile-web-app-title" content="كودلينجو" />
+            <meta name="application-name" content="CodeLingo" />
+            <meta name="apple-mobile-web-app-title" content="CodeLingo" />
+            <Script
+              id="dynamic-manifest"
+              strategy="beforeInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  // Check for saved language preference
+                  const savedLanguage = localStorage.getItem('language');
+                  if (savedLanguage === 'ar') {
+                    document.getElementById('manifest-link').setAttribute('href', '/manifest-ar.json');
+                    document.documentElement.lang = 'ar';
+                    document.documentElement.dir = 'rtl';
+                  } else {
+                    document.getElementById('manifest-link').setAttribute('href', '/manifest.json');
+                    document.documentElement.lang = 'en';
+                    document.documentElement.dir = 'ltr';
+                  }
+                `,
+              }}
+            />
           </head>
           <body className={font.className}>
             <Toaster />
@@ -85,16 +113,16 @@ export default function RootLayout({
                       navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
                         console.log('ServiceWorker registration successful with scope: ', registration.scope);
                         
-                        // التحقق من وجود تحديثات
+                        // Check for updates
                         registration.addEventListener('updatefound', function() {
                           const newWorker = registration.installing;
                           if (newWorker) {
                             newWorker.addEventListener('statechange', function() {
                               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // يوجد تحديث جديد متاح
+                                // New update available
                                 console.log('New service worker available.');
                                 
-                                // إرسال حدث للتطبيق لإظهار إشعار التحديث
+                                // Send event to the app to show update notification
                                 const event = new CustomEvent('serviceWorkerUpdateAvailable');
                                 window.dispatchEvent(event);
                               }
@@ -106,7 +134,7 @@ export default function RootLayout({
                         console.log('ServiceWorker registration failed: ', err);
                       });
                       
-                      // التعامل مع تحديثات Service Worker
+                      // Handle Service Worker updates
                       let refreshing = false;
                       navigator.serviceWorker.addEventListener('controllerchange', function() {
                         if (!refreshing) {

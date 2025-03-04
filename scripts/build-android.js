@@ -83,6 +83,12 @@ function updateCordovaConfig() {
     configXml = configXml.replace(/<description>.*?<\/description>/g, '<description>Learn programming languages easily with CodeLingo</description>');
     configXml = configXml.replace(/<author.*?>.*?<\/author>/g, '<author email="info@codelingo.app" href="https://codelingo.app">CodeLingo Team</author>');
     
+    // Add language support
+    if (!configXml.includes('<preference name="DefaultLanguage"')) {
+      const preferenceTag = '<preference name="DefaultLanguage" value="en-US" />';
+      configXml = configXml.replace('</widget>', `    ${preferenceTag}\n</widget>`);
+    }
+    
     // Write the updated config
     fs.writeFileSync(configPath, configXml);
     console.log('Config.xml updated successfully');

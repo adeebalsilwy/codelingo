@@ -4,24 +4,24 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-
+import { useI18n } from "@/app/i18n/client";
 import { Button } from "@/components/ui/button";
 
 type Props = {
   label: string;
   iconSrc: string;
   href: string;
-  isRtl?: boolean;
 };
 
 export const SidebarItem = ({
   label,
   iconSrc,
   href,
-  isRtl = false,
 }: Props) => {
   const pathname = usePathname();
   const active = pathname === href;
+  const { dir } = useI18n();
+  const isRtl = dir === "rtl";
 
   return (
     <Button

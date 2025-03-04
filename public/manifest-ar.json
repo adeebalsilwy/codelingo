@@ -1,8 +1,8 @@
 {
-  "name": "CodeLingo - Learn Programming",
-  "short_name": "CodeLingo",
-  "description": "Learn programming languages easily with CodeLingo",
-  "start_url": "/",
+  "name": "كودلينجو - تعلم البرمجة",
+  "short_name": "كودلينجو",
+  "description": "تعلم لغات البرمجة بسهولة مع كودلينجو",
+  "start_url": "/?lang=ar",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
@@ -14,8 +14,8 @@
       "id": "com.codelingo.app"
     }
   ],
-  "lang": "en",
-  "dir": "ltr",
+  "lang": "ar",
+  "dir": "rtl",
   "categories": ["education", "programming", "development"],
   "screenshots": [
     {
@@ -81,17 +81,17 @@
   ],
   "shortcuts": [
     {
-      "name": "Lessons",
-      "short_name": "Lessons",
-      "description": "Browse available lessons",
-      "url": "/learn",
+      "name": "الدروس",
+      "short_name": "الدروس",
+      "description": "استعرض الدروس المتاحة",
+      "url": "/learn?lang=ar",
       "icons": [{ "src": "/icons/lessons.png", "sizes": "192x192" }]
     },
     {
-      "name": "Profile",
-      "short_name": "Profile",
-      "description": "View your profile",
-      "url": "/profile",
+      "name": "الملف الشخصي",
+      "short_name": "الملف الشخصي",
+      "description": "عرض ملفك الشخصي",
+      "url": "/profile?lang=ar",
       "icons": [{ "src": "/icons/profile.png", "sizes": "192x192" }]
     }
   ]

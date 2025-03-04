@@ -45,37 +45,31 @@ export const Sidebar = ({ className }: Props) => {
           label={t('nav.learn')} 
           href="/learn"
           iconSrc="/learn.svg"
-          isRtl={isRtl}
         />
         <SidebarItem 
           label={t('nav.leaderboard')} 
           href="/leaderboard"
           iconSrc="/leaderboard.svg"
-          isRtl={isRtl}
         />
         <SidebarItem 
           label={t('nav.quests')} 
           href="/quests"
           iconSrc="/quests.svg"
-          isRtl={isRtl}
         />
         <SidebarItem 
           label={t('nav.shop')} 
           href="/shop"
           iconSrc="/shop.svg"
-          isRtl={isRtl}
         />
         <SidebarItem 
           label={t('nav.code_editor')} 
           href="/code-editor"
           iconSrc="/code.svg"
-          isRtl={isRtl}
         />
         <SidebarItem 
           label={t('nav.chat')} 
           href="/chat"
           iconSrc="/chat.svg"
-          isRtl={isRtl}
         />
       </div>
       <div className="p-4 flex items-center justify-between">

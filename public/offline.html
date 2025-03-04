@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>كودلينجو - غير متصل</title>
+  <title>CodeLingo - Offline</title>
   <style>
     body {
       font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -72,6 +72,18 @@
     html[lang="en"] {
       direction: ltr;
     }
+
+    .en {
+      display: none;
+    }
+
+    html[lang="en"] .ar {
+      display: none;
+    }
+
+    html[lang="en"] .en {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -79,32 +91,39 @@
     <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
     </svg>
-    <h1>أنت غير متصل بالإنترنت</h1>
-    <p>يبدو أنك فقدت اتصالك بالإنترنت. يتطلب كودلينجو اتصالاً بالإنترنت للعمل بشكل صحيح.</p>
-    <p>يرجى التحقق من اتصالك والمحاولة مرة أخرى.</p>
-    <a href="/" class="button">حاول مرة أخرى</a>
+    <h1 class="ar">أنت غير متصل بالإنترنت</h1>
+    <h1 class="en">You're Offline</h1>
+    <p class="ar">يبدو أنك فقدت اتصالك بالإنترنت. يتطلب كودلينجو اتصالاً بالإنترنت للعمل بشكل صحيح.</p>
+    <p class="en">It looks like you've lost your internet connection. CodeLingo requires an internet connection to work properly.</p>
+    <p class="ar">يرجى التحقق من اتصالك والمحاولة مرة أخرى.</p>
+    <p class="en">Please check your connection and try again.</p>
+    <a href="/" class="button ar">حاول مرة أخرى</a>
+    <a href="/" class="button en">Try Again</a>
   </div>
   
   <script>
-    // التحقق من تغييرات حالة الشبكة
+    // Check for network status changes
     window.addEventListener('online', () => {
       window.location.reload();
     });
     
-    document.querySelector('.button').addEventListener('click', (e) => {
-      if (!navigator.onLine) {
-        e.preventDefault();
-        alert('ما زلت غير متصل بالإنترنت. يرجى التحقق من اتصالك بالإنترنت.');
-      }
+    document.querySelectorAll('.button').forEach(button => {
+      button.addEventListener('click', (e) => {
+        if (!navigator.onLine) {
+          e.preventDefault();
+          const message = document.documentElement.lang === 'en' 
+            ? 'You are still offline. Please check your internet connection.'
+            : 'ما زلت غير متصل بالإنترنت. يرجى التحقق من اتصالك بالإنترنت.';
+          alert(message);
+        }
+      });
     });
 
-    // التحقق من لغة المتصفح وتغيير اللغة إذا لزم الأمر
-    if (navigator.language.startsWith('en')) {
+    // Check browser language and change language if needed
+    const savedLanguage = localStorage.getItem('language');
+    if (savedLanguage === 'en' || (navigator.language.startsWith('en') && !savedLanguage)) {
       document.documentElement.lang = 'en';
-      document.querySelector('h1').textContent = 'You\'re Offline';
-      document.querySelectorAll('p')[0].textContent = 'It looks like you\'ve lost your internet connection. CodeLingo requires an internet connection to work properly.';
-      document.querySelectorAll('p')[1].textContent = 'Please check your connection and try again.';
-      document.querySelector('.button').textContent = 'Try Again';
+      document.documentElement.dir = 'ltr';
     }
   </script>
 </body>

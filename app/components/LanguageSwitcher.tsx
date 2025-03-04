@@ -11,7 +11,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export const LanguageSwitcher = () => {
+type Props = {
+  variant?: "default" | "outline" | "ghost";
+};
+
+export const LanguageSwitcher = ({ variant = "ghost" }: Props) => {
   const { language, setLanguage, t, dir } = useI18n();
   const isRtl = dir === "rtl";
 
@@ -23,7 +27,13 @@ export const LanguageSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button 
+          size="icon" 
+          className={cn(
+            "rounded-full",
+            variant === "ghost" && "hover:bg-white/10 text-white"
+          )}
+        >
           <Globe className="h-5 w-5" />
           <span className="sr-only">{t("app.language")}</span>
         </Button>

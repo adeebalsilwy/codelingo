@@ -55,23 +55,23 @@ export const ChapterCreate = () => {
   return (
     <Create>
       <SimpleForm>
-        <div style={{ display: 'grid', gap: '1.5rem', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-          <TextInput
-            source="title"
-            validate={[required()]}
-            label="Title"
-            fullWidth
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-          />
-          <MyRichTextInput
-            source="description"
-            validate={(value: any) => {
-              if (!value) return 'Description is required';
-              return undefined;
-            }}
-            label="Description"
-            sx={{
-              '& .tox-editor-container': { borderRadius: '8px', overflow: 'hidden' },
+          <div style={{ display: 'grid', gap: '1.5rem', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+            <TextInput 
+              source="title" 
+              validate={[required()]} 
+              label="Title"
+              fullWidth
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+            />
+            <MyRichTextInput 
+              source="description" 
+              validate={(value: any) => {
+                if (!value) return 'Description is required';
+                return undefined;
+              }}
+              label="Description"
+              sx={{ 
+                '& .tox-editor-container': { borderRadius: '8px', overflow: 'hidden' },
               '& .tox-editor-header': { flexWrap: 'wrap' }
             }}
           />
@@ -84,33 +84,33 @@ export const ChapterCreate = () => {
             }}
           />
           <YouTubeInput source="video_youtube" />
-          <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: '1fr' }}>
-            <ReferenceInput
-              source="unitId"
-              reference="units"
-              filter={{ include: { course: true } }}
-              sort={{ field: "order", order: "ASC" }}
-            >
-              <SelectInput
-                validate={[required()]}
-                label="Unit"
-                optionText={(record) => {
-                  if (!record) return "";
-                  const unit = record as { title: string; course: { title: string } };
-                  return unit.course ? `${unit.title} - ${unit.course.title}` : unit.title;
-                }}
+            <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: '1fr' }}>
+              <ReferenceInput 
+                source="unitId" 
+                reference="units"
+                filter={{ include: { course: true } }}
+                sort={{ field: "order", order: "ASC" }}
+              >
+                <SelectInput 
+                  validate={[required()]} 
+                  label="Unit" 
+                  optionText={(record) => {
+                    if (!record) return "";
+                    const unit = record as { title: string; course: { title: string } };
+                    return unit.course ? `${unit.title} - ${unit.course.title}` : unit.title;
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                />
+              </ReferenceInput>
+              <NumberInput 
+                source="order" 
+                validate={[required()]} 
+                label="Order"
+              min={1}
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
               />
-            </ReferenceInput>
-            <NumberInput
-              source="order"
-              validate={[required()]}
-              label="Order"
-              min={1}
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-            />
+            </div>
           </div>
-        </div>
       </SimpleForm>
     </Create>
   );

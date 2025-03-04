@@ -1,23 +1,23 @@
 // اسم التخزين المؤقت
 const CACHE_NAME = 'codelingo-cache-v1';
+const OFFLINE_URL = '/offline.html';
 
 // الملفات التي سيتم تخزينها مؤقتًا للاستخدام في وضع عدم الاتصال
 const urlsToCache = [
   '/',
   '/offline.html',
   '/manifest.json',
-  '/favicon.ico',
-  '/logo192.png',
-  '/logo512.png',
-  '/images/logo-android.png',
-  '/images/icons/icon-72x72.png',
-  '/images/icons/icon-96x96.png',
-  '/images/icons/icon-128x128.png',
-  '/images/icons/icon-144x144.png',
-  '/images/icons/icon-152x152.png',
-  '/images/icons/icon-192x192.png',
-  '/images/icons/icon-384x384.png',
-  '/images/icons/icon-512x512.png',
+  '/manifest-ar.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
+  '/mascot.svg',
+  '/learn.svg',
+  '/leaderboard.svg',
+  '/quests.svg',
+  '/shop.svg',
+  '/code.svg',
+  '/chat.svg',
+  '/heart.svg'
 ];
 
 // تثبيت Service Worker
@@ -25,75 +25,63 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('تم فتح التخزين المؤقت');
+        console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting())
+      .catch((error) => {
+        console.error('Error in install handler:', error);
+      })
   );
 });
 
 // تنشيط Service Worker
 self.addEventListener('activate', (event) => {
   const cacheWhitelist = [CACHE_NAME];
+
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          if (!cacheWhitelist.includes(cacheName)) {
             return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    })
   );
 });
 
 // استراتيجية التخزين المؤقت: الشبكة أولاً، ثم التخزين المؤقت
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    fetch(event.request)
+    caches.match(event.request)
       .then((response) => {
-        // تحقق مما إذا كانت الاستجابة صالحة
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+        if (response) {
           return response;
         }
-
-        // انسخ الاستجابة
-        const responseToCache = response.clone();
-
-        // أضف الاستجابة إلى التخزين المؤقت
-        caches.open(CACHE_NAME)
-          .then((cache) => {
-            // تخزين الطلبات GET فقط
-            if (event.request.method === 'GET') {
-              cache.put(event.request, responseToCache);
-            }
-          });
-
-        return response;
-      })
-      .catch(() => {
-        // إذا فشل الطلب، تحقق من التخزين المؤقت
-        return caches.match(event.request)
+        return fetch(event.request)
           .then((response) => {
-            // إذا وجدنا استجابة في التخزين المؤقت، أعدها
-            if (response) {
+            // Check if we received a valid response
+            if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
-            
-            // إذا كان الطلب لصفحة، أعد صفحة عدم الاتصال
+
+            // Clone the response
+            const responseToCache = response.clone();
+
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+
+            return response;
+          })
+          .catch(() => {
+            // If the network request fails, return the offline page for navigate requests
             if (event.request.mode === 'navigate') {
-              return caches.match('/offline.html');
+              return caches.match(OFFLINE_URL);
             }
-            
-            // إذا لم نتمكن من استرداد الأصل من التخزين المؤقت، أعد استجابة خطأ
-            return new Response('حدث خطأ في الاتصال.', {
-              status: 503,
-              statusText: 'Service Unavailable',
-              headers: new Headers({
-                'Content-Type': 'text/plain'
-              })
-            });
+            return null;
           });
       })
   );

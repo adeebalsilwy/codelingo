@@ -11,28 +11,59 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+declare global {
+  interface WindowEventMap {
+    beforeinstallprompt: BeforeInstallPromptEvent;
+  }
+}
+
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const { t, dir } = useI18n();
+  const { dir } = useI18n();
   const isRtl = dir === 'rtl';
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
+    // Check if the app is already installed
+    const checkInstallState = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone ||
+        document.referrer.includes('android-app://');
+
+      if (isStandalone) {
+        console.log('App is already installed');
+        setIsVisible(false);
+        return true;
+      }
+      return false;
+    };
+
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
+      console.log('Received beforeinstallprompt event');
       // Prevent Chrome 67 and earlier from automatically showing the prompt
       e.preventDefault();
+      
+      // Don't show if already installed
+      if (checkInstallState()) return;
+
       // Store the event so it can be triggered later
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setDeferredPrompt(e);
       // Show the install button
       setIsVisible(true);
     };
 
-    // Check if the app is already installed
-    const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches;
-    if (isAppInstalled) {
-      setIsVisible(false);
-    } else {
+    // Initial check
+    if (!checkInstallState()) {
+      // Only add the event listener if the app isn't installed
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    }
+
+    // Handle iOS standalone mode
+    if (
+      navigator.userAgent.match(/iPhone|iPad|iPod/) &&
+      !window.matchMedia('(display-mode: standalone)').matches
+    ) {
+      setIsVisible(true);
     }
 
     return () => {
@@ -41,23 +72,36 @@ export function PWAInstallPrompt() {
   }, []);
 
   const handleInstallClick = async () => {
+    // For iOS devices, show a custom message
+    if (navigator.userAgent.match(/iPhone|iPad|iPod/)) {
+      alert(isRtl 
+        ? 'لتثبيت التطبيق: اضغط على زر المشاركة ثم "إضافة إلى الشاشة الرئيسية"'
+        : 'To install: tap the share button and then "Add to Home Screen"'
+      );
+      return;
+    }
+
     if (!deferredPrompt) return;
 
-    // Show the install prompt
-    await deferredPrompt.prompt();
+    try {
+      // Show the install prompt
+      await deferredPrompt.prompt();
 
-    // Wait for the user to respond to the prompt
-    const choiceResult = await deferredPrompt.userChoice;
-    
-    if (choiceResult.outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
+      // Wait for the user to respond to the prompt
+      const choiceResult = await deferredPrompt.userChoice;
+      
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+    } catch (error) {
+      console.error('Error showing install prompt:', error);
+    } finally {
+      // Clear the saved prompt as it can't be used again
+      setDeferredPrompt(null);
+      setIsVisible(false);
     }
-    
-    // Clear the saved prompt as it can't be used again
-    setDeferredPrompt(null);
-    setIsVisible(false);
   };
 
   if (!isVisible) return null;

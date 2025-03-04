@@ -1,74 +1,16 @@
 {
-  "name": "CodeLingo - Learn Programming",
+  "name": "CodeLingo",
   "short_name": "CodeLingo",
   "description": "Learn programming languages easily with CodeLingo",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#22c55e",
-  "prefer_related_applications": true,
-  "related_applications": [
-    {
-      "platform": "play",
-      "id": "com.codelingo.app"
-    }
-  ],
-  "lang": "en",
-  "dir": "ltr",
-  "categories": ["education", "programming", "development"],
-  "screenshots": [
-    {
-      "src": "/screenshots/home-screen.png",
-      "sizes": "1280x720",
-      "type": "image/png"
-    },
-    {
-      "src": "/screenshots/learn-screen.png",
-      "sizes": "1280x720",
-      "type": "image/png"
-    }
-  ],
+  "orientation": "portrait",
   "icons": [
-    {
-      "src": "/icons/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-384x384.png",
-      "sizes": "384x384",
       "type": "image/png",
       "purpose": "any maskable"
     },
@@ -79,20 +21,15 @@
       "purpose": "any maskable"
     }
   ],
-  "shortcuts": [
+  "screenshots": [
     {
-      "name": "Lessons",
-      "short_name": "Lessons",
-      "description": "Browse available lessons",
-      "url": "/learn",
-      "icons": [{ "src": "/icons/lessons.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Profile",
-      "short_name": "Profile",
-      "description": "View your profile",
-      "url": "/profile",
-      "icons": [{ "src": "/icons/profile.png", "sizes": "192x192" }]
+      "src": "/screenshots/mobile-1.jpg",
+      "sizes": "1170x2532",
+      "type": "image/jpeg",
+      "platform": "narrow",
+      "label": "CodeLingo Home Screen"
     }
-  ]
+  ],
+  "categories": ["education", "programming"],
+  "prefer_related_applications": false
 } 

@@ -1,0 +1,13 @@
+{
+  "pwaUrl": "https://codelingo.app",
+  "appName": "كودلينجو",
+  "appShortName": "كودلينجو",
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "appIcon": "F:\\myproject\\nextjs\\Lingo\\public\\icons\\icon-512x512.png",
+  "splashScreenColor": "#22c55e",
+  "appThemeColor": "#22c55e",
+  "appBackgroundColor": "#ffffff",
+  "androidPackageName": "com.codelingo.app",
+  "androidSdkPath": "C:\\Users\\ALBASGHA\\AppData\\Local\\Android\\Sdk"
+}

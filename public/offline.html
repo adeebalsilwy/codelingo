@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>كودلينجو - غير متصل</title>
+  <style>
+    body {
+      font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-color: #f9fafb;
+      color: #1f2937;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 500px;
+      padding: 2rem;
+      background-color: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 1.5rem;
+    }
+    
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #22c55e;
+    }
+    
+    p {
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+      color: #4b5563;
+    }
+    
+    .button {
+      display: inline-block;
+      background-color: #22c55e;
+      color: white;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+    
+    .button:hover {
+      background-color: #16a34a;
+    }
+    
+    .icon {
+      display: block;
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1rem;
+      color: #d1d5db;
+    }
+
+    html[lang="en"] {
+      direction: ltr;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+    </svg>
+    <h1>أنت غير متصل بالإنترنت</h1>
+    <p>يبدو أنك فقدت اتصالك بالإنترنت. يتطلب كودلينجو اتصالاً بالإنترنت للعمل بشكل صحيح.</p>
+    <p>يرجى التحقق من اتصالك والمحاولة مرة أخرى.</p>
+    <a href="/" class="button">حاول مرة أخرى</a>
+  </div>
+  
+  <script>
+    // التحقق من تغييرات حالة الشبكة
+    window.addEventListener('online', () => {
+      window.location.reload();
+    });
+    
+    document.querySelector('.button').addEventListener('click', (e) => {
+      if (!navigator.onLine) {
+        e.preventDefault();
+        alert('ما زلت غير متصل بالإنترنت. يرجى التحقق من اتصالك بالإنترنت.');
+      }
+    });
+
+    // التحقق من لغة المتصفح وتغيير اللغة إذا لزم الأمر
+    if (navigator.language.startsWith('en')) {
+      document.documentElement.lang = 'en';
+      document.querySelector('h1').textContent = 'You\'re Offline';
+      document.querySelectorAll('p')[0].textContent = 'It looks like you\'ve lost your internet connection. CodeLingo requires an internet connection to work properly.';
+      document.querySelectorAll('p')[1].textContent = 'Please check your connection and try again.';
+      document.querySelector('.button').textContent = 'Try Again';
+    }
+  </script>
+</body>
+</html> 

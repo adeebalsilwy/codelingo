@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#22c55e" rx="128"/>
+  <g transform="translate(256, 256)">
+    <path d="M-120,-40 L-40,-40 L-40,40 L-120,40 Z" fill="white" />
+    <path d="M-20,-40 L60,-40 L120,40 L40,40 Z" fill="white" />
+    <path d="M-120,-60 L120,-60 L120,-100 L-120,-100 Z" fill="white" />
+    <path d="M-120,60 L120,60 L120,100 L-120,100 Z" fill="white" />
+  </g>
+</svg> 

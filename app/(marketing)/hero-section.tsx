@@ -3,6 +3,9 @@
 import Image from "next/image";
 import { BookOpen, Clock } from "lucide-react";
 import { useI18n } from "@/app/i18n/client";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface HeroSectionProps {
   courses: any[];
@@ -31,6 +34,22 @@ export default function HeroSection({ courses }: HeroSectionProps) {
               ? 'أتقن لغات البرمجة من خلال الدروس التفاعلية وتمارين البرمجة العملية والمشاريع الواقعية.'
               : 'Master programming languages through interactive lessons, hands-on coding exercises, and real-world projects.'}
           </p>
+          <div className="flex justify-center gap-4 pt-4">
+            <SignedIn>
+              <Link href="/learn">
+                <Button size="lg" variant="primary" className="text-lg px-8">
+                  {language === 'ar' ? 'متابعة التعلم' : 'Continue Learning'}
+                </Button>
+              </Link>
+            </SignedIn>
+            <SignedOut>
+              <SignInButton mode="modal" afterSignInUrl="/learn" afterSignUpUrl="/learn">
+                <Button size="lg" variant="secondary" className="text-lg px-8">
+                  {language === 'ar' ? 'ابدأ التعلم' : 'Start Learning'}
+                </Button>
+              </SignInButton>
+            </SignedOut>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-[1000px]">

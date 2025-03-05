@@ -35,11 +35,27 @@ export const Header = () => {
             CodeLingo
           </h1>
         </Link>
-
+      
         <div className={cn(
           "flex items-center gap-4",
           isRtl ? "order-0 lg:order-none" : ""
         )}>
+            <div className="flex justify-center gap-4 pt-4">
+            <SignedIn>
+              <Link href="/learn">
+                <Button size="sm" variant="secondary">
+                  {language === 'ar' ? 'متابعة التعلم' : 'Continue Learning'}
+                </Button>
+              </Link>
+            </SignedIn>
+            <SignedOut>
+              <SignInButton mode="modal" afterSignInUrl="/learn" afterSignUpUrl="/learn">
+                <Button size="sm" variant="primary">
+                  {language === 'ar' ? 'ابدأ التعلم' : 'Start Learning'}
+                </Button>
+              </SignInButton>
+            </SignedOut>
+          </div>
           <LanguageSwitcher />
 
           <ClerkLoading>
@@ -84,6 +100,7 @@ export const Header = () => {
             </SignedOut>
           </ClerkLoaded>
         </div>
+
       </div>
     </header>
   );

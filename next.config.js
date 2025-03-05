@@ -1,11 +1,4 @@
 /** @type {import('next').NextConfig} */
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  register: true,
-  skipWaiting: true,
-});
-
 const nextConfig = {
   reactStrictMode: true,
   images: {
@@ -14,7 +7,7 @@ const nextConfig = {
       'images.clerk.dev',
     ],
   },
-  // Ensure PWA assets are handled correctly
+  // Headers configuration
   async headers() {
     return [
       {
@@ -28,27 +21,58 @@ const nextConfig = {
         ],
       },
       {
-        source: '/manifest.json',
-        locale: false,
+        // Add headers for API routes
+        source: '/api/:path*',
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
           },
-        ],
-      },
-      {
-        source: '/manifest-ar.json',
-        locale: false,
-        headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH',
           },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization, X-Total-Count, Content-Range, Range, Accept, Origin, X-Requested-With, X-HTTP-Method-Override',
+          },
+          {
+            key: 'Access-Control-Expose-Headers',
+            value: 'Content-Range, X-Total-Count, Content-Length, Range, ETag, Location',
+          },
+          {
+            key: 'Access-Control-Max-Age',
+            value: '86400',
+          },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true',
+          }
         ],
-      },
+      }
     ];
   },
+  // Development optimization
+  webpack: (config, { dev, isServer }) => {
+    // Only enable source maps in development
+    if (dev) {
+      config.devtool = 'eval-source-map';
+    }
+
+    // Handle Emotion styling
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@emotion/core': '@emotion/react',
+        'emotion-theming': '@emotion/react',
+      };
+    }
+
+    return config;
+  },
+  compiler: {
+    emotion: true
+  }
 };
 
-module.exports = withPWA(nextConfig); 
+module.exports = nextConfig; 

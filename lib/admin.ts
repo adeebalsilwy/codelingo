@@ -4,12 +4,17 @@ const adminIds = [
   "user_2kn7I81EfQGcQEN1w1PFxUJfJtX",
 ];
 
-export const isAdmin = () => {
-  const { userId } = auth();
+export const isAdmin = async () => {
+  try {
+    const { userId } = auth();
 
-  if (!userId) {
+    if (!userId) {
+      return false;
+    }
+
+    return adminIds.includes(userId);
+  } catch (error) {
+    console.error("Error checking admin status:", error);
     return false;
   }
-
-  return adminIds.indexOf(userId) !== -1;
 };

@@ -157,22 +157,10 @@ export const codeSnippets = pgTable("code_snippets", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const userRoleEnum = pgEnum("user_role", ["ADMIN", "USER"]);
 
-export const users = pgTable("users", {
-  id: text("id").primaryKey(),
-  email: text("email").unique().notNull(),
-  username: text("username").unique().notNull(),
-  fullName: text("full_name").notNull(),
-  hashedPassword: text("hashed_password").notNull(),
-  role: userRoleEnum("role").default("USER").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const usersRelations = relations(users, ({ one }) => ({
-  progress: one(userProgress, {
-    fields: [users.id],
-    references: [userProgress.userId],
-  }),
-}));
+export const admins = pgTable('admins', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}); 

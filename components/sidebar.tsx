@@ -8,6 +8,8 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import { Loader } from "lucide-react";
+import { isAdmin } from "@/lib/admin";
+import { useState, useEffect } from "react";
 
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/app/i18n/client";
@@ -22,6 +24,15 @@ type Props = {
 export const Sidebar = ({ className }: Props) => {
   const { t, dir } = useI18n();
   const isRtl = dir === "rtl";
+  const [isAdminUser, setIsAdminUser] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const adminStatus = await isAdmin();
+      setIsAdminUser(adminStatus);
+    };
+    checkAdmin();
+  }, []);
   
   return (
     <div className={cn(
@@ -71,6 +82,16 @@ export const Sidebar = ({ className }: Props) => {
           href="/chat"
           iconSrc="/chat.svg"
         />
+       
+         {isAdminUser && (
+          <SidebarItem 
+            label={t('nav.admin')} 
+            href="/admin"
+            iconSrc="/admin.svg"
+          />
+         )}
+       
+     
       </div>
       <div className="p-4 flex items-center justify-between">
         <div className={isRtl ? "order-last" : ""}>

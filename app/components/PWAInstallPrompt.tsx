@@ -1,134 +1,88 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useI18n } from '@/app/i18n/client';
-import { cn } from '@/lib/utils';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-declare global {
-  interface WindowEventMap {
-    beforeinstallprompt: BeforeInstallPromptEvent;
-  }
-}
-
-export function PWAInstallPrompt() {
+export const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const { dir } = useI18n();
-  const isRtl = dir === 'rtl';
+  const { t, language } = useI18n();
 
   useEffect(() => {
-    // Check if the app is already installed
-    const checkInstallState = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone ||
-        document.referrer.includes('android-app://');
-
-      if (isStandalone) {
-        console.log('App is already installed');
-        setIsVisible(false);
-        return true;
-      }
-      return false;
-    };
-
-    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
-      console.log('Received beforeinstallprompt event');
-      // Prevent Chrome 67 and earlier from automatically showing the prompt
+    const handler = (e: Event) => {
       e.preventDefault();
-      
-      // Don't show if already installed
-      if (checkInstallState()) return;
-
-      // Store the event so it can be triggered later
-      setDeferredPrompt(e);
-      // Show the install button
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsVisible(true);
     };
 
-    // Initial check
-    if (!checkInstallState()) {
-      // Only add the event listener if the app isn't installed
-      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    }
+    window.addEventListener('beforeinstallprompt', handler);
 
-    // Handle iOS standalone mode
-    if (
-      navigator.userAgent.match(/iPhone|iPad|iPod/) &&
-      !window.matchMedia('(display-mode: standalone)').matches
-    ) {
-      setIsVisible(true);
+    // Check if app is already installed
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone ||
+      document.referrer.includes('android-app://');
+
+    if (isStandalone) {
+      setIsVisible(false);
     }
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('beforeinstallprompt', handler);
     };
   }, []);
 
-  const handleInstallClick = async () => {
-    // For iOS devices, show a custom message
-    if (navigator.userAgent.match(/iPhone|iPad|iPod/)) {
-      alert(isRtl 
-        ? 'لتثبيت التطبيق: اضغط على زر المشاركة ثم "إضافة إلى الشاشة الرئيسية"'
-        : 'To install: tap the share button and then "Add to Home Screen"'
-      );
-      return;
-    }
-
+  const handleInstall = async () => {
     if (!deferredPrompt) return;
 
-    try {
-      // Show the install prompt
-      await deferredPrompt.prompt();
-
-      // Wait for the user to respond to the prompt
-      const choiceResult = await deferredPrompt.userChoice;
-      
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
-      }
-    } catch (error) {
-      console.error('Error showing install prompt:', error);
-    } finally {
-      // Clear the saved prompt as it can't be used again
-      setDeferredPrompt(null);
+    await deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    
+    if (result.outcome === 'accepted') {
       setIsVisible(false);
     }
+    setDeferredPrompt(null);
+  };
+
+  const handleDismiss = () => {
+    setIsVisible(false);
   };
 
   if (!isVisible) return null;
 
   return (
-    <div className={cn(
-      "fixed bottom-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-sm border z-50",
-      isRtl ? "right-4" : "left-4"
-    )}>
-      <h3 className="font-semibold mb-2">
-        {isRtl ? 'تثبيت تطبيق كودلينجو' : 'Install CodeLingo App'}
-      </h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        {isRtl 
-          ? 'قم بتثبيت التطبيق على جهازك للوصول السريع والاستخدام بدون إنترنت.'
-          : 'Install our app on your device for quick access and offline use.'
-        }
-      </p>
-      <div className={cn("flex gap-2", isRtl ? "flex-row-reverse" : "")}>
-        <Button onClick={handleInstallClick} className="gap-2">
-          <Download className="h-4 w-4" />
-          {isRtl ? 'تثبيت التطبيق' : 'Install App'}
-        </Button>
-        <Button variant="secondary" onClick={() => setIsVisible(false)}>
-          {isRtl ? 'لاحقاً' : 'Later'}
-        </Button>
+    <div className="fixed bottom-4 left-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mx-auto max-w-md z-50">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {language === 'ar' ? 'تثبيت كودينجو' : 'Install CodeLingo'}
+          </h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {language === 'ar' 
+              ? 'قم بتثبيت تطبيق كودينجو للوصول السريع وتجربة أفضل'
+              : 'Install CodeLingo for quick access and better experience'
+            }
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 flex justify-end gap-3">
+        <button
+          onClick={handleDismiss}
+          className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+        >
+          {language === 'ar' ? 'لاحقاً' : 'Later'}
+        </button>
+        <button
+          onClick={handleInstall}
+          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >
+          {language === 'ar' ? 'تثبيت' : 'Install'}
+        </button>
       </div>
     </div>
   );
-} 
+}; 

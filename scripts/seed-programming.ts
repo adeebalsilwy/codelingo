@@ -1,585 +1,455 @@
-import "dotenv/config";
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
-import * as schema from "../db/schema";
-import {
-  challengeOptions,
-  challenges,
-  chapters,
-  courses,
-  lessons,
-  units,
-  userProgress,
-  challengeProgress,
-} from "../db/schema";
-import db from "@/db/drizzle";
+import db from "../db/drizzle";
+import { courses, units, chapters, lessons, challenges, challengeOptions } from "../db/schema";
 
 async function main() {
   try {
-    // Delete existing data first
-    await Promise.all([
-      db.delete(schema.courses),
-      db.delete(schema.units),
-      db.delete(schema.chapters),
-      db.delete(schema.lessons),
-      db.delete(schema.challenges),
-      db.delete(schema.challengeOptions),
+    // Delete all existing data in reverse order of dependencies
+    console.log("Deleting existing data...");
+    await db.delete(challengeOptions);
+    await db.delete(challenges);
+    await db.delete(lessons);
+    await db.delete(chapters);
+    await db.delete(units);
+    await db.delete(courses);
+    console.log("Existing data deleted successfully");
+
+    // Create programming courses
+    const [cppCourse, pythonCourse, javaCourse, jsCourse] = await db.insert(courses).values([
+      {
+        title: "C++ Programming",
+        imageSrc: "/cpp_course.jpg"
+      },
+      {
+        title: "Python Programming",
+        imageSrc: "/python_course.jpg"
+      },
+      {
+        title: "Java Programming",
+        imageSrc: "/java_course.jpg"
+      },
+      {
+        title: "JavaScript Programming",
+        imageSrc: "/javascript_course.jpg"
+      }
+    ]).returning();
+
+    // Create units for C++ Course
+    const cppUnits = await db.insert(units).values([
+      {
+        title: "مقدمة في ++C",
+        description: "تعلم أساسيات لغة البرمجة ++C وتاريخها ومميزاتها وأهميتها",
+        courseId: cppCourse.id,
+        order: 1
+      },
+      {
+        title: "أنواع البيانات والمتغيرات",
+        description: "تعلم أنواع البيانات المختلفة والمتغيرات في ++C وكيفية استخدامها",
+        courseId: cppCourse.id,
+        order: 2
+      },
+      {
+        title: "العمليات الحسابية والمنطقية",
+        description: "تعلم العمليات الحسابية والمنطقية في ++C وكيفية استخدامها",
+        courseId: cppCourse.id,
+        order: 3
+      }
+    ]).returning();
+
+    // Create chapters for first unit (Introduction)
+    const unit1Chapters = await db.insert(chapters).values([
+      {
+        title: "تعريف لغة ++C",
+        description: "مقدمة عن لغة ++C وتاريخها",
+        content: "C++ هي لغة برمجة عامة الغرض تم تطويرها في أوائل الثمانينات. تتميز بقوتها في تطوير البرمجيات والألعاب ونظم التشغيل.",
+        unitId: cppUnits[0].id,
+        order: 1
+      },
+      {
+        title: "مميزات ++C",
+        description: "تعرف على أهم مميزات لغة ++C",
+        content: "تتميز لغة ++C بالأداء المرتفع والبرمجة الموجهة للكائنات والتحكم الكامل بالموارد وقابلية التوسع وتنوع الاستخدامات.",
+        unitId: cppUnits[0].id,
+        order: 2
+      },
+      {
+        title: "أهمية ++C",
+        description: "تعرف على أهمية لغة ++C",
+        content: "تستخدم لغة ++C في تطوير البرمجيات الأساسية وصناعة الألعاب والبرمجة العلمية وتوفر فرص عمل كثيرة.",
+        unitId: cppUnits[0].id,
+        order: 3
+      },
+      {
+        title: "بيئة التطوير",
+        description: "إعداد بيئة التطوير للغة ++C",
+        content: "تعلم كيفية تثبيت وإعداد بيئة التطوير المتكاملة للغة ++C.",
+        unitId: cppUnits[0].id,
+        order: 4
+      }
+    ]).returning();
+
+    // Create chapters for second unit (Data Types)
+    const unit2Chapters = await db.insert(chapters).values([
+      {
+        title: "أنواع البيانات الأساسية",
+        description: "تعرف على أنواع البيانات الأساسية في ++C",
+        content: "تشمل أنواع البيانات الأساسية: int للأعداد الصحيحة، double للأعداد العشرية، char للحروف، bool للقيم المنطقية.",
+        unitId: cppUnits[1].id,
+        order: 1
+      },
+      {
+        title: "المتغيرات وتعريفها",
+        description: "كيفية تعريف واستخدام المتغيرات",
+        content: "المتغير هو مساحة في الذاكرة لتخزين قيمة من نوع معين. يتم تعريف المتغير بتحديد نوعه واسمه.",
+        unitId: cppUnits[1].id,
+        order: 2
+      },
+      {
+        title: "نطاق المتغيرات",
+        description: "فهم نطاق المتغيرات في البرنامج",
+        content: "يحدد نطاق المتغير أين يمكن استخدامه في البرنامج. قد يكون محلياً أو عاماً.",
+        unitId: cppUnits[1].id,
+        order: 3
+      },
+      {
+        title: "الثوابت",
+        description: "تعريف واستخدام الثوابت",
+        content: "الثابت هو قيمة لا يمكن تغييرها بعد تعريفها. يتم تعريف الثابت باستخدام const.",
+        unitId: cppUnits[1].id,
+        order: 4
+      }
+    ]).returning();
+
+    // Create chapters for third unit (Operations)
+    const unit3Chapters = await db.insert(chapters).values([
+      {
+        title: "العمليات الحسابية الأساسية",
+        description: "تعلم العمليات الحسابية الأساسية",
+        content: "العمليات الحسابية الأساسية تشمل: الجمع (+)، الطرح (-)، الضرب (*)، القسمة (/)، باقي القسمة (%).",
+        unitId: cppUnits[2].id,
+        order: 1
+      },
+      {
+        title: "العمليات المنطقية",
+        description: "فهم العمليات المنطقية",
+        content: "العمليات المنطقية تشمل: AND (&&)، OR (||)، NOT (!).",
+        unitId: cppUnits[2].id,
+        order: 2
+      },
+      {
+        title: "عمليات المقارنة",
+        description: "تعلم عمليات المقارنة",
+        content: "عمليات المقارنة تشمل: يساوي (==)، لا يساوي (!=)، أكبر من (>)، أصغر من (<).",
+        unitId: cppUnits[2].id,
+        order: 3
+      },
+      {
+        title: "أولويات العمليات",
+        description: "فهم أولويات العمليات",
+        content: "ترتيب تنفيذ العمليات يعتمد على أولوياتها. مثلاً: الضرب والقسمة قبل الجمع والطرح.",
+        unitId: cppUnits[2].id,
+        order: 4
+      }
+    ]).returning();
+
+    // Create lessons and challenges for Unit 1
+    const lessons1 = await db.insert(lessons).values([
+      {
+        title: "مقدمة في لغة ++C",
+        unitId: cppUnits[0].id,
+        chapterId: unit1Chapters[0].id,
+        order: 1
+      }
+    ]).returning();
+
+    const challenges1 = await db.insert(challenges).values([
+      {
+        lessonId: lessons1[0].id,
+        type: "SELECT",
+        question: "متى تم تطوير لغة ++C؟",
+        order: 1
+      },
+      {
+        lessonId: lessons1[0].id,
+        type: "SELECT",
+        question: "ما هي أهم مميزات لغة ++C؟",
+        order: 2
+      },
+      {
+        lessonId: lessons1[0].id,
+        type: "SELECT",
+        question: "ما هي أهم مجالات استخدام لغة ++C؟",
+        order: 3
+      }
+    ]).returning();
+
+    // Create challenge options for Unit 1
+    await db.insert(challengeOptions).values([
+      {
+        challengeId: challenges1[0].id,
+        text: "أوائل الثمانينات",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges1[0].id,
+        text: "أواخر السبعينات",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges1[0].id,
+        text: "أوائل التسعينات",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges1[1].id,
+        text: "الأداء المرتفع والبرمجة الموجهة للكائنات",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges1[1].id,
+        text: "سهولة التعلم فقط",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges1[1].id,
+        text: "البرمجة الهيكلية فقط",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges1[2].id,
+        text: "تطوير البرمجيات وصناعة الألعاب",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges1[2].id,
+        text: "تصميم المواقع فقط",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges1[2].id,
+        text: "تطوير تطبيقات الموبايل فقط",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      }
     ]);
 
-    // Create Programming Language Courses
-    const programmingCourses = [
-      { title: "Python", imageSrc: "/python.svg" },
-      { title: "C++", imageSrc: "/cpp.svg" },
-      { title: "C#", imageSrc: "/csharp.svg" },
-    ];
-
-    const createdCourses = await Promise.all(
-      programmingCourses.map(async (course) => {
-        const [createdCourse] = await db.insert(courses).values(course).returning();
-        return createdCourse;
-      })
-    );
-
-    // Create Units for each course
-    for (const course of createdCourses) {
-      const unitsData = [
-        {
-          title: "Programming Fundamentals",
-          description: `Learn the basics of ${course.title}`,
-          courseId: course.id,
-          order: 1,
-        },
-        {
-          title: "Data Structures",
-          description: `Master data structures in ${course.title}`,
-          courseId: course.id,
-          order: 2,
-        },
-        {
-          title: "Advanced Concepts",
-          description: `Advanced programming concepts in ${course.title}`,
-          courseId: course.id,
-          order: 3,
-        },
-      ];
-
-      const createdUnits = await Promise.all(
-        unitsData.map(async (unit) => {
-          const [createdUnit] = await db.insert(units).values(unit).returning();
-          return createdUnit;
-        })
-      );
-
-      // Create Chapters for each unit
-      for (const unit of createdUnits) {
-        const chaptersData = getChaptersData(course.title, unit.title).map((chapter: Omit<ChapterData, 'unitId'>) => ({
-          ...chapter,
-          unitId: unit.id
-        }));
-
-        const createdChapters = await Promise.all(
-          chaptersData.map(async (chapter: ChapterData) => {
-            const [createdChapter] = await db.insert(chapters).values(chapter).returning();
-            return createdChapter;
-          })
-        );
-
-        // Create lessons for each chapter
-        for (const chapter of createdChapters) {
-          const lessonsData = getLessonsData(course.title, chapter.title).map((lesson: Omit<LessonData, 'chapterId' | 'unitId'>) => ({
-            ...lesson,
-              chapterId: chapter.id,
-            unitId: unit.id
-          }));
-            
-          const createdLessons = await Promise.all(
-            lessonsData.map(async (lesson: LessonData) => {
-            const [createdLesson] = await db.insert(lessons).values(lesson).returning();
-
-              // Create challenges for each lesson
-              const challengesData = getChallengesData(course.title, lesson.title);
-              
-              const createdChallenges = await Promise.all(
-                challengesData.map(async (challenge: Omit<ChallengeData, 'lessonId'>) => {
-                  const [createdChallenge] = await db.insert(challenges).values({
-                    ...challenge,
-                    lessonId: createdLesson.id,
-                  }).returning();
-
-                  // Create challenge options
-                  const optionsData = getChallengeOptionsData(course.title, challenge.question);
-                  await db.insert(challengeOptions).values(
-                    optionsData.map((option: Omit<ChallengeOptionData, 'challengeId'>) => ({
-                      ...option,
-                      challengeId: createdChallenge.id,
-                    }))
-                  );
-
-                  return createdChallenge;
-                })
-              );
-
-              return createdLesson;
-            })
-          );
-        }
+    // Create lessons and challenges for Unit 2
+    const lessons2 = await db.insert(lessons).values([
+      {
+        title: "أنواع البيانات الأساسية",
+        unitId: cppUnits[1].id,
+        chapterId: unit2Chapters[0].id,
+        order: 1
       }
-    }
+    ]).returning();
 
-    console.log("✅ Programming courses seeded successfully");
+    const challenges2 = await db.insert(challenges).values([
+      {
+        lessonId: lessons2[0].id,
+        type: "SELECT",
+        question: "ما هو نوع البيانات المستخدم للأعداد الصحيحة في ++C؟",
+        order: 1
+      },
+      {
+        lessonId: lessons2[0].id,
+        type: "SELECT",
+        question: "كيف يتم تعريف متغير من نوع int في ++C؟",
+        order: 2
+      },
+      {
+        lessonId: lessons2[0].id,
+        type: "SELECT",
+        question: "ما هو نوع البيانات المستخدم للقيم المنطقية في ++C؟",
+        order: 3
+      }
+    ]).returning();
+
+    // Create challenge options for Unit 2
+    await db.insert(challengeOptions).values([
+      {
+        challengeId: challenges2[0].id,
+        text: "int",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges2[0].id,
+        text: "string",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges2[0].id,
+        text: "char",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges2[1].id,
+        text: "int x;",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges2[1].id,
+        text: "x = int;",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges2[1].id,
+        text: "variable int;",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges2[2].id,
+        text: "bool",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges2[2].id,
+        text: "boolean",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges2[2].id,
+        text: "logical",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      }
+    ]);
+
+    // Create lessons and challenges for Unit 3
+    const lessons3 = await db.insert(lessons).values([
+      {
+        title: "العمليات الحسابية الأساسية",
+        unitId: cppUnits[2].id,
+        chapterId: unit3Chapters[0].id,
+        order: 1
+      }
+    ]).returning();
+
+    const challenges3 = await db.insert(challenges).values([
+      {
+        lessonId: lessons3[0].id,
+        type: "SELECT",
+        question: "ما هي العملية المستخدمة للحصول على باقي القسمة في ++C؟",
+        order: 1
+      },
+      {
+        lessonId: lessons3[0].id,
+        type: "SELECT",
+        question: "ما هي العملية المنطقية AND في ++C؟",
+        order: 2
+      },
+      {
+        lessonId: lessons3[0].id,
+        type: "SELECT",
+        question: "أي من العمليات التالية لها أولوية أعلى في التنفيذ؟",
+        order: 3
+      }
+    ]).returning();
+
+    // Create challenge options for Unit 3
+    await db.insert(challengeOptions).values([
+      {
+        challengeId: challenges3[0].id,
+        text: "%",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges3[0].id,
+        text: "/",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges3[0].id,
+        text: "*",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges3[1].id,
+        text: "&&",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges3[1].id,
+        text: "||",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges3[1].id,
+        text: "!",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges3[2].id,
+        text: "الضرب والقسمة",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges3[2].id,
+        text: "الجمع والطرح",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: challenges3[2].id,
+        text: "العمليات المنطقية",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      }
+    ]);
+
+    console.log("Seeding completed successfully");
   } catch (error) {
-    console.error("❌ Error seeding programming courses:", error);
+    console.error("Error seeding the database:", error);
     throw error;
   }
 }
 
-interface ChapterData {
-  title: string;
-  description: string;
-  content: string;
-  video_youtube: string;
-  order: number;
-  unitId: number;
-}
-
-interface LessonData {
-  title: string;
-  order: number;
-  chapterId: number;
-  unitId: number;
-}
-
-interface ChallengeData {
-  type: "SELECT" | "ASSIST";
-  question: string;
-  order: number;
-  lessonId: number;
-}
-
-interface ChallengeOptionData {
-  text: string;
-  correct: boolean;
-  challengeId: number;
-}
-
-function getChaptersData(courseTitle: string, unitTitle: string) {
-  const chaptersMap: Record<string, any> = {
-    "Programming Fundamentals": [
-      {
-        title: "Introduction to Variables and Data Types",
-        description: `Learn about variables and data types in ${courseTitle}`,
-        content: getContentForChapter(courseTitle, "variables"),
-        video_youtube: getYouTubeUrl(courseTitle, "variables"),
-        order: 1,
-      },
-      {
-        title: "Control Structures",
-        description: `Master control structures in ${courseTitle}`,
-        content: getContentForChapter(courseTitle, "control"),
-        video_youtube: getYouTubeUrl(courseTitle, "control"),
-        order: 2,
-      },
-      {
-        title: "Functions and Methods",
-        description: `Understanding functions and methods in ${courseTitle}`,
-        content: getContentForChapter(courseTitle, "functions"),
-        video_youtube: getYouTubeUrl(courseTitle, "functions"),
-        order: 3,
-      },
-    ],
-    "Data Structures": [
-      {
-        title: "Arrays and Collections",
-        description: `Working with arrays and collections in ${courseTitle}`,
-        content: getContentForChapter(courseTitle, "arrays"),
-        video_youtube: getYouTubeUrl(courseTitle, "arrays"),
-        order: 1,
-      },
-      {
-        title: "Linked Lists",
-        description: `Understanding linked lists in ${courseTitle}`,
-        content: getContentForChapter(courseTitle, "linkedlists"),
-        video_youtube: getYouTubeUrl(courseTitle, "linkedlists"),
-        order: 2,
-      },
-      {
-        title: "Stacks and Queues",
-        description: `Learning about stacks and queues in ${courseTitle}`,
-        content: getContentForChapter(courseTitle, "stacks"),
-        video_youtube: getYouTubeUrl(courseTitle, "stacks"),
-        order: 3,
-      },
-    ],
-    "Advanced Concepts": [
-      {
-        title: "Object-Oriented Programming",
-        description: `Master OOP concepts in ${courseTitle}`,
-        content: getContentForChapter(courseTitle, "oop"),
-        video_youtube: getYouTubeUrl(courseTitle, "oop"),
-        order: 1,
-      },
-      {
-        title: "Exception Handling",
-        description: `Understanding exception handling in ${courseTitle}`,
-        content: getContentForChapter(courseTitle, "exceptions"),
-        video_youtube: getYouTubeUrl(courseTitle, "exceptions"),
-        order: 2,
-      },
-      {
-        title: "File I/O Operations",
-        description: `Working with files in ${courseTitle}`,
-        content: getContentForChapter(courseTitle, "files"),
-        video_youtube: getYouTubeUrl(courseTitle, "files"),
-        order: 3,
-      },
-    ],
-  };
-
-  return chaptersMap[unitTitle] || [];
-}
-
-function getLessonsData(courseTitle: string, chapterTitle: string) {
-  const lessonsMap: Record<string, any> = {
-    "Introduction to Variables and Data Types": [
-      { title: "Basic Data Types", order: 1 },
-      { title: "Variable Declaration and Initialization", order: 2 },
-      { title: "Type Conversion", order: 3 },
-      { title: "Constants and Literals", order: 4 },
-      { title: "Scope and Lifetime", order: 5 },
-    ],
-    "Control Structures": [
-      { title: "If-Else Statements", order: 1 },
-      { title: "Loops and Iteration", order: 2 },
-      { title: "Switch Statements", order: 3 },
-      { title: "Break and Continue", order: 4 },
-      { title: "Nested Control Structures", order: 5 },
-    ],
-    "Functions and Methods": [
-      { title: "Function Definition and Calling", order: 1 },
-      { title: "Parameters and Return Values", order: 2 },
-      { title: "Function Overloading", order: 3 },
-      { title: "Recursive Functions", order: 4 },
-      { title: "Lambda Functions", order: 5 },
-    ],
-    "Arrays and Collections": [
-      { title: "Array Basics", order: 1 },
-      { title: "Array Operations", order: 2 },
-      { title: "Multidimensional Arrays", order: 3 },
-      { title: "Array Methods", order: 4 },
-      { title: "Array Manipulation", order: 5 },
-    ],
-    "Linked Lists": [
-      { title: "Singly Linked Lists", order: 1 },
-      { title: "Doubly Linked Lists", order: 2 },
-      { title: "Circular Linked Lists", order: 3 },
-      { title: "List Operations", order: 4 },
-      { title: "List Applications", order: 5 },
-    ],
-    "Stacks and Queues": [
-      { title: "Stack Implementation", order: 1 },
-      { title: "Queue Implementation", order: 2 },
-      { title: "Priority Queues", order: 3 },
-      { title: "Stack Applications", order: 4 },
-      { title: "Queue Applications", order: 5 },
-    ],
-    "Object-Oriented Programming": [
-      { title: "Classes and Objects", order: 1 },
-      { title: "Inheritance", order: 2 },
-      { title: "Polymorphism", order: 3 },
-      { title: "Encapsulation", order: 4 },
-      { title: "Abstraction", order: 5 },
-    ],
-    "Exception Handling": [
-      { title: "Try-Catch Blocks", order: 1 },
-      { title: "Exception Types", order: 2 },
-      { title: "Custom Exceptions", order: 3 },
-      { title: "Exception Propagation", order: 4 },
-      { title: "Best Practices", order: 5 },
-    ],
-    "File I/O Operations": [
-      { title: "File Reading", order: 1 },
-      { title: "File Writing", order: 2 },
-      { title: "File Manipulation", order: 3 },
-      { title: "Binary Files", order: 4 },
-      { title: "File Streams", order: 5 },
-    ],
-  };
-
-  return lessonsMap[chapterTitle] || [];
-}
-
-function getChallengesData(courseTitle: string, lessonTitle: string) {
-  const challengesMap: Record<string, any> = {
-    "Basic Data Types": [
-      {
-        type: "SELECT",
-        question: `What is the correct way to declare an integer variable in ${courseTitle}?`,
-        order: 1,
-      },
-      {
-        type: "SELECT",
-        question: `Which data type is used for decimal numbers in ${courseTitle}?`,
-        order: 2,
-      },
-      {
-        type: "SELECT",
-        question: `What is the size of a boolean type in ${courseTitle}?`,
-        order: 3,
-      },
-      {
-        type: "SELECT",
-        question: `How do you declare a character variable in ${courseTitle}?`,
-        order: 4,
-      },
-      {
-        type: "SELECT",
-        question: `What is the range of values for an integer in ${courseTitle}?`,
-        order: 5,
-      },
-    ],
-    "Variable Declaration and Initialization": [
-      {
-        type: "SELECT",
-        question: `How do you declare and initialize a string variable in ${courseTitle}?`,
-        order: 1,
-      },
-      {
-        type: "SELECT",
-        question: `What is the difference between declaration and initialization in ${courseTitle}?`,
-        order: 2,
-      },
-      {
-        type: "SELECT",
-        question: `How do you declare multiple variables in ${courseTitle}?`,
-        order: 3,
-      },
-      {
-        type: "SELECT",
-        question: `What is the default value of an uninitialized variable in ${courseTitle}?`,
-        order: 4,
-      },
-      {
-        type: "SELECT",
-        question: `How do you declare a constant in ${courseTitle}?`,
-        order: 5,
-      },
-    ],
-    "Type Conversion": [
-      {
-        type: "SELECT",
-        question: `How do you convert a string to an integer in ${courseTitle}?`,
-        order: 1,
-      },
-      {
-        type: "SELECT",
-        question: `What is type casting in ${courseTitle}?`,
-        order: 2,
-      },
-    ],
-    "Constants and Literals": [
-      {
-        type: "SELECT",
-        question: `How do you declare a constant in ${courseTitle}?`,
-        order: 1,
-      },
-      {
-        type: "SELECT",
-        question: `What are literal values in ${courseTitle}?`,
-        order: 2,
-      },
-    ],
-    "Scope and Lifetime": [
-      {
-        type: "SELECT",
-        question: `What is variable scope in ${courseTitle}?`,
-        order: 1,
-      },
-      {
-        type: "SELECT",
-        question: `What is the lifetime of a variable in ${courseTitle}?`,
-        order: 2,
-      },
-    ],
-    // Add default challenges for any lesson
-    "default": [
-      {
-        type: "SELECT",
-        question: `What is the main topic of this lesson in ${courseTitle}?`,
-        order: 1,
-      },
-      {
-        type: "SELECT",
-        question: `Can you explain the key concept of this lesson in ${courseTitle}?`,
-        order: 2,
-      },
-    ],
-  };
-
-  return challengesMap[lessonTitle] || challengesMap["default"];
-}
-
-function getChallengeOptionsData(courseTitle: string, question: string) {
-  const optionsMap: Record<string, any> = {
-    [`What is the correct way to declare an integer variable in ${courseTitle}?`]: [
-      { text: getVariableDeclarationExample(courseTitle, "integer"), correct: true },
-      { text: "var number = 42;", correct: false },
-      { text: "string number = 42;", correct: false },
-      { text: "const number = 42;", correct: false },
-    ],
-    [`Which data type is used for decimal numbers in ${courseTitle}?`]: [
-      { text: getDecimalType(courseTitle), correct: true },
-      { text: "int", correct: false },
-      { text: "string", correct: false },
-      { text: "bool", correct: false },
-    ],
-    [`What is the size of a boolean type in ${courseTitle}?`]: [
-      { text: "1 byte", correct: true },
-      { text: "2 bytes", correct: false },
-      { text: "4 bytes", correct: false },
-      { text: "8 bytes", correct: false },
-    ],
-    [`How do you declare a character variable in ${courseTitle}?`]: [
-      { text: getVariableDeclarationExample(courseTitle, "char"), correct: true },
-      { text: "char c = 'A';", correct: true },
-      { text: "string c = 'A';", correct: false },
-      { text: "int c = 'A';", correct: false },
-    ],
-    // Add default options for any question
-    "default": [
-      { text: "Option A", correct: true },
-      { text: "Option B", correct: false },
-      { text: "Option C", correct: false },
-      { text: "Option D", correct: false },
-    ],
-  };
-
-  return optionsMap[question] || optionsMap["default"];
-}
-
-function getContentForChapter(courseTitle: string, topic: string): string {
-  const contentMap: Record<string, any> = {
-    variables: {
-      Python: `
-        <h2>Variables in Python</h2>
-        <p>Python is a dynamically typed language, which means you don't need to declare variable types explicitly.</p>
-        <pre><code>
-        # Variable declaration examples
-        name = "John"
-        age = 25
-        height = 1.75
-        is_student = True
-        </code></pre>
-        <p>Key points about Python variables:</p>
-        <ul>
-          <li>Variables are case-sensitive</li>
-          <li>Names can contain letters, numbers, and underscores</li>
-          <li>Cannot start with a number</li>
-          <li>Cannot be a reserved keyword</li>
-        </ul>
-      `,
-      "C++": `
-        <h2>Variables in C++</h2>
-        <p>C++ is a statically typed language, requiring explicit type declaration.</p>
-        <pre><code>
-        // Variable declaration examples
-        string name = "John";
-        int age = 25;
-        double height = 1.75;
-        bool isStudent = true;
-        </code></pre>
-        <p>Key points about C++ variables:</p>
-        <ul>
-          <li>Variables must be declared before use</li>
-          <li>Types must be specified explicitly</li>
-          <li>Names are case-sensitive</li>
-          <li>Cannot be reserved keywords</li>
-        </ul>
-      `,
-      "C#": `
-        <h2>Variables in C#</h2>
-        <p>C# is a strongly typed language with type inference capabilities.</p>
-        <pre><code>
-        // Variable declaration examples
-        string name = "John";
-        int age = 25;
-        double height = 1.75;
-        bool isStudent = true;
-        </code></pre>
-        <p>Key points about C# variables:</p>
-        <ul>
-          <li>Variables must be declared before use</li>
-          <li>Types can be inferred using 'var'</li>
-          <li>Names are case-sensitive</li>
-          <li>Cannot be reserved keywords</li>
-        </ul>
-      `,
-    },
-    // Add default content for any topic
-    "default": `
-      <h2>${topic} in ${courseTitle}</h2>
-      <p>This section covers ${topic} in ${courseTitle}.</p>
-      <pre><code>
-      // Example code will be added here
-      </code></pre>
-      <p>Key points about ${topic}:</p>
-      <ul>
-        <li>Point 1</li>
-        <li>Point 2</li>
-        <li>Point 3</li>
-      </ul>
-    `,
-  };
-
-  return contentMap[topic]?.[courseTitle] || contentMap["default"];
-}
-
-function getYouTubeUrl(courseTitle: string, topic: string): string {
-  const videoMap: Record<string, any> = {
-    variables: {
-      Python: "https://www.youtube.com/watch?v=khKv-8q7YmY",
-      "C++": "https://www.youtube.com/watch?v=8XAQzcJvOHk",
-      "C#": "https://www.youtube.com/watch?v=GhQdlIFylQ8",
-    },
-    // Add default video URL
-    "default": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-  };
-
-  return videoMap[topic]?.[courseTitle] || videoMap["default"];
-}
-
-function getVariableDeclarationExample(courseTitle: string, type: string): string {
-  const examples: Record<string, any> = {
-    Python: {
-      integer: "number = 42",
-      string: 'name = "John"',
-      float: "price = 19.99",
-    },
-    "C++": {
-      integer: "int number = 42;",
-      string: 'string name = "John";',
-      float: "double price = 19.99;",
-    },
-    "C#": {
-      integer: "int number = 42;",
-      string: 'string name = "John";',
-      float: "double price = 19.99;",
-    },
-  };
-
-  return examples[courseTitle]?.[type] || "Example not available";
-}
-
-function getDecimalType(courseTitle: string): string {
-  const types: Record<string, any> = {
-    Python: "float",
-    "C++": "double",
-    "C#": "double",
-  };
-
-  return types[courseTitle] || "Type not available";
-}
-
-main().catch((err) => {
-  console.error("❌ Error running seed script:", err);
-  process.exit(1);
-});
+main();

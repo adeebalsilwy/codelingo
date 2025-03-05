@@ -1,12 +1,11 @@
 {
-  "name": "CodeLingo",
-  "short_name": "CodeLingo",
-  "description": "Learn programming languages easily with CodeLingo",
+  "name": "code lingo",
+  "short_name": "Lingo",
+  "description": "Learn languages with interactive lessons",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#22c55e",
-  "orientation": "portrait",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -20,16 +19,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/mobile-1.jpg",
-      "sizes": "1170x2532",
-      "type": "image/jpeg",
-      "platform": "narrow",
-      "label": "CodeLingo Home Screen"
-    }
-  ],
-  "categories": ["education", "programming"],
-  "prefer_related_applications": false
+  ]
 } 

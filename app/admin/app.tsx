@@ -1,10 +1,10 @@
 "use client";
 
 import { Admin, Resource } from "react-admin";
-import simpleRestProvider from "ra-data-simple-rest";
 import { School, Book, Class, Assignment, QuestionAnswer, Extension } from "@mui/icons-material";
 
 import { adminTheme } from "./theme";
+import { dataProvider } from "./dataProvider";
 import { CourseList } from "./course/list";
 import { CourseEdit } from "./course/edit";
 import { CourseCreate } from "./course/create";
@@ -28,8 +28,6 @@ import { ChallengeOptionCreate } from "./challengeOption/create";
 import ChapterList from "./chapter/list";
 import { ChapterEdit } from "./chapter/edit";
 import { ChapterCreate } from "./chapter/create";
-
-const dataProvider = simpleRestProvider("/api");
 
 const App = () => {
   return (

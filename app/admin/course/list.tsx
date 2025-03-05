@@ -1,4 +1,4 @@
-import { Datagrid, List, TextField, SearchInput, TextInput, FilterForm, CreateButton, ExportButton, TopToolbar } from "react-admin";
+import { Datagrid, List, TextField, SearchInput, TextInput, FilterForm, CreateButton, ExportButton, TopToolbar, ImageField } from "react-admin";
 import { Card, CardContent } from "@mui/material";
 
 const filters = [
@@ -30,7 +30,7 @@ export const CourseList = () => {
           >
             <TextField source="id" />
             <TextField source="title" />
-            <TextField source="imageSrc" />
+            <ImageField source="imageSrc" title="Image" />
           </Datagrid>
         </List>
       </CardContent>

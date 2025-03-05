@@ -1,4 +1,4 @@
-import { SimpleForm, Create, TextInput, required } from "react-admin";
+import { SimpleForm, Create, TextInput, required, ImageInput, ImageField } from "react-admin";
 
 export const CourseCreate = () => {
   return (
@@ -9,11 +9,14 @@ export const CourseCreate = () => {
           validate={[required()]} 
           label="Title"
         />
-        <TextInput 
+        <ImageInput 
           source="imageSrc" 
-          validate={[required()]} 
-          label="Image"
-        />
+          label="Course Image"
+          accept="image/*"
+          validate={[required()]}
+        >
+          <ImageField source="src" title="title" />
+        </ImageInput>
       </SimpleForm>
     </Create>
   );

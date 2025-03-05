@@ -47,13 +47,12 @@ export const dataProvider: DataProvider = {
   create: async (resource, params) => {
     let newParams = { ...params };
     
-    if (params.data.image) {
-      const imageUrl = await handleImageUpload(params.data.image.rawFile);
+    if (params.data.imageSrc) {
+      const imageUrl = await handleImageUpload(params.data.imageSrc.rawFile);
       newParams.data = {
         ...params.data,
         imageSrc: imageUrl,
       };
-      delete newParams.data.image;
     }
 
     const { json } = await httpClient(`${apiUrl}/${resource}`, {
@@ -66,13 +65,12 @@ export const dataProvider: DataProvider = {
   update: async (resource, params) => {
     let newParams = { ...params };
     
-    if (params.data.image) {
-      const imageUrl = await handleImageUpload(params.data.image.rawFile);
+    if (params.data.imageSrc && params.data.imageSrc.rawFile) {
+      const imageUrl = await handleImageUpload(params.data.imageSrc.rawFile);
       newParams.data = {
         ...params.data,
         imageSrc: imageUrl,
       };
-      delete newParams.data.image;
     }
 
     const { json } = await httpClient(`${apiUrl}/${resource}/${params.id}`, {

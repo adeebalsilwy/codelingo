@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" fill="#22c55e" rx="48"/>
+  <g transform="translate(96, 96)">
+    <path d="M-45,-15 L-15,-15 L-15,15 L-45,15 Z" fill="white" />
+    <path d="M-7.5,-15 L22.5,-15 L45,15 L15,15 Z" fill="white" />
+    <path d="M-45,-22.5 L45,-22.5 L45,-37.5 L-45,-37.5 Z" fill="white" />
+    <path d="M-45,22.5 L45,22.5 L45,37.5 L-45,37.5 Z" fill="white" />
+  </g>
+</svg> 

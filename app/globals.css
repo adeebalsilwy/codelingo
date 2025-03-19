@@ -1,0 +1,226 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+:root {
+  @apply h-full;
+}
+ 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 20% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+ 
+    --primary: 215 90% 50%;
+    --primary-foreground: 0 0% 100%;
+ 
+    --secondary: 200 85% 45%;
+    --secondary-foreground: 0 0% 100%;
+ 
+    --muted: 220 20% 96%;
+    --muted-foreground: 220 20% 60%;
+ 
+    --accent: 215 90% 50%;
+    --accent-foreground: 0 0% 100%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 215 90% 50%;
+ 
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 220 20% 10%;
+    --foreground: 0 0% 100%;
+ 
+    --card: 220 20% 10%;
+    --card-foreground: 0 0% 100%;
+ 
+    --popover: 220 20% 10%;
+    --popover-foreground: 0 0% 100%;
+ 
+    --primary: 215 90% 55%;
+    --primary-foreground: 0 0% 100%;
+ 
+    --secondary: 200 85% 50%;
+    --secondary-foreground: 0 0% 100%;
+ 
+    --muted: 220 20% 20%;
+    --muted-foreground: 220 20% 70%;
+ 
+    --accent: 215 90% 55%;
+    --accent-foreground: 0 0% 100%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+ 
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 215 90% 55%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] .flip-x {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .reverse-flex {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+/* Code Display in RTL */
+[dir="rtl"] pre,
+[dir="rtl"] code,
+[dir="rtl"] .code-block,
+[dir="rtl"] .monaco-editor {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: bidi-override;
+}
+
+[dir="rtl"] .challenge-code {
+  direction: ltr !important;
+  text-align: left !important;
+  font-family: monospace;
+}
+
+/* Editor specific RTL fixes */
+[dir="rtl"] .monaco-editor .monaco-editor-background,
+[dir="rtl"] .monaco-editor .margin,
+[dir="rtl"] .monaco-editor .inputarea.ime-input {
+  direction: ltr !important;
+}
+
+[dir="rtl"] .monaco-editor .margin {
+  border-right: none !important;
+  border-left: 1px solid var(--border);
+}
+
+[dir="rtl"] .editor-container {
+  direction: ltr !important;
+}
+
+/* Arabic Font Adjustments */
+[dir="rtl"] body {
+  font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "ss03" 1;
+  letter-spacing: -0.01em;
+}
+
+/* Fix for RTL dropdown menus */
+[dir="rtl"] .dropdown-menu-content {
+  transform-origin: top right;
+}
+
+/* Fix for RTL buttons with icons */
+[dir="rtl"] .button-icon-end {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+[dir="rtl"] .button-icon-start {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+/* Fix for RTL form inputs */
+[dir="rtl"] input,
+[dir="rtl"] textarea {
+  text-align: right;
+}
+
+/* Fix for RTL lists */
+[dir="rtl"] ul, 
+[dir="rtl"] ol {
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
+
+/* RTL Prose Support */
+.prose-rtl {
+  direction: rtl;
+}
+
+.prose-rtl ul,
+.prose-rtl ol {
+  padding-right: 1.625em;
+  padding-left: 0;
+}
+
+.prose-rtl blockquote {
+  border-left: none;
+  border-right: 0.25em solid var(--tw-prose-quote-borders);
+  padding-left: 0;
+  padding-right: 1em;
+}
+
+.prose-rtl h1,
+.prose-rtl h2,
+.prose-rtl h3,
+.prose-rtl h4,
+.prose-rtl h5,
+.prose-rtl h6 {
+  text-align: right;
+}
+
+.prose-rtl pre {
+  direction: ltr;
+  text-align: left;
+}
+
+.prose-rtl code {
+  direction: ltr;
+  display: inline-block;
+}
+
+.prose-rtl table {
+  text-align: right;
+}
+
+.prose-rtl figure {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.prose-rtl figure > * {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.prose-rtl .table-of-contents {
+  padding-right: 0;
+}
+
+.prose-rtl .table-of-contents li {
+  margin-right: 1.5em;
+  margin-left: 0;
+}

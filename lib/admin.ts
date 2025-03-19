@@ -1,4 +1,6 @@
-import { auth, useAuth } from "@clerk/nextjs"
+'use client';
+
+import { auth } from "@clerk/nextjs"
 import db from "@/db/drizzle"
 import { eq } from "drizzle-orm"
 import { admins } from "@/db/schema"
@@ -11,7 +13,7 @@ const adminIds = [
 ];
 
 // Function to ensure default admins exist in the database
-const ensureDefaultAdmins = async () => {
+export const ensureDefaultAdmins = async () => {
   try {
     for (const userId of adminIds) {
       // Check if admin already exists
@@ -25,7 +27,6 @@ const ensureDefaultAdmins = async () => {
           id: randomUUID(),
           userId: userId,
         });
-        console.log(`Added default admin: ${userId}`);
       }
     }
   } catch (error) {
@@ -34,49 +35,30 @@ const ensureDefaultAdmins = async () => {
 };
 
 // Server-side admin check
-export const isAdmin = async () => {
+export const checkIsAdmin = async (userId: string | null) => {
+  if (!userId) return false;
+
   try {
-    const { userId } = auth();
-
-    if (!userId) {
-      return false;
-    }
-
     // Ensure default admins exist before checking
     await ensureDefaultAdmins();
 
-    try {
-      const adminRecord = await db.query.admins.findFirst({
-        where: eq(admins.userId, userId),
-      });
+    const adminRecord = await db.query.admins.findFirst({
+      where: eq(admins.userId, userId),
+    });
 
-      if (adminRecord) {
-        return true;
-      }
-
-      return adminIds.includes(userId);
-    } catch (dbError) {
-      console.error("Database error checking admin status:", dbError);
-      return adminIds.includes(userId);
-    }
+    return adminRecord ? true : adminIds.includes(userId);
   } catch (error) {
     console.error("Error checking admin status:", error);
-    return false;
+    return adminIds.includes(userId || '');
   }
 };
 
 // Client-side admin check hook
 export const useIsAdmin = () => {
-  const { userId } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkAdmin = async () => {
-      if (!userId) {
-        setIsAdmin(false);
-        return;
-      }
-
       try {
         const response = await fetch('/api/admin/check');
         const data = await response.json();
@@ -88,7 +70,13 @@ export const useIsAdmin = () => {
     };
 
     checkAdmin();
-  }, [userId]);
+  }, []);
 
   return isAdmin;
+};
+
+// Server-side admin check wrapper
+export const isAdmin = async () => {
+  const { userId } = auth();
+  return checkIsAdmin(userId);
 };

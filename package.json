@@ -17,7 +17,7 @@
     "list-admins": "tsx ./scripts/list-admins.ts",
     "generate-icons": "node ./scripts/generate-icons.js",
     "build:android": "node ./scripts/build-android.js",
-    "postinstall": "prisma generate"
+    "vercel-build": "next build"
   },
   "dependencies": {
     "@bubblewrap/cli": "^1.22.3",

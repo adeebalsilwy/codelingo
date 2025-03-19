@@ -6,9 +6,8 @@ import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
 
-// Modern initialization without explicitly passing the API key
-// It will use the OPENAI_API_KEY environment variable by default
-const openai = new OpenAI();
+// Initialize OpenAI only if API key is available
+const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
 interface Message {
   role: 'user' | 'assistant' | 'system' | 'function' | 'tool' | 'developer';
@@ -24,7 +23,7 @@ interface ChatRequest {
 const providers = {
   'gpt-4o': {
     execute: async (messages: any[]) => {
-      if (!process.env.OPENAI_API_KEY) {
+      if (!openai) {
         throw new Error('OpenAI API key not configured');
       }
 
@@ -52,7 +51,7 @@ const providers = {
   },
   'gpt-4': {
     execute: async (messages: any[]) => {
-      if (!process.env.OPENAI_API_KEY) {
+      if (!openai) {
         throw new Error('OpenAI API key not configured');
       }
 
@@ -80,7 +79,7 @@ const providers = {
   },
   'gpt-3.5': {
     execute: async (messages: any[]) => {
-      if (!process.env.OPENAI_API_KEY) {
+      if (!openai) {
         throw new Error('OpenAI API key not configured');
       }
 
@@ -248,18 +247,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create a typed system message
+    // Check if OpenAI is required but not configured
+    if (['gpt-4o', 'gpt-4', 'gpt-3.5'].includes(model) && !OPENAI_API_KEY) {
+      return new NextResponse(
+        JSON.stringify({ error: 'OpenAI API key not configured. Please try a different model.' }),
+        { status: 503 }
+      );
+    }
+
     const systemMessage: Message = { 
       role: 'system', 
       content: 'You are a helpful educational assistant for Edu PRO, an educational platform focused on programming and coding. Provide clear, concise, and accurate responses. Your goal is to help users learn programming concepts and solve coding problems effectively.' 
     };
 
-    // Add the system message to the beginning of the array
     const messagesWithSystem = [systemMessage, ...messages];
-
     const provider = providers[model as keyof typeof providers];
-    
-    // Execute without explicit type casting
     const content = await provider.execute(messagesWithSystem);
 
     if (!content) {

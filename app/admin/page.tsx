@@ -1,18 +1,15 @@
-import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs";
+import { checkIsAdmin } from "@/lib/admin-server";
+import { AdminDashboard } from "./dashboard";
 
-import { isAdmin } from "@/lib/admin";
+export default async function AdminPage() {
+  const { userId } = auth();
+  const isAdminUser = await checkIsAdmin(userId);
 
-const App = dynamic(() => import("./app"), { ssr: false });
-
-const AdminPage = () => {
-  if (!isAdmin()) {
+  if (!isAdminUser) {
     redirect("/");
   }
 
-  return ( 
-    <App />
-  );
-};
- 
-export default AdminPage;
+  return <AdminDashboard />;
+}

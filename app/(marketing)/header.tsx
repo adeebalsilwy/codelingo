@@ -16,20 +16,12 @@ import Link from "next/link";
 import { useI18n } from "@/app/i18n/client";
 import { LanguageSwitcher } from "@/app/components/LanguageSwitcher";
 import { cn } from "@/lib/utils";
-import { isAdmin } from "@/lib/admin";
+import { useIsAdmin } from "@/lib/admin-client";
 
 export const Header = () => {
   const { dir, language } = useI18n();
   const isRtl = dir === "rtl";
-  const [isAdminUser, setIsAdminUser] = useState(false);
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      const adminStatus = await isAdmin();
-      setIsAdminUser(adminStatus);
-    };
-    checkAdminStatus();
-  }, []);
+  const isAdminUser = useIsAdmin();
 
   return (
     <header className="h-20 w-full border-b-2 border-slate-200 px-4">

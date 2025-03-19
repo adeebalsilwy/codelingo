@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql, and, or, like, desc, asc } from "drizzle-orm";
 import db from "@/db/drizzle";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin } from "@/lib/admin-server";
 import { courses } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs";

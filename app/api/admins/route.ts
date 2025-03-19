@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
 import db from "@/db/drizzle";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin } from "@/lib/admin-server";
 import { admins } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";

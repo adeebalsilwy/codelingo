@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import db from "@/db/drizzle";
 import { lessons } from "@/db/schema";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin } from "@/lib/admin-server";
 
 export const GET = async (
   req: Request,

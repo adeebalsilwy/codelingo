@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { chapters } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, asc, desc } from "drizzle-orm";
 import db from "@/db/drizzle";
 
 export async function GET(
@@ -21,17 +21,15 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const start = parseInt(searchParams.get("_start") || "0");
     const end = parseInt(searchParams.get("_end") || "10");
-    const sort = searchParams.get("_sort") || "id";
     const order = searchParams.get("_order") || "ASC";
 
     const chaptersList = await db.query.chapters.findMany({
       with: {
-        contents: true,
         unit: true
       },
       offset: start,
       limit: end - start,
-      orderBy: (cols) => order === "ASC" ? [cols[sort].asc()] : [cols[sort].desc()]
+      orderBy: order === "ASC" ? [asc(chapters.id)] : [desc(chapters.id)]
     });
 
     const totalCount = await db.select({ count: sql<number>`count(*)` })
@@ -40,11 +38,7 @@ export async function GET(
 
     const formattedChapters = chaptersList.map(chapter => ({
       ...chapter,
-      unitId: chapter.unit?.id,
-      contents: chapter.contents.map(content => ({
-        id: content.id,
-        contentType: content.contentType
-      }))
+      unitId: chapter.unit?.id
     }));
 
     return NextResponse.json(formattedChapters, {

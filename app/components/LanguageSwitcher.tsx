@@ -24,18 +24,20 @@ export const LanguageSwitcher = ({ variant = "ghost" }: Props) => {
     { code: "ar", name: "العربية", flag: "🇸🇦" },
   ];
 
+  const currentLanguage = languages.find(lang => lang.code === language);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button 
-          size="icon" 
+          size="sm"
           className={cn(
-            "rounded-full bg-white/20",
-            variant === "ghost" && "hover:bg-white/30 text-white"
+            "rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center gap-2 px-3",
+            variant === "ghost" && "hover:bg-white/30"
           )}
         >
-          <Globe className="h-5 w-5" />
-          <span className="sr-only">{t("app.language")}</span>
+          <Globe className="h-4 w-4" />
+          <span className="hidden sm:inline">{currentLanguage?.name}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 

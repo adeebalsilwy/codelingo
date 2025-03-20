@@ -1,5 +1,6 @@
 import { eq, asc } from "drizzle-orm";
 import { auth } from "@clerk/nextjs";
+import { cache } from "react";
 
 import db from "@/db/drizzle";
 import { 
@@ -12,7 +13,7 @@ import {
   userSubscription
 } from "@/db/schema";
 
-export const getUserProgress = async () => {
+export const getUserProgress = cache(async () => {
   const { userId } = await auth();
 
   if (!userId) {
@@ -27,9 +28,9 @@ export const getUserProgress = async () => {
   });
 
   return data;
-};
+});
 
-export const getUnits = async () => {
+export const getUnits = cache(async () => {
   const { userId } = await auth();
   const userProgress = await getUserProgress();
 
@@ -78,9 +79,9 @@ export const getUnits = async () => {
   });
 
   return normalizedData;
-};
+});
 
-export const getChapters = async (unitId: number) => {
+export const getChapters = cache(async (unitId: number) => {
   const { userId } = await auth();
   const userProgress = await getUserProgress();
 
@@ -132,14 +133,14 @@ export const getChapters = async (unitId: number) => {
   });
 
   return normalizedData;
-};
+});
 
-export const getCourses = async () => {
+export const getCourses = cache(async () => {
   const data = await db.query.courses.findMany();
   return data;
-};
+});
 
-export const getCourseById = async (courseId: number) => {
+export const getCourseById = cache(async (courseId: number) => {
   const data = await db.query.courses.findFirst({
     where: eq(courses.id, courseId),
     with: {
@@ -155,9 +156,9 @@ export const getCourseById = async (courseId: number) => {
   });
 
   return data;
-};
+});
 
-export const getCourseProgress = async () => {
+export const getCourseProgress = cache(async () => {
   const { userId } = await auth();
   const userProgress = await getUserProgress();
 
@@ -165,10 +166,9 @@ export const getCourseProgress = async () => {
     return null;
   }
 
-  // Get the first unit of the active course
-  const firstUnit = await db.query.units.findFirst({
-    where: eq(units.courseId, userProgress.activeCourseId),
+  const unitsInActiveCourse = await db.query.units.findMany({
     orderBy: (units, { asc }) => [asc(units.order)],
+    where: eq(units.courseId, userProgress.activeCourseId),
     with: {
       lessons: {
         orderBy: (lessons, { asc }) => [asc(lessons.order)],
@@ -186,26 +186,23 @@ export const getCourseProgress = async () => {
     },
   });
 
-  if (!firstUnit || !firstUnit.lessons.length) {
-    return null;
-  }
-
-  // Find first uncompleted lesson or return the first lesson
-  const firstUncompletedLesson = firstUnit.lessons.find((lesson) => {
-    return lesson.challenges.some((challenge) => {
-      return !challenge.challengeProgress 
-        || challenge.challengeProgress.length === 0 
-        || challenge.challengeProgress.some((progress) => progress.completed === false)
+  const firstUncompletedLesson = unitsInActiveCourse
+    .flatMap((unit) => unit.lessons)
+    .find((lesson) => {
+      return lesson.challenges.some((challenge) => {
+        return !challenge.challengeProgress 
+          || challenge.challengeProgress.length === 0 
+          || challenge.challengeProgress.some((progress) => progress.completed === false)
+      });
     });
-  }) || firstUnit.lessons[0]; // Fallback to first lesson if all are completed
 
   return {
     activeLesson: firstUncompletedLesson,
     activeLessonId: firstUncompletedLesson?.id,
   };
-};
+});
 
-export const getLesson = async (id?: number) => {
+export const getLesson = cache(async (id?: number) => {
   const { userId } = await auth();
 
   if (!userId) {
@@ -248,9 +245,9 @@ export const getLesson = async (id?: number) => {
   });
 
   return { ...data, challenges: normalizedChallenges }
-};
+});
 
-export const getLessonPercentage = async () => {
+export const getLessonPercentage = cache(async () => {
   const courseProgress = await getCourseProgress();
 
   if (!courseProgress?.activeLessonId) {
@@ -270,10 +267,10 @@ export const getLessonPercentage = async () => {
   );
 
   return percentage;
-};
+});
 
 const DAY_IN_MS = 86_400_000;
-export const getUserSubscription = async () => {
+export const getUserSubscription = cache(async () => {
   const { userId } = await auth();
 
   if (!userId) return null;
@@ -292,9 +289,9 @@ export const getUserSubscription = async () => {
     ...data,
     isActive: !!isActive,
   };
-};
+});
 
-export const getTopTenUsers = async () => {
+export const getTopTenUsers = cache(async () => {
   const { userId } = await auth();
 
   if (!userId) {
@@ -313,4 +310,4 @@ export const getTopTenUsers = async () => {
   });
 
   return data;
-};
+});

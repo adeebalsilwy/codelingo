@@ -30,8 +30,8 @@ export const LanguageSwitcher = ({ variant = "ghost" }: Props) => {
         <Button 
           size="icon" 
           className={cn(
-            "rounded-full",
-            variant === "ghost" && "hover:bg-white/10 text-white"
+            "rounded-full bg-white/20",
+            variant === "ghost" && "hover:bg-white/30 text-white"
           )}
         >
           <Globe className="h-5 w-5" />

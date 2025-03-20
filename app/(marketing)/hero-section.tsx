@@ -7,7 +7,7 @@ import { useI18n } from "@/app/i18n/client";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { isAdmin } from "@/lib/admin";
+import { useIsAdmin } from "@/lib/admin-client";
 
 interface HeroSectionProps {
   courses: any[];
@@ -15,15 +15,7 @@ interface HeroSectionProps {
 
 export default function HeroSection({ courses }: HeroSectionProps) {
   const { language } = useI18n();
-  const [isAdminUser, setIsAdminUser] = useState(false);
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      const adminStatus = await isAdmin();
-      setIsAdminUser(adminStatus);
-    };
-    checkAdminStatus();
-  }, []);
+  const isAdminUser = useIsAdmin();
 
   return (
     <>

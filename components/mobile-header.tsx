@@ -8,7 +8,7 @@ export const MobileHeader = () => {
   const isRtl = dir === "rtl";
 
   return (
-    <nav className="lg:hidden px-6 h-[50px] flex items-center justify-between bg-green-500 border-b fixed top-0 w-full z-50">
+    <nav className="lg:hidden px-6 h-[50px] flex items-center justify-between bg-blue-500 border-b fixed top-0 w-full z-50">
       <div className={cn(
         "flex items-center",
         isRtl ? "order-last" : ""

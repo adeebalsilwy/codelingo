@@ -5,6 +5,7 @@ import { isAdmin } from "@/lib/admin-server";
 import { courses } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs";
+import { getCourses as getCoursesQuery } from "@/db/queries";
 
 // Add OPTIONS method for CORS
 export async function OPTIONS() {
@@ -193,3 +194,19 @@ export const POST = async (req: Request) => {
     );
   }
 };
+
+export async function getCourses() {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const courses = await getCoursesQuery();
+    return NextResponse.json(courses);
+  } catch (error) {
+    console.error("[COURSES]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}

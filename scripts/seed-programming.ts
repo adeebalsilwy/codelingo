@@ -40,20 +40,20 @@ async function main() {
     // C++ Course Units
     const cppUnits = await db.insert(units).values([
       {
-        title: "مقدمة في ++C",
-        description: "تعلم أساسيات لغة البرمجة ++C وتاريخها ومميزاتها وأهميتها",
+        title: "أساسيات ++C",
+        description: "تعلم المفاهيم الأساسية في لغة ++C",
         courseId: cppCourse.id,
         order: 1
       },
       {
-        title: "البرمجة الشيئية في ++C",
-        description: "تعلم مفاهيم البرمجة الشيئية وتطبيقاتها في ++C",
+        title: "البرمجة الشيئية",
+        description: "تعلم مفاهيم البرمجة كائنية التوجه في ++C",
         courseId: cppCourse.id,
         order: 2
       },
       {
-        title: "الهياكل البيانية في ++C",
-        description: "تعلم هياكل البيانات وتطبيقاتها في ++C",
+        title: "هياكل البيانات",
+        description: "تعلم هياكل البيانات الأساسية في ++C",
         courseId: cppCourse.id,
         order: 3
       }
@@ -61,40 +61,19 @@ async function main() {
 
     // C++ Chapters with real content
     const cppChapters = await db.insert(chapters).values([
-      {
-        title: "مقدمة وتثبيت البيئة",
-        description: "تعرف على لغة ++C وقم بتثبيت بيئة التطوير المتكاملة",
-        content: `
-# مقدمة في لغة ++C
-
-لغة ++C هي لغة برمجة قوية وواسعة الانتشار تم تطويرها كامتداد للغة C. تتميز بالخصائص التالية:
-- دعم البرمجة الشيئية
-- أداء عالي وتحكم مباشر بالذاكرة
-- مكتبات قياسية غنية
-- استخدام واسع في تطوير الأنظمة والألعاب
-
-## تثبيت بيئة التطوير
-1. تحميل Code::Blocks من الموقع الرسمي
-2. اختيار النسخة المناسبة لنظام التشغيل
-3. تثبيت البرنامج واختيار المكونات الأساسية
-4. التحقق من نجاح التثبيت عبر إنشاء مشروع جديد
-        `,
-        video_youtube: "https://www.youtube.com/watch?v=ZzaPdXTrSb8",
-        unitId: cppUnits[0].id,
-        order: 1
-      },
+      // الوحدة الأولى: أساسيات ++C
       {
         title: "المتغيرات وأنواع البيانات",
-        description: "تعلم المتغيرات وأنواع البيانات في ++C",
+        description: "تعلم المتغيرات وأنواع البيانات الأساسية",
         content: `
 # المتغيرات وأنواع البيانات في ++C
 
 ## أنواع البيانات الأساسية
-- int: للأعداد الصحيحة
-- float: للأعداد العشرية
-- double: للأعداد العشرية بدقة مضاعفة
-- char: للمحارف
-- bool: للقيم المنطقية
+- \`int\`: للأعداد الصحيحة
+- \`float\`: للأعداد العشرية
+- \`double\`: للأعداد العشرية بدقة مضاعفة
+- \`char\`: للمحارف
+- \`bool\`: للقيم المنطقية
 
 ## تعريف المتغيرات
 \`\`\`cpp
@@ -103,49 +82,30 @@ float height = 1.75;
 char grade = 'A';
 bool isStudent = true;
 \`\`\`
-
-## نطاق المتغيرات
-- المتغيرات المحلية
-- المتغيرات العامة
-- المتغيرات الثابتة
         `,
         video_youtube: "https://www.youtube.com/watch?v=zB9RI8_wExo",
         unitId: cppUnits[0].id,
-        order: 2
+        order: 1
       },
       {
         title: "العمليات الحسابية والمنطقية",
-        description: "تعلم العمليات الحسابية والمنطقية في ++C",
+        description: "تعلم العمليات الحسابية والمنطقية الأساسية",
         content: `
-# العمليات الحسابية والمنطقية في ++C
+# العمليات في ++C
 
 ## العمليات الحسابية
-- الجمع (+)
-- الطرح (-)
-- الضرب (*)
-- القسمة (/)
-- باقي القسمة (%)
-
-مثال:
 \`\`\`cpp
-int a = 10;
-int b = 3;
-int sum = a + b;     // 13
-int diff = a - b;    // 7
-int prod = a * b;    // 30
-int quot = a / b;    // 3
-int rem = a % b;     // 1
+int a = 10, b = 3;
+int sum = a + b;    // 13
+int diff = a - b;   // 7
+int prod = a * b;   // 30
+int quot = a / b;   // 3
+int rem = a % b;    // 1
 \`\`\`
 
 ## العمليات المنطقية
-- AND (&&)
-- OR (||)
-- NOT (!)
-
-مثال:
 \`\`\`cpp
-bool x = true;
-bool y = false;
+bool x = true, y = false;
 bool result1 = x && y;  // false
 bool result2 = x || y;  // true
 bool result3 = !x;      // false
@@ -153,127 +113,234 @@ bool result3 = !x;      // false
         `,
         video_youtube: "https://www.youtube.com/watch?v=_r5i5ZtUpUM",
         unitId: cppUnits[0].id,
-        order: 3
+        order: 2
+      },
+      // الوحدة الثانية: البرمجة الشيئية
+      {
+        title: "الفئات والكائنات",
+        description: "تعلم أساسيات الفئات والكائنات",
+        content: `
+# الفئات والكائنات في ++C
+
+## تعريف الفئة
+\`\`\`cpp
+class Student {
+private:
+    string name;
+    int age;
+public:
+    Student(string n, int a) {
+        name = n;
+        age = a;
+    }
+    void display() {
+        cout << name << " is " << age << " years old";
+    }
+};
+\`\`\`
+
+## إنشاء الكائنات
+\`\`\`cpp
+Student s1("Ahmed", 20);
+s1.display();
+\`\`\`
+        `,
+        video_youtube: "https://www.youtube.com/watch?v=ABRP_5RYhqU",
+        unitId: cppUnits[1].id,
+        order: 1
+      },
+      // الوحدة الثالثة: هياكل البيانات
+      {
+        title: "المصفوفات",
+        description: "تعلم التعامل مع المصفوفات",
+        content: `
+# المصفوفات في ++C
+
+## تعريف المصفوفة
+\`\`\`cpp
+int numbers[5] = {1, 2, 3, 4, 5};
+int matrix[2][3] = {{1, 2, 3}, {4, 5, 6}};
+\`\`\`
+
+## العمليات على المصفوفات
+\`\`\`cpp
+// الوصول للعناصر
+int first = numbers[0];    // 1
+int value = matrix[1][2];  // 6
+
+// التكرار على المصفوفة
+for(int i = 0; i < 5; i++) {
+    cout << numbers[i] << " ";
+}
+\`\`\`
+        `,
+        video_youtube: "https://www.youtube.com/watch?v=v2jfGMyeClI",
+        unitId: cppUnits[2].id,
+        order: 1
       }
     ]).returning();
 
     // C++ Lessons with key concepts
     const cppLessons = await db.insert(lessons).values([
+      // دروس الوحدة الأولى
       {
-        title: "تثبيت بيئة التطوير Code::Blocks",
+        title: "التعامل مع المتغيرات",
         unitId: cppUnits[0].id,
         chapterId: cppChapters[0].id,
         order: 1
       },
       {
-        title: "كتابة أول برنامج Hello World",
+        title: "تحويل أنواع البيانات",
         unitId: cppUnits[0].id,
         chapterId: cppChapters[0].id,
         order: 2
       },
       {
-        title: "المتغيرات وأنواع البيانات الأساسية",
+        title: "العمليات الحسابية",
         unitId: cppUnits[0].id,
         chapterId: cppChapters[1].id,
         order: 3
+      },
+      {
+        title: "العمليات المنطقية",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[1].id,
+        order: 4
+      },
+      // دروس الوحدة الثانية
+      {
+        title: "إنشاء الفئات",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[2].id,
+        order: 1
+      },
+      {
+        title: "الخصائص والدوال",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[2].id,
+        order: 2
+      },
+      // دروس الوحدة الثالثة
+      {
+        title: "المصفوفات أحادية البعد",
+        unitId: cppUnits[2].id,
+        chapterId: cppChapters[3].id,
+        order: 1
+      },
+      {
+        title: "المصفوفات متعددة الأبعاد",
+        unitId: cppUnits[2].id,
+        chapterId: cppChapters[3].id,
+        order: 2
       }
     ]).returning();
 
     // C++ Challenges with real programming questions
     const cppChallenges = await db.insert(challenges).values([
+      // تحديات درس التعامل مع المتغيرات
       {
         lessonId: cppLessons[0].id,
         type: "SELECT",
-        question: "ما هو الامتداد الصحيح لملفات ++C؟",
+        question: "ما هو نوع البيانات المناسب لتخزين عمر شخص؟",
+        order: 1
+      },
+      {
+        lessonId: cppLessons[0].id,
+        type: "SELECT",
+        question: "كيف يتم تعريف متغير من نوع float في ++C؟",
+        order: 2
+      },
+      // تحديات درس تحويل أنواع البيانات
+      {
+        lessonId: cppLessons[1].id,
+        type: "SELECT",
+        question: "ما هي نتيجة تحويل الرقم 5.7 إلى int؟",
         order: 1
       },
       {
         lessonId: cppLessons[1].id,
         type: "SELECT",
-        question: "ما هي المكتبة الأساسية المستخدمة لعمليات الإدخال والإخراج في ++C؟",
+        question: "أي من التحويلات التالية يمكن أن يؤدي إلى فقدان البيانات؟",
+        order: 2
+      },
+      // تحديات درس العمليات الحسابية
+      {
+        lessonId: cppLessons[2].id,
+        type: "SELECT",
+        question: "ما هي نتيجة العملية: 15 % 4؟",
         order: 1
       },
       {
         lessonId: cppLessons[2].id,
         type: "SELECT",
-        question: "أي من أنواع البيانات التالية يستخدم لتخزين الأعداد الصحيحة في ++C؟",
-        order: 1
-      },
-      {
-        lessonId: cppLessons[2].id,
-        type: "SELECT",
-        question: "ما هي نتيجة العملية الحسابية: 17 % 5؟",
-        order: 1
-      },
-      {
-        lessonId: cppLessons[2].id,
-        type: "SELECT",
-        question: "ما هي نتيجة العملية المنطقية: true && false؟",
+        question: "ما هي نتيجة العملية: 7 / 2 في حالة المتغيرات من نوع int؟",
         order: 2
       }
     ]).returning();
 
     // C++ Challenge Options with correct answers
     await db.insert(challengeOptions).values([
-      // Options for first challenge
+      // خيارات تحدي نوع البيانات المناسب للعمر
       {
         challengeId: cppChallenges[0].id,
-        text: ".cpp",
-        correct: true,
-        imageSrc: null,
-        audioSrc: null
-      },
-      {
-        challengeId: cppChallenges[0].id,
-        text: ".c",
-        correct: false,
-        imageSrc: null,
-        audioSrc: null
-      },
-      // Options for second challenge
-      {
-        challengeId: cppChallenges[1].id,
-        text: "iostream",
-        correct: true,
-        imageSrc: null,
-        audioSrc: null
-      },
-      {
-        challengeId: cppChallenges[1].id,
-        text: "stdio.h",
-        correct: false,
-        imageSrc: null,
-        audioSrc: null
-      },
-      // Options for third challenge
-      {
-        challengeId: cppChallenges[2].id,
         text: "int",
         correct: true,
         imageSrc: null,
         audioSrc: null
       },
       {
-        challengeId: cppChallenges[2].id,
+        challengeId: cppChallenges[0].id,
         text: "float",
         correct: false,
         imageSrc: null,
         audioSrc: null
       },
+      // خيارات تحدي تعريف float
+      {
+        challengeId: cppChallenges[1].id,
+        text: "float x = 3.14;",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[1].id,
+        text: "int x = 3.14;",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      // خيارات تحدي تحويل 5.7 إلى int
+      {
+        challengeId: cppChallenges[2].id,
+        text: "5",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[2].id,
+        text: "6",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      // خيارات تحدي فقدان البيانات
       {
         challengeId: cppChallenges[3].id,
-        text: "2",
+        text: "double إلى int",
         correct: true,
         imageSrc: null,
         audioSrc: null
       },
       {
         challengeId: cppChallenges[3].id,
-        text: "3",
+        text: "int إلى double",
         correct: false,
         imageSrc: null,
         audioSrc: null
       },
+      // خيارات تحدي باقي القسمة
       {
         challengeId: cppChallenges[4].id,
         text: "false",

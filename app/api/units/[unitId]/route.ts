@@ -14,7 +14,7 @@ export async function GET(
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
-    }
+  }
 
     const unit = await db.query.units.findFirst({
       where: eq(units.id, parseInt(params.unitId)),
@@ -23,7 +23,7 @@ export async function GET(
           orderBy: (lessons, { asc }) => [asc(lessons.order)]
         }
       }
-    });
+  });
 
     return NextResponse.json(unit);
   } catch (error) {

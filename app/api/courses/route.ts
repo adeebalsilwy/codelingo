@@ -5,7 +5,8 @@ import { isAdmin } from "@/lib/admin-server";
 import { courses } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs";
-import { getCourses as getCoursesQuery } from "@/db/queries";
+
+export const runtime = 'nodejs';
 
 // Add OPTIONS method for CORS
 export async function OPTIONS() {
@@ -20,7 +21,7 @@ export async function OPTIONS() {
   });
 }
 
-export const GET = async (req: Request) => {
+export async function GET(req: Request) {
   try {
     const { userId } = auth();
 
@@ -37,9 +38,9 @@ export const GET = async (req: Request) => {
     console.error("[COURSES]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
-};
+}
 
-export const POST = async (req: Request) => {
+export async function POST(req: Request) {
   try {
     const { userId } = auth();
     if (!userId) {
@@ -59,22 +60,6 @@ export const POST = async (req: Request) => {
     return NextResponse.json(data[0]);
   } catch (error) {
     console.error("Error creating course:", error);
-    return new NextResponse("Internal Error", { status: 500 });
-  }
-};
-
-export async function getCourses() {
-  try {
-    const { userId } = auth();
-
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const courses = await getCoursesQuery();
-    return NextResponse.json(courses);
-  } catch (error) {
-    console.error("[COURSES]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

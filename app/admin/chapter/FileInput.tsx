@@ -109,8 +109,11 @@ const FileInput = (props: any) => {
   }, [field, props]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    props.onChange(acceptedFiles);
-  }, [field, props]);
+    const { onChange } = props;
+    if (onChange) {
+      onChange(acceptedFiles);
+    }
+  }, [props.onChange]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -131,7 +134,7 @@ const FileInput = (props: any) => {
         });
       }
     };
-  }, [props.value, field]);
+  }, [props.value]);
 
   return (
     <div style={{ marginTop: '1rem' }}>

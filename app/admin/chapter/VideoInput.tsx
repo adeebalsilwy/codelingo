@@ -35,6 +35,7 @@ const VideoInput = (props: any) => {
 
   const handleFileSelect = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { onFileSelect } = props;
       const file = event.target.files?.[0];
       if (!file) {
         setTempFile(null);
@@ -72,11 +73,11 @@ const VideoInput = (props: any) => {
       
       notify('Video file selected. Click Save to upload.', { type: 'info' });
       
-      if (props.onFileSelect) {
-        props.onFileSelect(file);
+      if (onFileSelect) {
+        onFileSelect(file);
       }
     },
-    [notify, props.onFileSelect, tempPreview]
+    [notify, tempPreview, field]
   );
 
   // Cleanup preview URL when component unmounts

@@ -14,7 +14,7 @@ export async function GET(
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
-    }
+  }
 
     const course = await db.query.courses.findFirst({
       where: eq(courses.id, parseInt(params.courseId)),
@@ -23,7 +23,7 @@ export async function GET(
           orderBy: (units, { asc }) => [asc(units.order)]
         }
       }
-    });
+  });
 
     return NextResponse.json(course);
   } catch (error) {

@@ -1,6 +1,7 @@
 import { Create, TextInput, ReferenceInput, NumberInput, required, SelectInput, SimpleForm } from "react-admin";
 import { FC, useState } from "react";
 import { MyRichTextInput } from "./myreach";
+import Image from 'next/image';
 
 interface ChapterFormData {
   title: string;
@@ -43,8 +44,13 @@ const YouTubeInput: FC<{ source: string }> = ({ source }) => {
         />
       </div>
       {preview && (
-        <div className="preview-container" style={{ marginTop: '15px', maxWidth: '400px' }}>
-          <img src={preview} alt="YouTube thumbnail" style={{ width: '100%', borderRadius: '8px' }} />
+        <div className="preview-container relative" style={{ marginTop: '15px', maxWidth: '400px', aspectRatio: '16/9' }}>
+          <Image 
+            src={preview} 
+            alt="YouTube thumbnail" 
+            fill
+            className="rounded-lg object-cover"
+          />
         </div>
       )}
     </div>

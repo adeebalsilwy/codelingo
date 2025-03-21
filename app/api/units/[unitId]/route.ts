@@ -1,24 +1,36 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-
+import { auth } from "@clerk/nextjs";
+import { isAdmin } from "@/lib/admin-server";
 import db from "@/db/drizzle";
 import { units } from "@/db/schema";
-import { isAdmin } from "@/lib/admin";
 
-export const GET = async (
+export async function GET(
   req: Request,
-  { params }: { params: { unitId: number } },
-) => {
-  if (!isAdmin()) {
-    return new NextResponse("Unauthorized", { status: 403 });
+  { params }: { params: { unitId: string } }
+) {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const unit = await db.query.units.findFirst({
+      where: eq(units.id, parseInt(params.unitId)),
+      with: {
+        lessons: {
+          orderBy: (lessons, { asc }) => [asc(lessons.order)]
+        }
+      }
+    });
+
+    return NextResponse.json(unit);
+  } catch (error) {
+    console.error("[UNIT_ID]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
-
-  const data = await db.query.units.findFirst({
-    where: eq(units.id, params.unitId),
-  });
-
-  return NextResponse.json(data);
-};
+}
 
 export const PUT = async (
   req: Request,

@@ -10,6 +10,7 @@ import { PWAInstallPrompt } from "@/app/components/PWAInstallPrompt";
 import { I18nProvider } from "./i18n/client";
 import "./globals.css";
 import Script from "next/script";
+import { Providers } from "@/app/providers";
 
 const font = Nunito({ 
   subsets: ["latin", "cyrillic"],
@@ -102,7 +103,9 @@ export default function RootLayout({
             <PracticeModal />
             <NotificationPrompt />
             <PWAInstallPrompt />
-            {children}
+            <Providers>
+              {children}
+            </Providers>
             <Script
               id="register-service-worker"
               strategy="afterInteractive"

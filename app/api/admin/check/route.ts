@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
-import { checkIsAdmin } from "@/lib/admin";
+import { checkIsAdmin } from "@/lib/admin-server";
 
 export async function GET() {
   try {
     const { userId } = auth();
-    const adminStatus = await checkIsAdmin(userId);
-    return NextResponse.json({ isAdmin: adminStatus });
+    const isAdmin = await checkIsAdmin(userId);
+    return NextResponse.json({ isAdmin });
   } catch (error) {
-    console.error("Error checking admin status:", error);
+    console.error("Error in admin check route:", error);
     return NextResponse.json({ isAdmin: false });
   }
 } 

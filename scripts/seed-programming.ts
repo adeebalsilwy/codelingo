@@ -1,12 +1,15 @@
 import "dotenv/config";
 import db from "../db/drizzle";
-import { courses, units, chapters, lessons, challenges, challengeOptions } from "../db/schema";
+import { courses, units, chapters, lessons, challenges, challengeOptions, challengeProgress, userProgress } from "../db/schema";
+import { randomUUID } from "crypto";
 
 async function main() {
   try {
     // Delete all existing data in reverse order of dependencies
     console.log("Deleting existing data...");
     await db.delete(challengeOptions);
+    await db.delete(userProgress);
+    await db.delete(challengeProgress);
     await db.delete(challenges);
     await db.delete(lessons);
     await db.delete(chapters);
@@ -56,12 +59,26 @@ async function main() {
       }
     ]).returning();
 
-    // C++ Chapters
+    // C++ Chapters with real content
     const cppChapters = await db.insert(chapters).values([
       {
         title: "مقدمة وتثبيت البيئة",
         description: "تعرف على لغة ++C وقم بتثبيت بيئة التطوير المتكاملة",
-        content: "سنتعرف في هذا الدرس على لغة ++C وكيفية تثبيت بيئة التطوير...",
+        content: `
+# مقدمة في لغة ++C
+
+لغة ++C هي لغة برمجة قوية وواسعة الانتشار تم تطويرها كامتداد للغة C. تتميز بالخصائص التالية:
+- دعم البرمجة الشيئية
+- أداء عالي وتحكم مباشر بالذاكرة
+- مكتبات قياسية غنية
+- استخدام واسع في تطوير الأنظمة والألعاب
+
+## تثبيت بيئة التطوير
+1. تحميل Code::Blocks من الموقع الرسمي
+2. اختيار النسخة المناسبة لنظام التشغيل
+3. تثبيت البرنامج واختيار المكونات الأساسية
+4. التحقق من نجاح التثبيت عبر إنشاء مشروع جديد
+        `,
         video_youtube: "https://www.youtube.com/watch?v=ZzaPdXTrSb8",
         unitId: cppUnits[0].id,
         order: 1
@@ -69,7 +86,29 @@ async function main() {
       {
         title: "المتغيرات وأنواع البيانات",
         description: "تعلم المتغيرات وأنواع البيانات في ++C",
-        content: "سنتعرف على المتغيرات وأنواع البيانات المختلفة في ++C...",
+        content: `
+# المتغيرات وأنواع البيانات في ++C
+
+## أنواع البيانات الأساسية
+- int: للأعداد الصحيحة
+- float: للأعداد العشرية
+- double: للأعداد العشرية بدقة مضاعفة
+- char: للمحارف
+- bool: للقيم المنطقية
+
+## تعريف المتغيرات
+\`\`\`cpp
+int age = 25;
+float height = 1.75;
+char grade = 'A';
+bool isStudent = true;
+\`\`\`
+
+## نطاق المتغيرات
+- المتغيرات المحلية
+- المتغيرات العامة
+- المتغيرات الثابتة
+        `,
         video_youtube: "https://www.youtube.com/watch?v=zB9RI8_wExo",
         unitId: cppUnits[0].id,
         order: 2
@@ -77,32 +116,49 @@ async function main() {
       {
         title: "العمليات الحسابية والمنطقية",
         description: "تعلم العمليات الحسابية والمنطقية في ++C",
-        content: "سنتعرف على العمليات الحسابية والمنطقية وكيفية استخدامها...",
+        content: `
+# العمليات الحسابية والمنطقية في ++C
+
+## العمليات الحسابية
+- الجمع (+)
+- الطرح (-)
+- الضرب (*)
+- القسمة (/)
+- باقي القسمة (%)
+
+مثال:
+\`\`\`cpp
+int a = 10;
+int b = 3;
+int sum = a + b;     // 13
+int diff = a - b;    // 7
+int prod = a * b;    // 30
+int quot = a / b;    // 3
+int rem = a % b;     // 1
+\`\`\`
+
+## العمليات المنطقية
+- AND (&&)
+- OR (||)
+- NOT (!)
+
+مثال:
+\`\`\`cpp
+bool x = true;
+bool y = false;
+bool result1 = x && y;  // false
+bool result2 = x || y;  // true
+bool result3 = !x;      // false
+\`\`\`
+        `,
         video_youtube: "https://www.youtube.com/watch?v=_r5i5ZtUpUM",
         unitId: cppUnits[0].id,
         order: 3
-      },
-      {
-        title: "الدوال والمصفوفات",
-        description: "تعلم كيفية إنشاء واستخدام الدوال والمصفوفات",
-        content: "سنتعرف على كيفية إنشاء الدوال والمصفوفات واستخدامها...",
-        video_youtube: "https://www.youtube.com/watch?v=TqQXS8G93Fs",
-        unitId: cppUnits[1].id,
-        order: 4
-      },
-      {
-        title: "البرمجة الشيئية",
-        description: "مقدمة في البرمجة الشيئية والكائنات",
-        content: "سنتعرف على مفاهيم البرمجة الشيئية والكائنات...",
-        video_youtube: "https://www.youtube.com/watch?v=wN0x9eZLix4",
-        unitId: cppUnits[1].id,
-        order: 5
       }
     ]).returning();
 
-    // C++ Lessons
+    // C++ Lessons with key concepts
     const cppLessons = await db.insert(lessons).values([
-      // Unit 1 Lessons
       {
         title: "تثبيت بيئة التطوير Code::Blocks",
         unitId: cppUnits[0].id,
@@ -120,101 +176,114 @@ async function main() {
         unitId: cppUnits[0].id,
         chapterId: cppChapters[1].id,
         order: 3
-      },
-      {
-        title: "العمليات الحسابية",
-        unitId: cppUnits[0].id,
-        chapterId: cppChapters[2].id,
-        order: 4
-      },
-      {
-        title: "العمليات المنطقية وجمل الشرط",
-        unitId: cppUnits[0].id,
-        chapterId: cppChapters[2].id,
-        order: 5
-      },
-      // Unit 2 Lessons
-      {
-        title: "مقدمة في الدوال",
-        unitId: cppUnits[1].id,
-        chapterId: cppChapters[3].id,
-        order: 6
-      },
-      {
-        title: "المصفوفات أحادية البعد",
-        unitId: cppUnits[1].id,
-        chapterId: cppChapters[3].id,
-        order: 7
-      },
-      {
-        title: "المصفوفات ثنائية البعد",
-        unitId: cppUnits[1].id,
-        chapterId: cppChapters[3].id,
-        order: 8
-      },
-      {
-        title: "مفهوم الكائنات والفئات",
-        unitId: cppUnits[1].id,
-        chapterId: cppChapters[4].id,
-        order: 9
-      },
-      {
-        title: "الخصائص والطرق",
-        unitId: cppUnits[1].id,
-        chapterId: cppChapters[4].id,
-        order: 10
       }
     ]).returning();
 
-    // C++ Challenges
+    // C++ Challenges with real programming questions
     const cppChallenges = await db.insert(challenges).values([
       {
         lessonId: cppLessons[0].id,
         type: "SELECT",
-        question: "ما هو البرنامج المستخدم لتطوير تطبيقات ++C؟",
+        question: "ما هو الامتداد الصحيح لملفات ++C؟",
         order: 1
       },
       {
         lessonId: cppLessons[1].id,
         type: "SELECT",
-        question: "ما هي الدالة الرئيسية في برنامج ++C؟",
+        question: "ما هي المكتبة الأساسية المستخدمة لعمليات الإدخال والإخراج في ++C؟",
         order: 1
+      },
+      {
+        lessonId: cppLessons[2].id,
+        type: "SELECT",
+        question: "أي من أنواع البيانات التالية يستخدم لتخزين الأعداد الصحيحة في ++C؟",
+        order: 1
+      },
+      {
+        lessonId: cppLessons[2].id,
+        type: "SELECT",
+        question: "ما هي نتيجة العملية الحسابية: 17 % 5؟",
+        order: 1
+      },
+      {
+        lessonId: cppLessons[2].id,
+        type: "SELECT",
+        question: "ما هي نتيجة العملية المنطقية: true && false؟",
+        order: 2
       }
     ]).returning();
 
-    // C++ Challenge Options
+    // C++ Challenge Options with correct answers
     await db.insert(challengeOptions).values([
+      // Options for first challenge
       {
         challengeId: cppChallenges[0].id,
-        text: "Code::Blocks",
+        text: ".cpp",
         correct: true,
         imageSrc: null,
         audioSrc: null
       },
       {
         challengeId: cppChallenges[0].id,
-        text: "Visual Studio",
+        text: ".c",
         correct: false,
         imageSrc: null,
         audioSrc: null
       },
-      {
-        challengeId: cppChallenges[0].id,
-        text: "Eclipse",
-        correct: false,
-        imageSrc: null,
-        audioSrc: null
-      },
+      // Options for second challenge
       {
         challengeId: cppChallenges[1].id,
-        text: "main()",
+        text: "iostream",
         correct: true,
         imageSrc: null,
         audioSrc: null
       },
       {
         challengeId: cppChallenges[1].id,
-        text: "start()",
+        text: "stdio.h",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      // Options for third challenge
+      {
+        challengeId: cppChallenges[2].id,
+        text: "int",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[2].id,
+        text: "float",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[3].id,
+        text: "2",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[3].id,
+        text: "3",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[4].id,
+        text: "false",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[4].id,
+        text: "true",
         correct: false,
         imageSrc: null,
         audioSrc: null
@@ -228,18 +297,6 @@ async function main() {
         description: "تعلم أساسيات لغة Python وبناء التطبيقات البسيطة",
         courseId: pythonCourse.id,
         order: 1
-      },
-      {
-        title: "البرمجة المتقدمة في Python",
-        description: "تعلم المفاهيم المتقدمة في Python",
-        courseId: pythonCourse.id,
-        order: 2
-      },
-      {
-        title: "تطوير التطبيقات بـ Python",
-        description: "بناء تطبيقات حقيقية باستخدام Python",
-        courseId: pythonCourse.id,
-        order: 3
       }
     ]).returning();
 
@@ -247,89 +304,50 @@ async function main() {
     const pythonChapters = await db.insert(chapters).values([
       {
         title: "مقدمة في Python",
-        description: "تعرف على لغة Python وميزاتها",
-        content: "Python هي لغة برمجة عالية المستوى...",
-        video_youtube: "https://www.youtube.com/watch?v=rfscVS0vtbw",
+        description: "تعلم أساسيات لغة Python",
+        content: `
+# مقدمة في Python
+
+Python هي لغة برمجة عالية المستوى، سهلة التعلم وقوية. تتميز بما يلي:
+
+## المميزات الرئيسية
+- بناء جملة واضح وبسيط
+- مكتبة قياسية غنية
+- تدعم البرمجة كائنية التوجه
+- ديناميكية الأنواع
+
+## المتغيرات والأنواع الأساسية
+\`\`\`python
+# الأعداد
+x = 5       # integer
+y = 3.14    # float
+
+# النصوص
+name = "Ahmed"
+
+# القوائم
+numbers = [1, 2, 3, 4, 5]
+
+# القواميس
+person = {
+    "name": "Omar",
+    "age": 25
+}
+\`\`\`
+    `,
+        video_youtube: "https://www.youtube.com/watch?v=Y8Tko2YC5hA",
         unitId: pythonUnits[0].id,
         order: 1
-      },
-      {
-        title: "المتغيرات والعمليات",
-        description: "تعلم المتغيرات والعمليات في Python",
-        content: "سنتعرف على المتغيرات وكيفية استخدامها...",
-        video_youtube: "https://www.youtube.com/watch?v=khKv-8q7YmY",
-        unitId: pythonUnits[0].id,
-        order: 2
-      },
-      {
-        title: "هياكل التحكم والدوال",
-        description: "تعلم هياكل التحكم والدوال في Python",
-        content: "سنتعرف على جمل الشرط والحلقات والدوال...",
-        video_youtube: "https://www.youtube.com/watch?v=9Os0o3wzS_I",
-        unitId: pythonUnits[1].id,
-        order: 3
-      },
-      {
-        title: "القوائم والقواميس",
-        description: "تعلم التعامل مع القوائم والقواميس",
-        content: "سنتعرف على هياكل البيانات في Python...",
-        video_youtube: "https://www.youtube.com/watch?v=W8KRzm-HUcc",
-        unitId: pythonUnits[1].id,
-        order: 4
       }
     ]).returning();
 
     // Python Lessons
     const pythonLessons = await db.insert(lessons).values([
-      // Unit 1 Lessons
       {
         title: "تثبيت Python وبيئة التطوير",
         unitId: pythonUnits[0].id,
         chapterId: pythonChapters[0].id,
         order: 1
-      },
-      {
-        title: "أول برنامج بلغة Python",
-        unitId: pythonUnits[0].id,
-        chapterId: pythonChapters[0].id,
-        order: 2
-      },
-      {
-        title: "المتغيرات وأنواع البيانات",
-        unitId: pythonUnits[0].id,
-        chapterId: pythonChapters[1].id,
-        order: 3
-      },
-      {
-        title: "العمليات الحسابية والمنطقية",
-        unitId: pythonUnits[0].id,
-        chapterId: pythonChapters[1].id,
-        order: 4
-      },
-      // Unit 2 Lessons
-      {
-        title: "جمل الشرط if",
-        unitId: pythonUnits[1].id,
-        chapterId: pythonChapters[2].id,
-        order: 5
-      },
-      {
-        title: "الحلقات التكرارية",
-        unitId: pythonUnits[1].id,
-        chapterId: pythonChapters[2].id,
-        order: 6
-      },
-      {
-        title: "الدوال وإعادة القيم",
-        unitId: pythonUnits[1].id,
-        chapterId: pythonChapters[2].id,
-        order: 7
-      },
-      {
-        title: "القوائم وعملياتها",
-        unitId: pythonUnits[1].id,
-        chapterId: pythonChapters[3].id,
-        order: 8
       }
     ]).returning();
 
@@ -338,13 +356,7 @@ async function main() {
       {
         lessonId: pythonLessons[0].id,
         type: "SELECT",
-        question: "ما هو الامتداد الافتراضي لملفات Python؟",
-        order: 1
-      },
-      {
-        lessonId: pythonLessons[1].id,
-        type: "SELECT",
-        question: "ما هي الدالة المستخدمة للطباعة في Python؟",
+        question: "أي من التالي يمثل تعريف قائمة (list) صحيح في Python؟",
         order: 1
       }
     ]).returning();
@@ -353,28 +365,14 @@ async function main() {
     await db.insert(challengeOptions).values([
       {
         challengeId: pythonChallenges[0].id,
-        text: ".py",
+        text: "numbers = [1, 2, 3]",
         correct: true,
         imageSrc: null,
         audioSrc: null
       },
       {
         challengeId: pythonChallenges[0].id,
-        text: ".python",
-        correct: false,
-        imageSrc: null,
-        audioSrc: null
-      },
-      {
-        challengeId: pythonChallenges[1].id,
-        text: "print()",
-        correct: true,
-        imageSrc: null,
-        audioSrc: null
-      },
-      {
-        challengeId: pythonChallenges[1].id,
-        text: "console.log()",
+        text: "numbers = {1, 2, 3}",
         correct: false,
         imageSrc: null,
         audioSrc: null
@@ -388,28 +386,6 @@ async function main() {
         description: "تعلم أساسيات لغة Java وبناء التطبيقات البسيطة",
         courseId: javaCourse.id,
         order: 1
-      },
-      {
-        title: "البرمجة المتقدمة في Java",
-        description: "تعلم المفاهيم المتقدمة في Java",
-        courseId: javaCourse.id,
-        order: 2
-      }
-    ]).returning();
-
-    // JavaScript Course Units
-    const jsUnits = await db.insert(units).values([
-      {
-        title: "أساسيات JavaScript",
-        description: "تعلم أساسيات لغة JavaScript وبرمجة الويب",
-        courseId: jsCourse.id,
-        order: 1
-      },
-      {
-        title: "البرمجة المتقدمة في JavaScript",
-        description: "تعلم المفاهيم المتقدمة في JavaScript",
-        courseId: jsCourse.id,
-        order: 2
       }
     ]).returning();
 
@@ -418,34 +394,154 @@ async function main() {
       {
         title: "مقدمة في Java",
         description: "تعرف على لغة Java وبيئة التطوير",
-        content: "Java هي لغة برمجة قوية وموجهة للكائنات...",
+        content: `
+# مقدمة في لغة Java
+
+Java هي لغة برمجة قوية وشائعة الاستخدام:
+- تدعم البرمجة الشيئية بشكل كامل
+- تعمل على جميع المنصات
+- آمنة وموثوقة
+- مناسبة لتطوير التطبيقات المؤسسية
+
+## تثبيت JDK
+1. تحميل Java Development Kit
+2. تثبيت وإعداد متغيرات البيئة
+3. التحقق من التثبيت
+        `,
         video_youtube: "https://www.youtube.com/watch?v=eIrMbAQSU34",
         unitId: javaUnits[0].id,
         order: 1
       },
       {
-        title: "أساسيات Java",
-        description: "تعلم أساسيات البرمجة بلغة Java",
-        content: "سنتعرف على المتغيرات والعمليات الأساسية...",
-        video_youtube: "https://www.youtube.com/watch?v=RRubcjpTkks",
+        title: "البرمجة كائنية التوجه في Java",
+        description: "تعلم مفاهيم البرمجة كائنية التوجه في Java",
+        content: `
+# البرمجة كائنية التوجه في Java
+
+## الفئات والكائنات
+الفئة (Class) هي القالب الذي يحدد خصائص وسلوكيات الكائن.
+
+\`\`\`java
+public class Car {
+    // الخصائص
+    private String brand;
+    private int year;
+    
+    // Constructor المُنشئ
+    public Car(String brand, int year) {
+        this.brand = brand;
+        this.year = year;
+    }
+    
+    // Getter methods دوال الحصول
+    public String getBrand() {
+        return brand;
+    }
+    
+    public int getYear() {
+        return year;
+    }
+    
+    // Method دالة
+    public void startEngine() {
+        System.out.println("The " + brand + " engine is starting...");
+    }
+}
+
+// إنشاء كائن
+Car myCar = new Car("Toyota", 2023);
+myCar.startEngine();
+\`\`\`
+
+## الوراثة (Inheritance)
+\`\`\`java
+public class ElectricCar extends Car {
+    private int batteryCapacity;
+    
+    public ElectricCar(String brand, int year, int batteryCapacity) {
+        super(brand, year);
+        this.batteryCapacity = batteryCapacity;
+    }
+}
+\`\`\`
+    `,
+        video_youtube: "https://www.youtube.com/watch?v=pTB0EiLXUC8",
         unitId: javaUnits[0].id,
         order: 2
+      }
+    ]).returning();
+
+    // Java Lessons
+    const javaLessons = await db.insert(lessons).values([
+      {
+        title: "تثبيت Java Development Kit",
+        unitId: javaUnits[0].id,
+        chapterId: javaChapters[0].id,
+        order: 1
       },
       {
-        title: "البرمجة الشيئية",
-        description: "تعلم مفاهيم البرمجة الشيئية في Java",
-        content: "سنتعرف على الكائنات والفئات والوراثة...",
-        video_youtube: "https://www.youtube.com/watch?v=pTB0EiLXUC8",
-        unitId: javaUnits[1].id,
-        order: 3
+        title: "البرمجة كائنية التوجه في Java",
+        unitId: javaUnits[0].id,
+        chapterId: javaChapters[1].id,
+        order: 2
+      }
+    ]).returning();
+
+    // Java Challenges
+    const javaChallenges = await db.insert(challenges).values([
+      {
+        lessonId: javaLessons[0].id,
+        type: "SELECT",
+        question: "ما هو الامتداد الصحيح لملفات الجافا المصدرية؟",
+        order: 1
       },
       {
-        title: "معالجة الاستثناءات",
-        description: "تعلم كيفية معالجة الأخطاء والاستثناءات",
-        content: "سنتعرف على كيفية التعامل مع الأخطاء...",
-        video_youtube: "https://www.youtube.com/watch?v=1XAfapkBQjk",
-        unitId: javaUnits[1].id,
-        order: 4
+        lessonId: javaLessons[1].id,
+        type: "SELECT",
+        question: "ما هي الكلمة المفتاحية المستخدمة للوراثة في Java؟",
+        order: 1
+      }
+    ]).returning();
+
+    // Java Challenge Options
+    await db.insert(challengeOptions).values([
+      {
+        challengeId: javaChallenges[0].id,
+        text: ".java",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: javaChallenges[0].id,
+        text: ".class",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: javaChallenges[1].id,
+        text: "extends",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: javaChallenges[1].id,
+        text: "implements",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      }
+    ]);
+
+    // JavaScript Course Units
+    const jsUnits = await db.insert(units).values([
+      {
+        title: "أساسيات JavaScript",
+        description: "تعلم أساسيات لغة JavaScript وبرمجة الويب",
+        courseId: jsCourse.id,
+        order: 1
       }
     ]).returning();
 
@@ -454,124 +550,92 @@ async function main() {
       {
         title: "مقدمة في JavaScript",
         description: "تعرف على لغة JavaScript وأساسياتها",
-        content: "JavaScript هي لغة برمجة الويب الأساسية...",
+        content: `
+# مقدمة في لغة JavaScript
+
+JavaScript هي لغة برمجة أساسية للويب:
+- تعمل في جميع المتصفحات
+- تدعم البرمجة الوظيفية والشيئية
+- غنية بالمكتبات والأطر
+- مناسبة لتطوير واجهات المستخدم
+
+## بيئة التطوير
+1. محرر النصوص (VS Code)
+2. متصفح حديث
+3. أدوات المطور
+        `,
         video_youtube: "https://www.youtube.com/watch?v=PkZNo7MFNFg",
         unitId: jsUnits[0].id,
         order: 1
       },
       {
-        title: "التعامل مع DOM",
-        description: "تعلم كيفية التعامل مع عناصر الصفحة",
-        content: "سنتعرف على كيفية التعامل مع DOM...",
-        video_youtube: "https://www.youtube.com/watch?v=0ik6X4DJKCc",
+        title: "التعامل مع المصفوفات في JavaScript",
+        description: "تعلم طرق التعامل مع المصفوفات وأهم الدوال المتاحة",
+        content: `
+# التعامل مع المصفوفات في JavaScript
+
+## إنشاء المصفوفات
+\`\`\`javascript
+// طرق إنشاء المصفوفات
+const numbers = [1, 2, 3, 4, 5];
+const fruits = new Array('apple', 'banana', 'orange');
+
+// المصفوفات متعددة الأنواع
+const mixed = [1, 'hello', true, { name: 'John' }];
+\`\`\`
+
+## دوال المصفوفات الأساسية
+\`\`\`javascript
+const arr = [1, 2, 3, 4, 5];
+
+// إضافة عناصر
+arr.push(6);         // [1, 2, 3, 4, 5, 6]
+arr.unshift(0);      // [0, 1, 2, 3, 4, 5, 6]
+
+// حذف عناصر
+arr.pop();           // [0, 1, 2, 3, 4, 5]
+arr.shift();         // [1, 2, 3, 4, 5]
+
+// البحث والتصفية
+const found = arr.find(x => x > 3);     // 4
+const filtered = arr.filter(x => x > 3); // [4, 5]
+
+// التحويل
+const doubled = arr.map(x => x * 2);     // [2, 4, 6, 8, 10]
+\`\`\`
+
+## التكرار على المصفوفات
+\`\`\`javascript
+const numbers = [1, 2, 3];
+
+// for...of loop
+for (const num of numbers) {
+    console.log(num);
+}
+
+// forEach method
+numbers.forEach(num => console.log(num));
+\`\`\`
+    `,
+        video_youtube: "https://www.youtube.com/watch?v=rRgD1yVwIvE",
         unitId: jsUnits[0].id,
         order: 2
-      },
-      {
-        title: "الأحداث والنماذج",
-        description: "تعلم التعامل مع الأحداث والنماذج",
-        content: "سنتعرف على كيفية التعامل مع أحداث المستخدم...",
-        video_youtube: "https://www.youtube.com/watch?v=e57ReoUn6kM",
-        unitId: jsUnits[1].id,
-        order: 3
-      },
-      {
-        title: "AJAX والوعود",
-        description: "تعلم التعامل مع الطلبات غير المتزامنة",
-        content: "سنتعرف على AJAX والوعود في JavaScript...",
-        video_youtube: "https://www.youtube.com/watch?v=DHvZLI7Db8E",
-        unitId: jsUnits[1].id,
-        order: 4
-      }
-    ]).returning();
-
-    // Java Lessons
-    const javaLessons = await db.insert(lessons).values([
-      // Unit 1 Lessons
-      {
-        title: "تثبيت Java JDK",
-        unitId: javaUnits[0].id,
-        chapterId: javaChapters[0].id,
-        order: 1
-      },
-      {
-        title: "إعداد بيئة التطوير",
-        unitId: javaUnits[0].id,
-        chapterId: javaChapters[0].id,
-        order: 2
-      },
-      {
-        title: "المتغيرات وأنواع البيانات",
-        unitId: javaUnits[0].id,
-        chapterId: javaChapters[1].id,
-        order: 3
-      },
-      {
-        title: "العمليات والمصفوفات",
-        unitId: javaUnits[0].id,
-        chapterId: javaChapters[1].id,
-        order: 4
-      },
-      // Unit 2 Lessons
-      {
-        title: "مفهوم الكائنات والفئات",
-        unitId: javaUnits[1].id,
-        chapterId: javaChapters[2].id,
-        order: 5
-      },
-      {
-        title: "الوراثة وتعدد الأشكال",
-        unitId: javaUnits[1].id,
-        chapterId: javaChapters[2].id,
-        order: 6
       }
     ]).returning();
 
     // JavaScript Lessons
     const jsLessons = await db.insert(lessons).values([
-      // Unit 1 Lessons
       {
-        title: "مقدمة وإعداد بيئة العمل",
+        title: "مقدمة في JavaScript",
         unitId: jsUnits[0].id,
         chapterId: jsChapters[0].id,
         order: 1
       },
       {
-        title: "المتغيرات والعمليات",
+        title: "التعامل مع المصفوفات في JavaScript",
         unitId: jsUnits[0].id,
-        chapterId: jsChapters[0].id,
+        chapterId: jsChapters[1].id,
         order: 2
-      },
-      {
-        title: "التعامل مع DOM",
-        unitId: jsUnits[0].id,
-        chapterId: jsChapters[1].id,
-        order: 3
-      },
-      {
-        title: "تحديث محتوى الصفحة",
-        unitId: jsUnits[0].id,
-        chapterId: jsChapters[1].id,
-        order: 4
-      },
-      // Unit 2 Lessons
-      {
-        title: "أحداث الماوس ولوحة المفاتيح",
-        unitId: jsUnits[1].id,
-        chapterId: jsChapters[2].id,
-        order: 5
-      },
-      {
-        title: "التحقق من النماذج",
-        unitId: jsUnits[1].id,
-        chapterId: jsChapters[2].id,
-        order: 6
-      },
-      {
-        title: "مقدمة في AJAX",
-        unitId: jsUnits[1].id,
-        chapterId: jsChapters[3].id,
-        order: 7
       }
     ]).returning();
 
@@ -580,13 +644,13 @@ async function main() {
       {
         lessonId: jsLessons[0].id,
         type: "SELECT",
-        question: "أين يتم كتابة كود JavaScript في صفحة HTML؟",
+        question: "أي من التالي يستخدم لطباعة نص في وحدة تحكم المتصفح؟",
         order: 1
       },
       {
         lessonId: jsLessons[1].id,
         type: "SELECT",
-        question: "ما هي الطريقة الصحيحة لتعريف متغير في JavaScript؟",
+        question: "أي من الدوال التالية تستخدم لإضافة عنصر في نهاية المصفوفة؟",
         order: 1
       }
     ]).returning();
@@ -595,28 +659,28 @@ async function main() {
     await db.insert(challengeOptions).values([
       {
         challengeId: jsChallenges[0].id,
-        text: "داخل وسم <script>",
+        text: "console.log()",
         correct: true,
         imageSrc: null,
         audioSrc: null
       },
       {
         challengeId: jsChallenges[0].id,
-        text: "داخل وسم <js>",
+        text: "System.out.println()",
         correct: false,
         imageSrc: null,
         audioSrc: null
       },
       {
         challengeId: jsChallenges[1].id,
-        text: "let myVar = 5;",
+        text: "push()",
         correct: true,
         imageSrc: null,
         audioSrc: null
       },
       {
         challengeId: jsChallenges[1].id,
-        text: "variable myVar = 5;",
+        text: "unshift()",
         correct: false,
         imageSrc: null,
         audioSrc: null

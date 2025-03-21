@@ -32,7 +32,7 @@ export const LanguageSwitcher = ({ variant = "ghost" }: Props) => {
         <Button 
           size="sm"
           className={cn(
-            "rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center gap-2 px-3",
+            "rounded-lg bg-white/10 hover:bg-white/20 text-black flex items-center gap-2 px-3",
             variant === "ghost" && "hover:bg-white/30"
           )}
         >

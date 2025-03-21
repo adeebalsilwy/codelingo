@@ -2,97 +2,107 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ClerkLoading,
-  ClerkLoaded,
-  UserButton,
-} from "@clerk/nextjs";
-import { Loader } from "lucide-react";
-import { useIsAdmin } from "@/lib/admin";
-import { useState, useEffect } from "react";
-
-import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 import { useI18n } from "@/app/i18n/client";
-import { LanguageSwitcher } from "@/app/components/LanguageSwitcher";
-
-import { SidebarItem } from "./sidebar-item";
+import { useIsAdmin } from "@/lib/admin-client";
+import { cn } from "@/lib/utils";
+import { Loader } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type Props = {
   className?: string;
 };
 
 export const Sidebar = ({ className }: Props) => {
-  const { t, dir } = useI18n();
-  const isRtl = dir === "rtl";
-  const isAdminUser = useIsAdmin();
+  const pathname = usePathname();
+  const { t } = useI18n();
+  const { isAdmin, loading } = useIsAdmin();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const routes = [
+    {
+      icon: "/learn.svg",
+      label: t('nav.learn'),
+      href: "/learn",
+    },
+    {
+      icon: "/leaderboard.svg",
+      label: t('nav.leaderboard'),
+      href: "/leaderboard",
+    },
+    {
+      icon: "/quests.svg",
+      label: t('nav.quests'),
+      href: "/quests",
+    },
+    {
+      icon: "/shop.svg",
+      label: t('nav.shop'),
+      href: "/shop",
+    },
+    {
+      icon: "/code.svg",
+      label: t('nav.codeEditor'),
+      href: "/code-editor",
+    },
+    {
+      icon: "/mascot.svg",
+      label: t('nav.chat'),
+      href: "/chat",
+    },
+  ];
+
+  // Only add admin route if we're mounted and admin status is confirmed
+  if (mounted && isAdmin) {
+    routes.push({
+      icon: "/next.svg",
+      label: t('nav.admin'),
+      href: "/admin",
+    });
+  }
+
+  if (!mounted) {
+    return (
+      <div className={cn(
+        "flex h-full lg:flex-col lg:space-x-0 lg:space-y-4 items-center justify-center",
+        className
+      )}>
+        <Loader className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className={cn(
-      "flex h-full lg:w-[256px] lg:fixed top-0 border-r-2 flex-col",
-      isRtl ? "lg:right-0 border-l-2 border-r-0" : "lg:left-0",
-      className,
+      "flex h-full lg:flex-col lg:space-x-0 lg:space-y-4",
+      className
     )}>
-      <div className={cn(
-        "pt-8 pb-7 flex items-center gap-x-3",
-        isRtl ? "pr-4" : "pl-4"
-      )}>
-        <Link href="/learn" className="flex items-center gap-x-3">
-          <Image src="/logo1.jpg" height={40} width={40} alt="Logo" className="rounded-lg" />
-          <h1 className="text-2xl font-extrabold text-primary tracking-wide">
-            {t('app.title')}
-          </h1>
+      {routes.map((route) => (
+        <Link
+          key={route.href}
+          href={route.href}
+          className={cn(
+            "flex items-center justify-center lg:justify-start text-muted-foreground text-xs lg:text-sm font-medium p-1.5 lg:p-3 hover:text-primary hover:bg-primary/10 rounded-lg transition-all",
+            pathname === route.href && "text-primary bg-primary/10"
+          )}
+        >
+          <div className="relative h-5 w-5 lg:mr-2">
+            <Image
+              src={route.icon}
+              alt={route.label}
+              fill
+              className="object-contain"
+            />
+          </div>
+          <span className="hidden lg:block">
+            {route.label}
+          </span>
         </Link>
-      </div>
-      <div className="flex flex-col gap-y-2 flex-1">
-        <SidebarItem 
-          label={t('nav.learn')} 
-          href="/learn"
-          iconSrc="/learn.svg"
-        />
-        <SidebarItem 
-          label={t('nav.leaderboard')} 
-          href="/leaderboard"
-          iconSrc="/leaderboard.svg"
-        />
-        <SidebarItem 
-          label={t('nav.quests')} 
-          href="/quests"
-          iconSrc="/quests.svg"
-        />
-        <SidebarItem 
-          label={t('nav.shop')} 
-          href="/shop"
-          iconSrc="/shop.svg"
-        />
-        <SidebarItem 
-          label={t('nav.code_editor')} 
-          href="/code-editor"
-          iconSrc="/code.svg"
-        />
-        <SidebarItem 
-          label={t('nav.chat')} 
-          href="/chat"
-          iconSrc="/chat.svg"
-        />
-        {isAdminUser && (
-          <SidebarItem 
-            label={t('nav.admin')} 
-            href="/admin"
-            iconSrc="/admin.svg"
-          />
-        )}
-      </div>
-      <div className="p-4 flex items-center justify-between">
-        <div className={isRtl ? "order-last" : ""}>
-          <ClerkLoading>
-            <Loader className="h-5 w-5 text-muted-foreground animate-spin" />
-          </ClerkLoading>
-          <ClerkLoaded>
-            <UserButton afterSignOutUrl="/" />
-          </ClerkLoaded>
-        </div>
-        <LanguageSwitcher />
-      </div>
+      ))}
     </div>
   );
 };

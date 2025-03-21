@@ -37,7 +37,9 @@ export const LanguageSwitcher = ({ variant = "ghost" }: Props) => {
           )}
         >
           <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline">{currentLanguage?.name}</span>
+          <span className="inline text-sm">
+            {currentLanguage?.flag}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 

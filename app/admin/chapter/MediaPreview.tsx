@@ -1,8 +1,9 @@
 import { FC } from 'react';
+import Image from 'next/image';
 
 interface MediaPreviewProps {
   url: string;
-  type: 'VIDEO' | 'PDF' | 'YOUTUBE';
+  type: 'VIDEO' | 'PDF' | 'YOUTUBE' | 'image';
 }
 
 export const MediaPreview: FC<MediaPreviewProps> = ({ url, type }) => {
@@ -71,18 +72,23 @@ export const MediaPreview: FC<MediaPreviewProps> = ({ url, type }) => {
       )}
       {type === 'YOUTUBE' && (
         <div>
-          <img 
-            src={url} 
-            alt="YouTube thumbnail" 
-            style={{ width: '100%', borderRadius: '8px' }}
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              const errorMsg = document.createElement('p');
-              errorMsg.textContent = 'Error loading YouTube thumbnail';
-              errorMsg.style.color = '#d32f2f';
-              target.parentNode?.appendChild(errorMsg);
-            }}
+          <div className="relative aspect-video">
+            <Image
+              src={url}
+              alt="YouTube thumbnail"
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+      )}
+      {type === 'image' && (
+        <div className="relative w-full h-48">
+          <Image
+            src={url}
+            alt="Media preview"
+            fill
+            className="object-contain"
           />
         </div>
       )}

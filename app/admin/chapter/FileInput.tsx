@@ -1,5 +1,7 @@
 import { useInput, useNotify } from "react-admin";
 import { useCallback, useEffect, useState } from "react";
+import { useDropzone } from 'react-dropzone';
+import { Upload } from 'lucide-react';
 
 const FileInput = (props: any) => {
   const { field } = useInput(props);
@@ -104,7 +106,32 @@ const FileInput = (props: any) => {
     field.onChange(null);
     setUploadProgress(0);
     setIsUploading(false);
-  }, [props.contentType]);
+  }, [field, props]);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    props.onChange(acceptedFiles);
+  }, [field, props]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: props.accept,
+    maxSize: props.maxSize,
+    maxFiles: props.maxFiles,
+    disabled: props.disabled
+  });
+
+  useEffect(() => {
+    // Cleanup effect
+    return () => {
+      if (props.value) {
+        props.value.forEach((file: { preview?: string }) => {
+          if (file.preview) {
+            URL.revokeObjectURL(file.preview);
+          }
+        });
+      }
+    };
+  }, [props.value, field]);
 
   return (
     <div style={{ marginTop: '1rem' }}>
@@ -198,6 +225,23 @@ const FileInput = (props: any) => {
           </div>
         </div>
       )}
+      <div
+        {...getRootProps()}
+        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition"
+      >
+        <input {...getInputProps()} />
+        <div className="flex flex-col items-center justify-center gap-2">
+          <Upload className="h-10 w-10 text-gray-400" />
+          {isDragActive ? (
+            <p>Drop the files here ...</p>
+          ) : (
+            <p>Drag & drop files here, or click to select files</p>
+          )}
+          <p className="text-xs text-gray-500">
+            Max file size: {Math.round(props.maxSize / 1024 / 1024)}MB
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

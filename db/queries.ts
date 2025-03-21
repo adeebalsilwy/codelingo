@@ -42,6 +42,7 @@ export const getUnits = cache(async () => {
     orderBy: (units, { asc }) => [asc(units.order)],
     where: eq(units.courseId, userProgress.activeCourseId),
     with: {
+      course: true,
       lessons: {
         orderBy: (lessons, { asc }) => [asc(lessons.order)],
         with: {
@@ -58,11 +59,11 @@ export const getUnits = cache(async () => {
     }
   });
 
-  const normalizedData = data.map((unit) => {
+  const filteredData = data.filter(unit => unit.courseId === userProgress.activeCourseId);
+
+  const normalizedData = filteredData.map((unit) => {
     const lessonsWithCompletedStatus = unit.lessons.map((lesson) => {
-      if (
-        lesson.challenges.length === 0
-      ) {
+      if (lesson.challenges.length === 0) {
         return { ...lesson, completed: false };
       }
 
@@ -75,7 +76,11 @@ export const getUnits = cache(async () => {
       return { ...lesson, completed: allCompletedChallenges };
     });
 
-    return { ...unit, lessons: lessonsWithCompletedStatus };
+    return { 
+      ...unit,
+      lessons: lessonsWithCompletedStatus,
+      courseName: unit.course.title
+    };
   });
 
   return normalizedData;

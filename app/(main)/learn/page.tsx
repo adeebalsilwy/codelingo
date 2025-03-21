@@ -46,6 +46,10 @@ const LearnPage = async () => {
     redirect("/courses");
   }
 
+  if (units.length > 0 && units[0].courseId !== userProgress.activeCourseId) {
+    redirect("/courses");
+  }
+
   const isPro = !!userSubscription?.isActive;
 
   return (

@@ -12,6 +12,22 @@ interface PageProps {
   };
 }
 
+// Force dynamic rendering and disable caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <div className="text-gray-500 dark:text-gray-400">Loading unit...</div>
+      </div>
+    </div>
+  );
+}
+
 const ChapterPage = async ({ params }: PageProps) => {
   const unitId = parseInt(params.unitId);
   const chapterId = parseInt(params.chapterId);

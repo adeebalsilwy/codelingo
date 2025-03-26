@@ -53,6 +53,7 @@ const CoursesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Check authentication and redirect if not authenticated
   useEffect(() => {
@@ -167,10 +168,10 @@ const CoursesPage = () => {
 
   // Fetch data on mount and when language or auth state changes
   useEffect(() => {
-    if (isSignedIn) {
+    if (mounted) {
       fetchData();
     }
-  }, [language, isSignedIn]);
+  }, [mounted, fetchData]);
 
   // Don't render anything while checking auth
   if (!isLoaded) {

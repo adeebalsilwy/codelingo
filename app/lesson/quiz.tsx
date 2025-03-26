@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 import Confetti from "react-confetti";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { useAudio, useWindowSize, useMount } from "react-use";
 
 import { reduceHearts } from "@/actions/user-progress";
@@ -39,51 +39,121 @@ export const Quiz = ({
   initialLessonChallenges,
   userSubscription,
 }: Props) => {
+  const { width, height } = useWindowSize();
+  const router = useRouter();
   const { open: openHeartsModal } = useHeartsModal();
   const { open: openPracticeModal } = usePracticeModal();
 
-  useMount(() => {
-    if (initialPercentage === 100) {
-      openPracticeModal();
-    }
-  });
-
-  const { width, height } = useWindowSize();
-
-  const router = useRouter();
-
   const [finishAudio] = useAudio({ src: "/finish.mp3", autoPlay: true });
-  const [
-    correctAudio,
-    _c,
-    correctControls,
-  ] = useAudio({ src: "/correct.wav" });
-  const [
-    incorrectAudio,
-    _i,
-    incorrectControls,
-  ] = useAudio({ src: "/incorrect.wav" });
+  const [correctAudio, _c, correctControls] = useAudio({ src: "/correct.wav" });
+  const [incorrectAudio, _i, incorrectControls] = useAudio({ src: "/incorrect.wav" });
+  
   const [pending, startTransition] = useTransition();
 
   const [lessonId] = useState(initialLessonId);
   const [hearts, setHearts] = useState(initialHearts);
-  const [percentage, setPercentage] = useState(() => {
-    return initialPercentage === 100 ? 0 : initialPercentage;
+  const [challenges] = useState(() => {
+    // Try to restore completed challenges from localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const savedProgress = localStorage.getItem(`lesson_progress_${initialLessonId}`);
+        if (savedProgress) {
+          const { completedChallenges = [] } = JSON.parse(savedProgress);
+          if (completedChallenges.length > 0) {
+            return initialLessonChallenges.map(challenge => ({
+              ...challenge,
+              completed: challenge.completed || completedChallenges.includes(challenge.id)
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error reading from localStorage:", error);
+      }
+    }
+    
+    return initialLessonChallenges;
   });
-  const [challenges] = useState(initialLessonChallenges);
+  
   const [activeIndex, setActiveIndex] = useState(() => {
+    // Try to restore active index from localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const savedProgress = localStorage.getItem(`lesson_progress_${initialLessonId}`);
+        if (savedProgress) {
+          const { activeIndex: savedActiveIndex } = JSON.parse(savedProgress);
+          if (savedActiveIndex !== undefined && savedActiveIndex >= 0) {
+            return savedActiveIndex;
+          }
+        }
+      } catch (error) {
+        console.error("Error reading from localStorage:", error);
+      }
+    }
+    
     const uncompletedIndex = challenges.findIndex((challenge) => !challenge.completed);
     return uncompletedIndex === -1 ? 0 : uncompletedIndex;
   });
-
+  
+  const [percentage, setPercentage] = useState(() => {
+    // Try to restore progress from localStorage if available
+    if (typeof window !== 'undefined') {
+      try {
+        const savedProgress = localStorage.getItem(`lesson_progress_${initialLessonId}`);
+        if (savedProgress) {
+          const { percentage: savedPercentage } = JSON.parse(savedProgress);
+          if (savedPercentage > 0 && savedPercentage < 100) {
+            return savedPercentage;
+          }
+        }
+      } catch (error) {
+        console.error("Error reading from localStorage:", error);
+      }
+    }
+    
+    return initialPercentage === 100 ? 0 : initialPercentage;
+  });
+  
   const [selectedOption, setSelectedOption] = useState<number>();
   const [status, setStatus] = useState<"correct" | "wrong" | "none">("none");
+
+  const saveProgressToLocalStorage = useCallback(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`lesson_progress_${initialLessonId}`, JSON.stringify({
+          activeIndex,
+          percentage,
+          completedChallenges: challenges.filter(c => c.completed).map(c => c.id)
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to save progress to localStorage:", error);
+    }
+  }, [initialLessonId, activeIndex, percentage, challenges]);
+
+  // Save progress when component unmounts or user navigates away
+  useEffect(() => {
+    const saveProgressOnExit = () => {
+      saveProgressToLocalStorage();
+    };
+    
+    window.addEventListener('beforeunload', saveProgressOnExit);
+    
+    return () => {
+      window.removeEventListener('beforeunload', saveProgressOnExit);
+      saveProgressToLocalStorage();
+    };
+  }, [saveProgressToLocalStorage]);
 
   const challenge = challenges[activeIndex];
   const options = challenge?.challengeOptions ?? [];
 
   const onNext = () => {
-    setActiveIndex((current) => current + 1);
+    setActiveIndex((current: number) => {
+      const newIndex = current + 1;
+      // Save progress after advancing to next challenge
+      setTimeout(() => saveProgressToLocalStorage(), 0);
+      return newIndex;
+    });
   };
 
   const onSelect = (id: number) => {
@@ -125,11 +195,11 @@ export const Quiz = ({
 
             correctControls.play();
             setStatus("correct");
-            setPercentage((prev) => prev + 100 / challenges.length);
+            setPercentage((prev: number) => prev + 100 / challenges.length);
 
             // This is a practice
             if (initialPercentage === 100) {
-              setHearts((prev) => Math.min(prev + 1, 5));
+              setHearts((prev: number) => Math.min(prev + 1, 5));
             }
           })
           .catch(() => toast.error("Something went wrong. Please try again."))
@@ -147,13 +217,22 @@ export const Quiz = ({
             setStatus("wrong");
 
             if (!response?.error) {
-              setHearts((prev) => Math.max(prev - 1, 0));
+              setHearts((prev: number) => Math.max(prev - 1, 0));
             }
           })
           .catch(() => toast.error("Something went wrong. Please try again."))
       });
     }
   };
+
+  useMount(() => {
+    if (initialPercentage === 100) {
+      openPracticeModal();
+    }
+    
+    // Save initial state to localStorage to persist progress even if user navigates away
+    saveProgressToLocalStorage();
+  });
 
   if (!challenge) {
     return (

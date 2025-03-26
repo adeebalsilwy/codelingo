@@ -69,7 +69,7 @@ const VideoInput = (props: any) => {
       const previewUrl = URL.createObjectURL(file);
       setTempFile(file);
       setTempPreview(previewUrl);
-      field.onChange(file); // Update form field value
+      field.onChange(file);
       
       notify('Video file selected. Click Save to upload.', { type: 'info' });
       
@@ -77,7 +77,7 @@ const VideoInput = (props: any) => {
         onFileSelect(file);
       }
     },
-    [notify, tempPreview, field]
+    [notify, tempPreview, field, props]
   );
 
   // Cleanup preview URL when component unmounts

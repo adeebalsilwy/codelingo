@@ -99,9 +99,9 @@ export const Sidebar = ({ className }: Props) => {
           href={route.href}
           className={cn(
             "flex items-center gap-x-4 text-muted-foreground text-sm font-medium p-3",
-            "hover:text-foreground hover:bg-primary/5 rounded-lg transition-all",
+            "hover:text-foreground hover:bg-primary/5 dark:hover:bg-primary/10 rounded-lg transition-all",
             "active:scale-[0.98]",
-            pathname === route.href && "text-foreground bg-primary/5",
+            pathname === route.href && "text-foreground bg-primary/5 dark:bg-primary/10",
             route.color
           )}
         >

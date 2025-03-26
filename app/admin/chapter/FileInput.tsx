@@ -37,6 +37,7 @@ const FileInput = (props: any) => {
 
   const handleFileSelect = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { onFileSelect, contentType } = props;
       const file = event.target.files?.[0];
       if (!file) {
         setTempFile(null);
@@ -49,22 +50,17 @@ const FileInput = (props: any) => {
       const maxSize = 100 * 1024 * 1024;
       if (file.size > maxSize) {
         notify('File size exceeds 100MB limit', { type: 'error' });
+        event.target.value = '';
         return;
       }
 
       // Validate file type
-      const validTypes = {
-        VIDEO: ['video/mp4', 'video/webm', 'video/ogg'],
-        PDF: ['application/pdf']
-      };
-
-      const contentType = props.contentType;
-      if (contentType === 'VIDEO' && !validTypes.VIDEO.includes(file.type)) {
+      if (contentType === 'VIDEO' && !['video/mp4', 'video/webm', 'video/ogg'].includes(file.type)) {
         notify('Please upload a valid video file (MP4, WebM, or OGG)', { type: 'error' });
         event.target.value = '';
         return;
       }
-      if (contentType === 'PDF' && !validTypes.PDF.includes(file.type)) {
+      if (contentType === 'PDF' && file.type !== 'application/pdf') {
         notify('Please upload a valid PDF file', { type: 'error' });
         event.target.value = '';
         return;
@@ -79,15 +75,15 @@ const FileInput = (props: any) => {
       const previewUrl = URL.createObjectURL(file);
       setTempFile(file);
       setTempPreview(previewUrl);
-      field.onChange(file); // Update form field value
+      field.onChange(file);
       
-      notify('File selected. Click Save to upload.', { type: 'info' });
+      notify(`${contentType} file selected. Click Save to upload.`, { type: 'info' });
       
-      if (props.onFileSelect) {
-        props.onFileSelect(file);
+      if (onFileSelect) {
+        onFileSelect(file);
       }
     },
-    [notify, props.contentType, props.onFileSelect, tempPreview]
+    [notify, tempPreview, field, props]
   );
 
   // Cleanup preview URL when component unmounts or content type changes
@@ -113,7 +109,7 @@ const FileInput = (props: any) => {
     if (onChange) {
       onChange(acceptedFiles);
     }
-  }, [props.onChange]);
+  }, [props]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

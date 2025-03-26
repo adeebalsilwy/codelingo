@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs"
-import db from "@/db/drizzle"
+import db from "@/db/client"
 import { eq } from "drizzle-orm"
 import { admins } from "@/db/schema"
 import { randomUUID } from "crypto"

@@ -2,6 +2,7 @@
 
 import { MobileSidebar } from "./mobile-sidebar";
 import { LanguageSwitcher } from "@/app/components/LanguageSwitcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useI18n } from "@/app/i18n/client";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -17,30 +18,46 @@ export const MobileHeader = () => {
 
   if (!mounted) {
     return (
-      <nav className="lg:hidden px-6 h-[50px] flex items-center justify-between bg-blue-500 border-b fixed top-0 w-full z-50">
-        <div className="flex items-center">
-          <div className="w-8 h-8" /> {/* Placeholder for sidebar button */}
-        </div>
-        <div className="flex items-center">
-          <div className="w-8 h-8" /> {/* Placeholder for language switcher */}
+      <nav className={cn(
+        "lg:hidden fixed top-0 left-0 right-0",
+        "h-16 px-4 z-50",
+        "bg-white dark:bg-gray-900",
+        "border-b border-gray-200 dark:border-gray-800"
+      )}>
+        <div className="flex h-full items-center justify-between">
+          <div className="w-8 h-8" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8" />
+            <div className="w-8 h-8" />
+          </div>
         </div>
       </nav>
     );
   }
 
   return (
-    <nav className="lg:hidden px-6 h-[50px] flex items-center justify-between bg-blue-500 border-b fixed top-0 w-full z-50">
-      <div className={cn(
-        "flex items-center",
-        isRtl ? "order-last" : ""
-      )}>
-        <MobileSidebar />
-      </div>
-      <div className={cn(
-        "flex items-center",
-        isRtl ? "order-first" : ""
-      )}>
-        <LanguageSwitcher />
+    <nav className={cn(
+      "lg:hidden fixed top-0 left-0 right-0",
+      "h-16 px-4 z-50",
+      "bg-white dark:bg-gray-900",
+      "border-b border-gray-200 dark:border-gray-800",
+      "transition-colors duration-200"
+    )}>
+      <div className="flex h-full items-center justify-between max-w-[1400px] mx-auto">
+        <div className={cn(
+          "flex items-center",
+          isRtl ? "order-last" : "order-first"
+        )}>
+          <MobileSidebar />
+        </div>
+        <div className={cn(
+          "flex items-center gap-3",
+          isRtl ? "order-first" : "order-last"
+        )}>
+          <ThemeToggle />
+          <div className="w-px h-6 bg-gray-200 dark:bg-gray-800" />
+          <LanguageSwitcher />
+        </div>
       </div>
     </nav>
   );

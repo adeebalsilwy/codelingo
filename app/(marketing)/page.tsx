@@ -1,4 +1,5 @@
-import Image from "next/image";
+import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs";
 import { getCourses } from "@/db/queries";
 import HeroSection from "./hero-section";
 import { Loader } from "lucide-react";
@@ -17,18 +18,20 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { cookies } from 'next/headers';
 
-export default async function Home() {
-  // Get language from cookie, default to 'english'
-  const cookieStore = cookies();
-  const language = cookieStore.get('language')?.value || 'english';
+export default async function MarketingPage() {
+  const { userId } = await auth();
   
-  const courses = await getCourses();
-  // const { dir, language } = useI18n();
-  // const isRtl = dir === "rtl";
+  // Redirect signed-in users to learn page
+  if (userId) {
+    redirect("/learn");
+  }
+  
+  // Get courses for display
+  const courses = await getCourses() || [];
+  
   return (
-    <div className="max-w-[988px] mx-auto flex-1 w-full flex flex-col items-center justify-center p-4 gap-8">
-      <HeroSection courses={courses} />
-     
-    </div>
+    <main className="flex min-h-screen flex-col items-center justify-center py-12 px-6 bg-white">
+      <HeroSection courses={courses.slice(0, 3)} />
+    </main>
   );
 }

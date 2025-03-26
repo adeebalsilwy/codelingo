@@ -5,167 +5,148 @@
 html,
 body,
 :root {
-  @apply h-full;
+  height: 100%;
 }
- 
+
+/* Layout Transitions */
+body * {
+  @apply transition-[margin,padding,left,right,transform] duration-200;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 220 20% 20%;
-
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 20%;
- 
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 20%;
- 
-    --primary: 215 90% 50%;
-    --primary-foreground: 0 0% 100%;
- 
-    --secondary: 200 85% 45%;
-    --secondary-foreground: 0 0% 100%;
- 
-    --muted: 220 20% 96%;
-    --muted-foreground: 220 20% 60%;
- 
-    --accent: 215 90% 50%;
-    --accent-foreground: 0 0% 100%;
- 
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 20% 90%;
-    --input: 220 20% 90%;
-    --ring: 215 90% 50%;
- 
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 142.1 76.2% 36.3%;
     --radius: 0.5rem;
   }
- 
+
   .dark {
-    --background: 220 20% 10%;
-    --foreground: 0 0% 100%;
- 
-    --card: 220 20% 10%;
-    --card-foreground: 0 0% 100%;
- 
-    --popover: 220 20% 10%;
-    --popover-foreground: 0 0% 100%;
- 
-    --primary: 215 90% 55%;
-    --primary-foreground: 0 0% 100%;
- 
-    --secondary: 200 85% 50%;
-    --secondary-foreground: 0 0% 100%;
- 
-    --muted: 220 20% 20%;
-    --muted-foreground: 220 20% 70%;
- 
-    --accent: 215 90% 55%;
-    --accent-foreground: 0 0% 100%;
- 
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 142.1 70.6% 45.3%;
+    --primary-foreground: 144.9 80.4% 10%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
- 
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
-    --ring: 215 90% 55%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 142.4 71.8% 29.2%;
   }
 }
- 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground;
 }
 
 /* RTL Support */
-[dir="rtl"] .flip-x {
-  transform: scaleX(-1);
+[dir="rtl"] {
+  .flip-x {
+    transform: scaleX(-1);
+  }
+
+  .reverse-flex {
+    flex-direction: row-reverse;
+  }
+
+  .text-right {
+    text-align: left;
+  }
+
+  .text-left {
+    text-align: right;
+  }
+
+  pre,
+  code {
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: bidi-override;
+  }
+
+  .challenge-code {
+    direction: ltr;
+    text-align: left;
+  }
+
+  .monaco-editor .monaco-editor-background,
+  .monaco-editor .margin-view-overlays,
+  .monaco-editor .margin {
+    direction: ltr;
+  }
+
+  .monaco-editor .margin {
+    text-align: right;
+  }
+
+  .editor-container {
+    direction: ltr;
+  }
+
+  body {
+    text-align: right;
+  }
+
+  .dropdown-menu-content {
+    transform-origin: top right;
+  }
+
+  .button-icon-end {
+    margin-right: 0.5rem;
+    margin-left: 0;
+  }
+
+  .button-icon-start {
+    margin-left: 0.5rem;
+    margin-right: 0;
+  }
+
+  input,
+  textarea {
+    text-align: right;
+  }
+
+  ul, 
+  ol {
+    padding-right: 1.5rem;
+    padding-left: 0;
+  }
+
+  .rtl-rotate-180 {
+    transform: rotate(180deg);
+  }
 }
 
-[dir="rtl"] .reverse-flex {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .text-right {
-  text-align: left;
-}
-
-[dir="rtl"] .text-left {
-  text-align: right;
-}
-
-/* Code Display in RTL */
-[dir="rtl"] pre,
-[dir="rtl"] code,
-[dir="rtl"] .code-block,
-[dir="rtl"] .monaco-editor {
-  direction: ltr !important;
-  text-align: left !important;
-  unicode-bidi: bidi-override;
-}
-
-[dir="rtl"] .challenge-code {
-  direction: ltr !important;
-  text-align: left !important;
-  font-family: monospace;
-}
-
-/* Editor specific RTL fixes */
-[dir="rtl"] .monaco-editor .monaco-editor-background,
-[dir="rtl"] .monaco-editor .margin,
-[dir="rtl"] .monaco-editor .inputarea.ime-input {
-  direction: ltr !important;
-}
-
-[dir="rtl"] .monaco-editor .margin {
-  border-right: none !important;
-  border-left: 1px solid var(--border);
-}
-
-[dir="rtl"] .editor-container {
-  direction: ltr !important;
-}
-
-/* Arabic Font Adjustments */
-[dir="rtl"] body {
-  font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "ss03" 1;
-  letter-spacing: -0.01em;
-}
-
-/* Fix for RTL dropdown menus */
-[dir="rtl"] .dropdown-menu-content {
-  transform-origin: top right;
-}
-
-/* Fix for RTL buttons with icons */
-[dir="rtl"] .button-icon-end {
-  margin-left: 0;
-  margin-right: 0.5rem;
-}
-
-[dir="rtl"] .button-icon-start {
-  margin-right: 0;
-  margin-left: 0.5rem;
-}
-
-/* Fix for RTL form inputs */
-[dir="rtl"] input,
-[dir="rtl"] textarea {
-  text-align: right;
-}
-
-/* Fix for RTL lists */
-[dir="rtl"] ul, 
-[dir="rtl"] ol {
-  padding-right: 1.5rem;
-  padding-left: 0;
-}
-
-/* RTL Prose Support */
+/* RTL Typography */
 .prose-rtl {
   direction: rtl;
 }
@@ -177,10 +158,10 @@ body,
 }
 
 .prose-rtl blockquote {
+  border-right: 0.25em solid #e5e7eb;
   border-left: none;
-  border-right: 0.25em solid var(--tw-prose-quote-borders);
-  padding-left: 0;
   padding-right: 1em;
+  padding-left: 0;
 }
 
 .prose-rtl h1,
@@ -199,7 +180,7 @@ body,
 
 .prose-rtl code {
   direction: ltr;
-  display: inline-block;
+  unicode-bidi: bidi-override;
 }
 
 .prose-rtl table {
@@ -207,20 +188,47 @@ body,
 }
 
 .prose-rtl figure {
-  margin-left: 0;
   margin-right: 0;
 }
 
 .prose-rtl figure > * {
-  margin-left: 0;
   margin-right: 0;
 }
 
 .prose-rtl .table-of-contents {
-  padding-right: 0;
+  text-align: right;
 }
 
 .prose-rtl .table-of-contents li {
-  margin-right: 1.5em;
+  margin-right: 1em;
   margin-left: 0;
+}
+
+/* Transitions */
+.transition-smooth {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Responsive Paddings */
+.responsive-container {
+  @apply px-4 md:px-6 lg:px-8;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted/50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/30 transition-colors;
+}
+
+/* Mobile Navigation */
+.mobile-nav-height {
+  height: calc(100vh - 50px);
 }

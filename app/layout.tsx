@@ -8,6 +8,7 @@ import { PracticeModal } from "@/components/modals/practice-modal";
 import { NotificationPrompt } from "@/app/components/NotificationPrompt";
 import { PWAInstallPrompt } from "@/app/components/PWAInstallPrompt";
 import { Providers } from "@/app/providers";
+import { AutoNotifications } from "@/app/components/AutoNotifications";
 import "./globals.css";
 
 const font = Nunito({ 
@@ -63,11 +64,47 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html>
+      <html lang="ar" suppressHydrationWarning>
         <head>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                // Dark mode handling to avoid hydration mismatch
+                (function() {
+                  try {
+                    const getStoredTheme = () => localStorage.getItem('theme');
+                    const getPreferredTheme = () => {
+                      const storedTheme = getStoredTheme();
+                      if (storedTheme) {
+                        return storedTheme;
+                      }
+                      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                    };
+                    
+                    const theme = getPreferredTheme();
+                    document.documentElement.classList.add(theme);
+                    document.documentElement.style.colorScheme = theme;
+                    
+                    // تحديد ملف المانيفست المناسب بناءً على اللغة
+                    const defaultLang = 'ar';
+                    const savedLang = localStorage.getItem('language') || defaultLang;
+                    const linkElem = document.querySelector('#manifest-link');
+                    
+                    if (linkElem) {
+                      linkElem.setAttribute('href', 
+                        savedLang === 'en' ? '/manifest.json' : '/manifest-ar.json'
+                      );
+                    }
+                  } catch (e) {
+                    console.error('Failed to setup theme:', e);
+                  }
+                })();
+              `,
+            }}
+          />
           <link rel="manifest" href="/manifest.json" id="manifest-link" />
           <meta name="theme-color" content="#22c55e" />
-          <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+          <link rel="apple-touch-icon" href="/logo1.jpg" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="default" />
           <meta name="mobile-web-app-capable" content="yes" />
@@ -76,13 +113,14 @@ export default function RootLayout({
         </head>
         <body className={font.className}>
           <Providers>
+            {children}
             <Toaster />
             <ExitModal />
             <HeartsModal />
             <PracticeModal />
             <NotificationPrompt />
             <PWAInstallPrompt />
-            {children}
+            <AutoNotifications />
           </Providers>
           <script
             dangerouslySetInnerHTML={{

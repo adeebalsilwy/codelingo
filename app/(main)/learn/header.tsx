@@ -7,17 +7,20 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 type Props = {
-  title: string;
+  activeCourse?: string;
+  title?: string;
 };
 
-export const Header = ({ title }: Props) => {
+export const Header = ({ title, activeCourse }: Props) => {
   const { language } = useI18n();
   const { isAdmin } = useIsAdmin();
+  
+  const displayTitle = activeCourse || title || (language === 'ar' ? 'التعلم' : 'Learn');
 
   return (
     <div className="flex items-center justify-between p-4 border-b">
       <h1 className="text-2xl font-bold">
-        {title}
+        {displayTitle}
       </h1>
       {isAdmin && (
         <Link href="/admin">

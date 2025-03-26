@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
-import db from "@/db/drizzle";
+import db from "@/db/client";
 import { stripe } from "@/lib/stripe";
 import { userSubscription } from "@/db/schema";
 

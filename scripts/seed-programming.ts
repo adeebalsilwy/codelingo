@@ -1,5 +1,5 @@
 import "dotenv/config";
-import db from "../db/drizzle";
+import { db } from "../db/client";
 import { courses, units, chapters, lessons, challenges, challengeOptions, challengeProgress, userProgress } from "../db/schema";
 import { randomUUID } from "crypto";
 
@@ -16,24 +16,24 @@ async function main() {
     await db.delete(units);
     await db.delete(courses);
     console.log("Existing data deleted successfully");
-
+    
     // Create programming courses
     const [cppCourse, pythonCourse, javaCourse, jsCourse] = await db.insert(courses).values([
       {
-        title: "C++ Programming",
-        imageSrc: "/uploads/1741215595501-cpp.svg"
+        title: "برمجة ++C",
+        imageSrc: "/cpp.svg"
       },
       {
-        title: "Python Programming",
-        imageSrc: "/uploads/1741216013564-python.svg"
+        title: "برمجة Python",
+        imageSrc: "/python.svg"
       },
       {
-        title: "Java Programming",
-        imageSrc: "/uploads/1741216045987-java.svg"
+        title: "برمجة Java",
+        imageSrc: "/java.svg"
       },
       {
-        title: "JavaScript Programming",
-        imageSrc: "/uploads/1741216398222-javascript.svg"
+        title: "برمجة JavaScript",
+        imageSrc: "/javascript.svg"
       }
     ]).returning();
 
@@ -56,12 +56,18 @@ async function main() {
         description: "تعلم هياكل البيانات الأساسية في ++C",
         courseId: cppCourse.id,
         order: 3
+      },
+      {
+        title: "البرمجة المتقدمة",
+        description: "تعلم تقنيات البرمجة المتقدمة في ++C",
+        courseId: cppCourse.id,
+        order: 4
       }
     ]).returning();
 
     // C++ Chapters with real content
     const cppChapters = await db.insert(chapters).values([
-      // الوحدة الأولى: أساسيات ++C
+      // الوحدة الأولى: أساسيات ++C - الفصل 1
       {
         title: "المتغيرات وأنواع البيانات",
         description: "تعلم المتغيرات وأنواع البيانات الأساسية",
@@ -83,10 +89,11 @@ char grade = 'A';
 bool isStudent = true;
 \`\`\`
         `,
-        video_youtube: "https://www.youtube.com/watch?v=zB9RI8_wExo",
+        videoYoutube: "https://www.youtube.com/watch?v=zB9RI8_wExo",
         unitId: cppUnits[0].id,
         order: 1
       },
+      // الوحدة الأولى: أساسيات ++C - الفصل 2
       {
         title: "العمليات الحسابية والمنطقية",
         description: "تعلم العمليات الحسابية والمنطقية الأساسية",
@@ -111,11 +118,88 @@ bool result2 = x || y;  // true
 bool result3 = !x;      // false
 \`\`\`
         `,
-        video_youtube: "https://www.youtube.com/watch?v=_r5i5ZtUpUM",
+        videoYoutube: "https://www.youtube.com/watch?v=_r5i5ZtUpUM",
         unitId: cppUnits[0].id,
         order: 2
       },
-      // الوحدة الثانية: البرمجة الشيئية
+      // الوحدة الأولى: أساسيات ++C - الفصل 3
+      {
+        title: "هياكل التحكم",
+        description: "تعلم هياكل التحكم في البرنامج",
+        content: `
+# هياكل التحكم في ++C
+
+## الشروط
+\`\`\`cpp
+int age = 18;
+if (age >= 18) {
+    cout << "بالغ";
+} else {
+    cout << "قاصر";
+}
+
+// العامل الثلاثي
+string status = (age >= 18) ? "بالغ" : "قاصر";
+\`\`\`
+
+## الحلقات التكرارية
+\`\`\`cpp
+// حلقة for
+for (int i = 0; i < 5; i++) {
+    cout << i << " ";
+}
+
+// حلقة while
+int j = 0;
+while (j < 5) {
+    cout << j << " ";
+    j++;
+}
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=qMlnFwYdqIw",
+        unitId: cppUnits[0].id,
+        order: 3
+      },
+      // الوحدة الأولى: أساسيات ++C - الفصل 4
+      {
+        title: "الدوال",
+        description: "تعلم كيفية استخدام الدوال",
+        content: `
+# الدوال في ++C
+
+## تعريف الدالة
+\`\`\`cpp
+int add(int a, int b) {
+    return a + b;
+}
+
+void printMessage(string message) {
+    cout << message << endl;
+}
+\`\`\`
+
+## استدعاء الدالة
+\`\`\`cpp
+int result = add(5, 3);    // result = 8
+printMessage("مرحبا بالعالم");
+\`\`\`
+
+## المعاملات الافتراضية
+\`\`\`cpp
+void greet(string name = "زائر") {
+    cout << "مرحبا " << name << endl;
+}
+
+greet();        // مرحبا زائر
+greet("أحمد");  // مرحبا أحمد
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=V9zuox47zr0",
+        unitId: cppUnits[0].id,
+        order: 4
+      },
+      // الوحدة الثانية: البرمجة الشيئية - الفصل 1
       {
         title: "الفئات والكائنات",
         description: "تعلم أساسيات الفئات والكائنات",
@@ -141,15 +225,186 @@ public:
 
 ## إنشاء الكائنات
 \`\`\`cpp
-Student s1("Ahmed", 20);
+Student s1("أحمد", 20);
 s1.display();
 \`\`\`
         `,
-        video_youtube: "https://www.youtube.com/watch?v=ABRP_5RYhqU",
+        videoYoutube: "https://www.youtube.com/watch?v=ABRP_5RYhqU",
         unitId: cppUnits[1].id,
         order: 1
       },
-      // الوحدة الثالثة: هياكل البيانات
+      // الوحدة الثانية: البرمجة الشيئية - الفصل 2
+      {
+        title: "الوراثة",
+        description: "تعلم الوراثة في البرمجة الشيئية",
+        content: `
+# الوراثة في ++C
+
+## مفهوم الوراثة
+الوراثة هي عملية إنشاء فئة جديدة من فئة موجودة، بحيث ترث الفئة الجديدة جميع خصائص وسلوكيات الفئة الأم.
+
+## تطبيق الوراثة
+\`\`\`cpp
+class Person {
+protected:
+    string name;
+    int age;
+public:
+    Person(string n, int a) {
+        name = n;
+        age = a;
+    }
+    void display() {
+        cout << name << " is " << age << " years old";
+    }
+};
+
+class Student : public Person {
+private:
+    int studentId;
+public:
+    Student(string n, int a, int id) : Person(n, a) {
+        studentId = id;
+    }
+    void displayStudent() {
+        display();
+        cout << " with ID: " << studentId;
+    }
+};
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=X8nYM8wdNRE",
+        unitId: cppUnits[1].id,
+        order: 2
+      },
+      // الوحدة الثانية: البرمجة الشيئية - الفصل 3
+      {
+        title: "تعدد الأشكال",
+        description: "تعلم مفهوم تعدد الأشكال في البرمجة الشيئية",
+        content: `
+# تعدد الأشكال في ++C
+
+## المفهوم
+تعدد الأشكال هو قدرة الكائن على اتخاذ أشكال متعددة.
+
+## الدوال الافتراضية
+\`\`\`cpp
+class Shape {
+public:
+    virtual void draw() {
+        cout << "رسم شكل";
+    }
+};
+
+class Circle : public Shape {
+public:
+    void draw() override {
+        cout << "رسم دائرة";
+    }
+};
+
+class Rectangle : public Shape {
+public:
+    void draw() override {
+        cout << "رسم مستطيل";
+    }
+};
+
+// استخدام تعدد الأشكال
+void drawShape(Shape* shape) {
+    shape->draw();
+}
+
+int main() {
+    Circle c;
+    Rectangle r;
+    
+    drawShape(&c);  // رسم دائرة
+    drawShape(&r);  // رسم مستطيل
+    
+    return 0;
+}
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=wN0x9eZLix4",
+        unitId: cppUnits[1].id,
+        order: 3
+      },
+      // الوحدة الثانية: البرمجة الشيئية - الفصل 4
+      {
+        title: "التغليف والتجريد",
+        description: "تعلم مفاهيم التغليف والتجريد في البرمجة الشيئية",
+        content: `
+# التغليف والتجريد في ++C
+
+## التغليف (Encapsulation)
+التغليف هو إخفاء تفاصيل التنفيذ وإتاحة واجهة بسيطة للتعامل مع الكائن.
+
+\`\`\`cpp
+class BankAccount {
+private:
+    string accountNumber;
+    double balance;
+    
+public:
+    BankAccount(string accNum, double initialBalance) {
+        accountNumber = accNum;
+        balance = initialBalance;
+    }
+    
+    void deposit(double amount) {
+        if (amount > 0) {
+            balance += amount;
+        }
+    }
+    
+    bool withdraw(double amount) {
+        if (amount > 0 && balance >= amount) {
+            balance -= amount;
+            return true;
+        }
+        return false;
+    }
+    
+    double getBalance() {
+        return balance;
+    }
+};
+\`\`\`
+
+## التجريد (Abstraction)
+التجريد هو إخفاء التعقيد وإظهار الواجهة الضرورية فقط.
+
+\`\`\`cpp
+class AbstractDatabase {
+public:
+    virtual void connect() = 0;
+    virtual void disconnect() = 0;
+    virtual bool executeQuery(string query) = 0;
+};
+
+class MySQLDatabase : public AbstractDatabase {
+public:
+    void connect() override {
+        // Implementation
+    }
+    
+    void disconnect() override {
+        // Implementation
+    }
+    
+    bool executeQuery(string query) override {
+        // Implementation
+        return true;
+    }
+};
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=ZpFVogiA_Eg",
+        unitId: cppUnits[1].id,
+        order: 4
+      },
+      // الوحدة الثالثة: هياكل البيانات - الفصل 1
       {
         title: "المصفوفات",
         description: "تعلم التعامل مع المصفوفات",
@@ -174,70 +429,806 @@ for(int i = 0; i < 5; i++) {
 }
 \`\`\`
         `,
-        video_youtube: "https://www.youtube.com/watch?v=v2jfGMyeClI",
+        videoYoutube: "https://www.youtube.com/watch?v=v2jfGMyeClI",
         unitId: cppUnits[2].id,
         order: 1
+      },
+      // الوحدة الثالثة: هياكل البيانات - الفصل 2
+      {
+        title: "القوائم المرتبطة",
+        description: "تعلم بناء واستخدام القوائم المرتبطة",
+        content: `
+# القوائم المرتبطة في ++C
+
+## تعريف القائمة المرتبطة
+القائمة المرتبطة هي سلسلة من العقد، حيث تحتوي كل عقدة على بيانات وإشارة للعقدة التالية.
+
+## تنفيذ القائمة المرتبطة الأحادية
+\`\`\`cpp
+class Node {
+public:
+    int data;
+    Node* next;
+    
+    Node(int value) {
+        data = value;
+        next = nullptr;
+    }
+};
+
+class LinkedList {
+private:
+    Node* head;
+    
+public:
+    LinkedList() {
+        head = nullptr;
+    }
+    
+    void insert(int value) {
+        Node* newNode = new Node(value);
+        
+        if (head == nullptr) {
+            head = newNode;
+            return;
+        }
+        
+        Node* temp = head;
+        while (temp->next != nullptr) {
+            temp = temp->next;
+        }
+        
+        temp->next = newNode;
+    }
+    
+    void display() {
+        Node* temp = head;
+        
+        while (temp != nullptr) {
+            cout << temp->data << " -> ";
+            temp = temp->next;
+        }
+        
+        cout << "NULL" << endl;
+    }
+};
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=NobHlGUjV3g",
+        unitId: cppUnits[2].id,
+        order: 2
+      },
+      // الوحدة الثالثة: هياكل البيانات - الفصل 3
+      {
+        title: "المكدسات والطوابير",
+        description: "تعلم استخدام المكدسات والطوابير",
+        content: `
+# المكدسات والطوابير في ++C
+
+## المكدس (Stack)
+المكدس هو هيكل بيانات يتبع مبدأ LIFO (Last In First Out).
+
+\`\`\`cpp
+class Stack {
+private:
+    int arr[100];
+    int top;
+    
+public:
+    Stack() {
+        top = -1;
+    }
+    
+    bool isEmpty() {
+        return top == -1;
+    }
+    
+    bool isFull() {
+        return top == 99;
+    }
+    
+    void push(int value) {
+        if (isFull()) {
+            cout << "Stack Overflow!" << endl;
+            return;
+        }
+        
+        arr[++top] = value;
+    }
+    
+    int pop() {
+        if (isEmpty()) {
+            cout << "Stack Underflow!" << endl;
+            return -1;
+        }
+        
+        return arr[top--];
+    }
+    
+    int peek() {
+        if (isEmpty()) {
+            cout << "Stack is empty!" << endl;
+            return -1;
+        }
+        
+        return arr[top];
+    }
+};
+\`\`\`
+
+## الطابور (Queue)
+الطابور هو هيكل بيانات يتبع مبدأ FIFO (First In First Out).
+
+\`\`\`cpp
+class Queue {
+private:
+    int arr[100];
+    int front;
+    int rear;
+    
+public:
+    Queue() {
+        front = -1;
+        rear = -1;
+    }
+    
+    bool isEmpty() {
+        return front == -1;
+    }
+    
+    bool isFull() {
+        return rear == 99;
+    }
+    
+    void enqueue(int value) {
+        if (isFull()) {
+            cout << "Queue Overflow!" << endl;
+            return;
+        }
+        
+        if (isEmpty()) {
+            front = 0;
+        }
+        
+        arr[++rear] = value;
+    }
+    
+    int dequeue() {
+        if (isEmpty()) {
+            cout << "Queue Underflow!" << endl;
+            return -1;
+        }
+        
+        int value = arr[front];
+        
+        if (front == rear) {
+            // Last element in the queue
+            front = rear = -1;
+        } else {
+            front++;
+        }
+        
+        return value;
+    }
+};
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=FfWi2dT5yEw",
+        unitId: cppUnits[2].id,
+        order: 3
+      },
+      // الوحدة الثالثة: هياكل البيانات - الفصل 4
+      {
+        title: "الأشجار والرسوم البيانية",
+        description: "تعلم استخدام الأشجار والرسوم البيانية",
+        content: `
+# الأشجار والرسوم البيانية في ++C
+
+## شجرة ثنائية البحث
+\`\`\`cpp
+class TreeNode {
+public:
+    int data;
+    TreeNode* left;
+    TreeNode* right;
+    
+    TreeNode(int value) {
+        data = value;
+        left = nullptr;
+        right = nullptr;
+    }
+};
+
+class BinarySearchTree {
+private:
+    TreeNode* root;
+    
+    TreeNode* insert(TreeNode* node, int value) {
+        if (node == nullptr) {
+            return new TreeNode(value);
+        }
+        
+        if (value < node->data) {
+            node->left = insert(node->left, value);
+        } else if (value > node->data) {
+            node->right = insert(node->right, value);
+        }
+        
+        return node;
+    }
+    
+    void inorderTraversal(TreeNode* node) {
+        if (node == nullptr) {
+            return;
+        }
+        
+        inorderTraversal(node->left);
+        cout << node->data << " ";
+        inorderTraversal(node->right);
+    }
+    
+public:
+    BinarySearchTree() {
+        root = nullptr;
+    }
+    
+    void insert(int value) {
+        root = insert(root, value);
+    }
+    
+    void inorder() {
+        inorderTraversal(root);
+        cout << endl;
+    }
+};
+\`\`\`
+
+## الرسم البياني
+\`\`\`cpp
+class Graph {
+private:
+    int vertices;
+    vector<vector<int>> adjacencyList;
+    
+public:
+    Graph(int v) {
+        vertices = v;
+        adjacencyList.resize(v);
+    }
+    
+    void addEdge(int u, int v) {
+        adjacencyList[u].push_back(v);
+        adjacencyList[v].push_back(u);  // لرسم بياني غير موجه
+    }
+    
+    void BFS(int startVertex) {
+        vector<bool> visited(vertices, false);
+        queue<int> q;
+        
+        visited[startVertex] = true;
+        q.push(startVertex);
+        
+        while (!q.empty()) {
+            int current = q.front();
+            q.pop();
+            
+            cout << current << " ";
+            
+            for (int neighbor : adjacencyList[current]) {
+                if (!visited[neighbor]) {
+                    visited[neighbor] = true;
+                    q.push(neighbor);
+                }
+            }
+        }
+    }
+};
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=oSWTXtMglKE",
+        unitId: cppUnits[2].id,
+        order: 4
+      },
+      // الوحدة الرابعة: البرمجة المتقدمة - الفصل 1
+      {
+        title: "القوالب",
+        description: "تعلم استخدام القوالب في البرمجة",
+        content: `
+# القوالب في ++C
+
+## قوالب الدوال
+القوالب تسمح بكتابة دوال وفئات عامة تعمل مع أنواع بيانات مختلفة.
+
+\`\`\`cpp
+// قالب دالة
+template <typename T>
+T findMax(T a, T b) {
+    return (a > b) ? a : b;
+}
+
+// استخدام قالب الدالة
+int maxInt = findMax<int>(3, 7);        // 7
+double maxDouble = findMax<double>(3.14, 2.71);  // 3.14
+char maxChar = findMax<char>('a', 'z');  // 'z'
+\`\`\`
+
+## قوالب الفئات
+\`\`\`cpp
+// قالب فئة
+template <typename T>
+class Stack {
+private:
+    T arr[100];
+    int top;
+    
+public:
+    Stack() {
+        top = -1;
+    }
+    
+    void push(T value) {
+        if (top < 99) {
+            arr[++top] = value;
+        }
+    }
+    
+    T pop() {
+        if (top >= 0) {
+            return arr[top--];
+        }
+        throw "Stack Underflow";
+    }
+};
+
+// استخدام قالب الفئة
+Stack<int> intStack;
+Stack<string> stringStack;
+
+intStack.push(10);
+stringStack.push("Hello");
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=I-hZkUa9mIs",
+        unitId: cppUnits[3].id,
+        order: 1
+      },
+      // الوحدة الرابعة: البرمجة المتقدمة - الفصل 2
+      {
+        title: "استثناءات",
+        description: "تعلم التعامل مع الاستثناءات",
+        content: `
+# الاستثناءات في ++C
+
+## مفهوم الاستثناءات
+الاستثناءات هي آلية للتعامل مع الأخطاء أثناء تنفيذ البرنامج.
+
+## بناء الاستثناءات
+\`\`\`cpp
+// تعريف استثناء مخصص
+class DivideByZeroException : public exception {
+public:
+    const char* what() const throw() {
+        return "محاولة قسمة على صفر!";
+    }
+};
+
+// استخدام الاستثناءات
+double divide(int a, int b) {
+    if (b == 0) {
+        throw DivideByZeroException();
+    }
+    return static_cast<double>(a) / b;
+}
+
+int main() {
+    try {
+        double result = divide(10, 2);  // 5.0
+        cout << "النتيجة: " << result << endl;
+        
+        result = divide(10, 0);  // سيثير استثناء
+        cout << "لن يتم طباعة هذا النص" << endl;
+    } catch (const DivideByZeroException& e) {
+        cout << "خطأ: " << e.what() << endl;
+    } catch (...) {
+        cout << "حدث خطأ غير معروف" << endl;
+    }
+    
+    return 0;
+}
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=ZPzHLn0V3ZU",
+        unitId: cppUnits[3].id,
+        order: 2
+      },
+      // الوحدة الرابعة: البرمجة المتقدمة - الفصل 3
+      {
+        title: "البرمجة المتزامنة",
+        description: "تعلم أساسيات البرمجة متعددة المسارات",
+        content: `
+# البرمجة المتزامنة في ++C
+
+## الخيوط (Threads)
+الخيوط هي وحدات تنفيذ متزامنة داخل نفس العملية.
+
+\`\`\`cpp
+#include <iostream>
+#include <thread>
+#include <mutex>
+
+std::mutex mtx;  // لمنع التضارب في الوصول للموارد
+
+void printNumbers(int start, int end, const std::string& threadName) {
+    for (int i = start; i <= end; i++) {
+        std::lock_guard<std::mutex> lock(mtx);  // اكتساب القفل
+        std::cout << threadName << ": " << i << std::endl;
+    }
+}
+
+int main() {
+    std::thread t1(printNumbers, 1, 5, "الخيط 1");
+    std::thread t2(printNumbers, 6, 10, "الخيط 2");
+    
+    t1.join();  // انتظار الخيط الأول حتى ينتهي
+    t2.join();  // انتظار الخيط الثاني حتى ينتهي
+    
+    return 0;
+}
+\`\`\`
+
+## متغيرات الشرط (Condition Variables)
+\`\`\`cpp
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
+std::mutex mtx;
+std::condition_variable cv;
+bool ready = false;
+
+void printNumbers() {
+    std::unique_lock<std::mutex> lock(mtx);
+    
+    // انتظار الإشارة
+    cv.wait(lock, [] { return ready; });
+    
+    std::cout << "تم استلام الإشارة!" << std::endl;
+}
+
+int main() {
+    std::thread t(printNumbers);
+    
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        ready = true;
+    }
+    
+    cv.notify_one();  // إرسال الإشارة
+    t.join();
+    
+    return 0;
+}
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=TPVH_coGAQs",
+        unitId: cppUnits[3].id,
+        order: 3
+      },
+      // الوحدة الرابعة: البرمجة المتقدمة - الفصل 4
+      {
+        title: "البرمجة الوظيفية",
+        description: "تعلم أساليب البرمجة الوظيفية في ++C",
+        content: `
+# البرمجة الوظيفية في ++C
+
+## الدوال المجهولة (Lambda)
+\`\`\`cpp
+// تعريف دالة مجهولة
+auto add = [](int a, int b) { return a + b; };
+
+// استدعاء الدالة المجهولة
+int result = add(3, 4);  // 7
+\`\`\`
+
+## العمليات على المجموعات
+\`\`\`cpp
+#include <algorithm>
+#include <vector>
+#include <iostream>
+
+int main() {
+    std::vector<int> numbers = {1, 2, 3, 4, 5};
+    
+    // تحويل كل عنصر
+    std::transform(numbers.begin(), numbers.end(), numbers.begin(),
+                   [](int n) { return n * 2; });
+    
+    // طباعة النتائج
+    for (int n : numbers) {
+        std::cout << n << " ";  // 2 4 6 8 10
+    }
+    
+    // تصفية العناصر
+    std::vector<int> filtered;
+    std::copy_if(numbers.begin(), numbers.end(), std::back_inserter(filtered),
+                [](int n) { return n > 4; });
+    
+    // طباعة النتائج المصفاة
+    for (int n : filtered) {
+        std::cout << n << " ";  // 6 8 10
+    }
+    
+    return 0;
+}
+\`\`\`
+
+## دوال الترتيب العالي
+\`\`\`cpp
+// دالة تأخذ دالة كمعامل
+template <typename Func>
+void executeAndPrint(Func f, int value) {
+    int result = f(value);
+    std::cout << "النتيجة: " << result << std::endl;
+}
+
+int main() {
+    // استدعاء الدالة باستخدام lambda
+    executeAndPrint([](int x) { return x * x; }, 5);  // النتيجة: 25
+    executeAndPrint([](int x) { return x + 10; }, 5);  // النتيجة: 15
+    
+    return 0;
+}
+\`\`\`
+        `,
+        videoYoutube: "https://www.youtube.com/watch?v=an3BgJDR5C0",
+        unitId: cppUnits[3].id,
+        order: 4
       }
     ]).returning();
 
     // C++ Lessons with key concepts
     const cppLessons = await db.insert(lessons).values([
-      // دروس الوحدة الأولى
+      // الوحدة الأولى - الفصل الأول: المتغيرات وأنواع البيانات
       {
-        title: "التعامل مع المتغيرات",
+        title: "أنواع البيانات الأساسية",
         unitId: cppUnits[0].id,
         chapterId: cppChapters[0].id,
         order: 1
+      },
+      {
+        title: "تعريف المتغيرات",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[0].id,
+        order: 2
+      },
+      {
+        title: "الثوابت",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[0].id,
+        order: 3
       },
       {
         title: "تحويل أنواع البيانات",
         unitId: cppUnits[0].id,
         chapterId: cppChapters[0].id,
-        order: 2
+        order: 4
       },
+
+      // الوحدة الأولى - الفصل الثاني: العمليات الحسابية والمنطقية
       {
         title: "العمليات الحسابية",
         unitId: cppUnits[0].id,
         chapterId: cppChapters[1].id,
-        order: 3
+        order: 1
       },
       {
         title: "العمليات المنطقية",
         unitId: cppUnits[0].id,
         chapterId: cppChapters[1].id,
+        order: 2
+      },
+      {
+        title: "العمليات الثنائية",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[1].id,
+        order: 3
+      },
+      {
+        title: "أولويات العمليات",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[1].id,
         order: 4
       },
-      // دروس الوحدة الثانية
+
+      // الوحدة الأولى - الفصل الثالث: هياكل التحكم
       {
-        title: "إنشاء الفئات",
-        unitId: cppUnits[1].id,
+        title: "جملة if-else",
+        unitId: cppUnits[0].id,
         chapterId: cppChapters[2].id,
         order: 1
       },
       {
-        title: "الخصائص والدوال",
-        unitId: cppUnits[1].id,
+        title: "جملة switch",
+        unitId: cppUnits[0].id,
         chapterId: cppChapters[2].id,
         order: 2
       },
-      // دروس الوحدة الثالثة
+      {
+        title: "حلقة for",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[2].id,
+        order: 3
+      },
+      {
+        title: "حلقات while و do-while",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[2].id,
+        order: 4
+      },
+      
+      // الوحدة الأولى - الفصل الرابع: الدوال
+      {
+        title: "تعريف واستدعاء الدوال",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[3].id,
+        order: 1
+      },
+      {
+        title: "تمرير المعاملات",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[3].id,
+        order: 2
+      },
+      {
+        title: "القيم الافتراضية",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[3].id,
+        order: 3
+      },
+      {
+        title: "تحميل الدوال",
+        unitId: cppUnits[0].id,
+        chapterId: cppChapters[3].id,
+        order: 4
+      },
+      
+      // الوحدة الثانية - الفصل الأول: الفئات والكائنات
+      {
+        title: "مفهوم الفئات",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[4].id,
+        order: 1
+      },
+      {
+        title: "البناة والهوادم",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[4].id,
+        order: 2
+      },
+      {
+        title: "الخصائص والسلوكيات",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[4].id,
+        order: 3
+      },
+      {
+        title: "أنواع الوصول",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[4].id,
+        order: 4
+      },
+      
+      // الوحدة الثانية - الفصل الثاني: الوراثة
+      {
+        title: "أساسيات الوراثة",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[5].id,
+        order: 1
+      },
+      {
+        title: "الوراثة المتعددة",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[5].id,
+        order: 2
+      },
+      {
+        title: "الوراثة متعددة المستويات",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[5].id,
+        order: 3
+      },
+      {
+        title: "الوراثة الهجينة",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[5].id,
+        order: 4
+      },
+      
+      // الوحدة الثانية - الفصل الثالث: تعدد الأشكال
+      {
+        title: "الدوال الافتراضية",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[6].id,
+        order: 1
+      },
+      {
+        title: "الدوال الافتراضية البحتة",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[6].id,
+        order: 2
+      },
+      {
+        title: "تجاوز الدوال",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[6].id,
+        order: 3
+      },
+      {
+        title: "الواجهات",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[6].id,
+        order: 4
+      },
+      
+      // الوحدة الثانية - الفصل الرابع: التغليف والتجريد
+      {
+        title: "مفهوم التغليف",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[7].id,
+        order: 1
+      },
+      {
+        title: "تطبيق التغليف",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[7].id,
+        order: 2
+      },
+      {
+        title: "مفهوم التجريد",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[7].id,
+        order: 3
+      },
+      {
+        title: "تطبيق التجريد",
+        unitId: cppUnits[1].id,
+        chapterId: cppChapters[7].id,
+        order: 4
+      },
+      
+      // الوحدة الثالثة - الفصل الأول: المصفوفات
       {
         title: "المصفوفات أحادية البعد",
         unitId: cppUnits[2].id,
-        chapterId: cppChapters[3].id,
+        chapterId: cppChapters[8].id,
         order: 1
       },
       {
         title: "المصفوفات متعددة الأبعاد",
         unitId: cppUnits[2].id,
-        chapterId: cppChapters[3].id,
+        chapterId: cppChapters[8].id,
         order: 2
+      },
+      {
+        title: "تمرير المصفوفات للدوال",
+        unitId: cppUnits[2].id,
+        chapterId: cppChapters[8].id,
+        order: 3
+      },
+      {
+        title: "المصفوفات الديناميكية",
+        unitId: cppUnits[2].id,
+        chapterId: cppChapters[8].id,
+        order: 4
       }
     ]).returning();
 
     // C++ Challenges with real programming questions
     const cppChallenges = await db.insert(challenges).values([
-      // تحديات درس التعامل مع المتغيرات
+      // تحديات الوحدة الأولى - الفصل الأول: المتغيرات وأنواع البيانات
       {
         lessonId: cppLessons[0].id,
         type: "SELECT",
@@ -245,36 +1236,48 @@ for(int i = 0; i < 5; i++) {
         order: 1
       },
       {
-        lessonId: cppLessons[0].id,
+        lessonId: cppLessons[1].id,
         type: "SELECT",
         question: "كيف يتم تعريف متغير من نوع float في ++C؟",
-        order: 2
+        order: 1
       },
-      // تحديات درس تحويل أنواع البيانات
       {
-        lessonId: cppLessons[1].id,
+        lessonId: cppLessons[2].id,
+        type: "SELECT",
+        question: "أي من التالي يمثل تعريفاً صحيحاً لثابت في ++C؟",
+        order: 1
+      },
+      {
+        lessonId: cppLessons[3].id,
         type: "SELECT",
         question: "ما هي نتيجة تحويل الرقم 5.7 إلى int؟",
         order: 1
       },
+      
+      // تحديات الوحدة الأولى - الفصل الثاني: العمليات الحسابية والمنطقية
       {
-        lessonId: cppLessons[1].id,
-        type: "SELECT",
-        question: "أي من التحويلات التالية يمكن أن يؤدي إلى فقدان البيانات؟",
-        order: 2
-      },
-      // تحديات درس العمليات الحسابية
-      {
-        lessonId: cppLessons[2].id,
+        lessonId: cppLessons[4].id,
         type: "SELECT",
         question: "ما هي نتيجة العملية: 15 % 4؟",
         order: 1
       },
       {
-        lessonId: cppLessons[2].id,
+        lessonId: cppLessons[5].id,
         type: "SELECT",
-        question: "ما هي نتيجة العملية: 7 / 2 في حالة المتغيرات من نوع int؟",
-        order: 2
+        question: "ما هي نتيجة العملية المنطقية: true && false || true؟",
+        order: 1
+      },
+      {
+        lessonId: cppLessons[6].id,
+        type: "SELECT",
+        question: "ما هو ناتج العملية الثنائية: 5 & 3؟",
+        order: 1
+      },
+      {
+        lessonId: cppLessons[7].id,
+        type: "SELECT",
+        question: "أي من العمليات التالية لها أولوية أعلى؟",
+        order: 1
       }
     ]).returning();
 
@@ -310,32 +1313,32 @@ for(int i = 0; i < 5; i++) {
         imageSrc: null,
         audioSrc: null
       },
-      // خيارات تحدي تحويل 5.7 إلى int
+      // خيارات تحدي تعريف الثوابت
       {
         challengeId: cppChallenges[2].id,
+        text: "const int MAX = 100;",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[2].id,
+        text: "constant int MAX = 100;",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      // خيارات تحدي تحويل 5.7 إلى int
+      {
+        challengeId: cppChallenges[3].id,
         text: "5",
         correct: true,
         imageSrc: null,
         audioSrc: null
       },
       {
-        challengeId: cppChallenges[2].id,
+        challengeId: cppChallenges[3].id,
         text: "6",
-        correct: false,
-        imageSrc: null,
-        audioSrc: null
-      },
-      // خيارات تحدي فقدان البيانات
-      {
-        challengeId: cppChallenges[3].id,
-        text: "double إلى int",
-        correct: true,
-        imageSrc: null,
-        audioSrc: null
-      },
-      {
-        challengeId: cppChallenges[3].id,
-        text: "int إلى double",
         correct: false,
         imageSrc: null,
         audioSrc: null
@@ -343,14 +1346,59 @@ for(int i = 0; i < 5; i++) {
       // خيارات تحدي باقي القسمة
       {
         challengeId: cppChallenges[4].id,
-        text: "false",
+        text: "3",
         correct: true,
         imageSrc: null,
         audioSrc: null
       },
       {
         challengeId: cppChallenges[4].id,
+        text: "4",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      // خيارات تحدي العمليات المنطقية
+      {
+        challengeId: cppChallenges[5].id,
         text: "true",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[5].id,
+        text: "false",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      // خيارات تحدي العمليات الثنائية
+      {
+        challengeId: cppChallenges[6].id,
+        text: "1",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[6].id,
+        text: "8",
+        correct: false,
+        imageSrc: null,
+        audioSrc: null
+      },
+      // خيارات تحدي أولويات العمليات
+      {
+        challengeId: cppChallenges[7].id,
+        text: "العمليات الحسابية (*، /) على العمليات المنطقية (&&، ||)",
+        correct: true,
+        imageSrc: null,
+        audioSrc: null
+      },
+      {
+        challengeId: cppChallenges[7].id,
+        text: "العمليات المنطقية (&&، ||) على العمليات الحسابية (*، /)",
         correct: false,
         imageSrc: null,
         audioSrc: null
@@ -402,7 +1450,7 @@ person = {
 }
 \`\`\`
     `,
-        video_youtube: "https://www.youtube.com/watch?v=Y8Tko2YC5hA",
+        videoYoutube: "https://www.youtube.com/watch?v=Y8Tko2YC5hA",
         unitId: pythonUnits[0].id,
         order: 1
       }
@@ -475,7 +1523,7 @@ Java هي لغة برمجة قوية وشائعة الاستخدام:
 2. تثبيت وإعداد متغيرات البيئة
 3. التحقق من التثبيت
         `,
-        video_youtube: "https://www.youtube.com/watch?v=eIrMbAQSU34",
+        videoYoutube: "https://www.youtube.com/watch?v=eIrMbAQSU34",
         unitId: javaUnits[0].id,
         order: 1
       },
@@ -532,7 +1580,7 @@ public class ElectricCar extends Car {
 }
 \`\`\`
     `,
-        video_youtube: "https://www.youtube.com/watch?v=pTB0EiLXUC8",
+        videoYoutube: "https://www.youtube.com/watch?v=pTB0EiLXUC8",
         unitId: javaUnits[0].id,
         order: 2
       }
@@ -631,7 +1679,7 @@ JavaScript هي لغة برمجة أساسية للويب:
 2. متصفح حديث
 3. أدوات المطور
         `,
-        video_youtube: "https://www.youtube.com/watch?v=PkZNo7MFNFg",
+        videoYoutube: "https://www.youtube.com/watch?v=PkZNo7MFNFg",
         unitId: jsUnits[0].id,
         order: 1
       },
@@ -684,7 +1732,7 @@ for (const num of numbers) {
 numbers.forEach(num => console.log(num));
 \`\`\`
     `,
-        video_youtube: "https://www.youtube.com/watch?v=rRgD1yVwIvE",
+        videoYoutube: "https://www.youtube.com/watch?v=rRgD1yVwIvE",
         unitId: jsUnits[0].id,
         order: 2
       }
@@ -753,7 +1801,7 @@ numbers.forEach(num => console.log(num));
         audioSrc: null
       }
     ]);
-
+  
     console.log("Seed completed successfully");
     process.exit(0);
   } catch (error) {

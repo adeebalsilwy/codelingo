@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { sql, and, or, like, desc, asc } from "drizzle-orm";
-import db from "@/db/drizzle";
+import db from "@/db/client";
 import { isAdmin } from "@/lib/admin-server";
 import { lessons } from "@/db/schema";
 import { eq } from "drizzle-orm";

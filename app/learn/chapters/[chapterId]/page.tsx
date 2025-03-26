@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs";
-import db from "@/db/drizzle";
+import db from "@/db/client";
 import { chapters } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { YouTubeEmbed } from "@/app/components/YouTubeEmbed";

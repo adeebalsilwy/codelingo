@@ -21,6 +21,12 @@ const translations: Record<Language, Translations> = {
     'app.title': 'Edu PRO',
     'app.description': 'Learn programming languages easily',
     'app.language': 'Language',
+    'app.loading': 'Loading...',
+    'app.back': 'Back',
+    'app.start': 'Start',
+    'app.review': 'Review',
+    'app.progress': 'Progress',
+    'app.level': 'Level',
     
     // Navigation
     'nav.home': 'Home',
@@ -32,6 +38,28 @@ const translations: Record<Language, Translations> = {
     'nav.quests': 'Quests',
     'nav.shop': 'Shop',
     'nav.code_editor': 'Code Editor',
+    
+    // Theme
+    'theme.light': 'Light',
+    'theme.dark': 'Dark',
+    'theme.system': 'System',
+    'theme.enableLight': 'Enable light mode',
+    'theme.enableDark': 'Enable dark mode',
+    
+    // Units and Lessons
+    'units.activeCourse': 'Active Course',
+    'units.locked': 'Locked',
+    'units.active': 'Current',
+    'units.completed': 'Completed',
+    'units.current': 'Current Lesson',
+    'units.minutes': 'min',
+    'units.challenges': 'challenges',
+    'units.return': 'Return to Homepage',
+    
+    // Lessons Types
+    'lessons.type.practice': 'Practice',
+    'lessons.type.challenge': 'Challenge',
+    'lessons.type.quiz': 'Quiz',
     
     // Courses
     'courses.title': 'Available Courses',
@@ -46,6 +74,7 @@ const translations: Record<Language, Translations> = {
     'chapters.title': 'Chapters',
     'chapters.lessons': 'lesson',
     'chapters.lessons_plural': 'lessons',
+    'chapters.completed': 'completed',
     
     // Lessons
     'lessons.title': 'Lessons',
@@ -108,6 +137,12 @@ const translations: Record<Language, Translations> = {
     'app.title': 'إيدو برو',
     'app.description': 'تعلم لغات البرمجة بسهولة',
     'app.language': 'اللغة',
+    'app.loading': 'جاري التحميل...',
+    'app.back': 'عودة',
+    'app.start': 'ابدأ',
+    'app.review': 'مراجعة',
+    'app.progress': 'التقدم',
+    'app.level': 'المستوى',
     
     // Navigation
     'nav.home': 'الرئيسية',
@@ -119,6 +154,28 @@ const translations: Record<Language, Translations> = {
     'nav.quests': 'المهام',
     'nav.shop': 'المتجر',
     'nav.code_editor': 'محرر الأكواد',
+    
+    // Theme
+    'theme.light': 'فاتح',
+    'theme.dark': 'داكن',
+    'theme.system': 'تلقائي',
+    'theme.enableLight': 'تفعيل الوضع الفاتح',
+    'theme.enableDark': 'تفعيل الوضع الداكن',
+    
+    // Units and Lessons
+    'units.activeCourse': 'الدورة الحالية',
+    'units.locked': 'مقفل',
+    'units.active': 'الحالي',
+    'units.completed': 'مكتمل',
+    'units.current': 'الدرس الحالي',
+    'units.minutes': 'دقيقة',
+    'units.challenges': 'تحديات',
+    'units.return': 'العودة للصفحة الرئيسية',
+    
+    // Lessons Types
+    'lessons.type.practice': 'تدريب',
+    'lessons.type.challenge': 'تحدي',
+    'lessons.type.quiz': 'اختبار',
     
     // Courses
     'courses.title': 'الدورات المتاحة',
@@ -133,6 +190,7 @@ const translations: Record<Language, Translations> = {
     'chapters.title': 'الفصول',
     'chapters.lessons': 'درس',
     'chapters.lessons_plural': 'دروس',
+    'chapters.completed': 'مكتمل',
     
     // Lessons
     'lessons.title': 'الدروس',

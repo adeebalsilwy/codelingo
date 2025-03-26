@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-import db from "@/db/drizzle";
+import db from "@/db/client";
 import { chapters } from "@/db/schema";
 import { isAdmin } from "@/lib/admin-server";
 

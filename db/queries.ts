@@ -1,8 +1,8 @@
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 import { auth } from "@clerk/nextjs";
 import { cache } from "react";
 
-import db from "@/db/drizzle";
+import db, { checkDatabaseConnection } from "@/db/client";
 import { 
   challengeProgress,
   chapters,
@@ -10,135 +10,359 @@ import {
   lessons, 
   units, 
   userProgress,
-  userSubscription
+  userSubscription,
+  userCourseProgress
 } from "@/db/schema";
 
-export const getUserProgress = cache(async () => {
-  const { userId } = await auth();
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000;
 
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const retryOperation = async <T>(operation: () => Promise<T>, operationName: string): Promise<T> => {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      console.error(`Attempt ${attempt} failed for ${operationName}:`, error);
+      
+      if (attempt < MAX_RETRIES) {
+        await wait(RETRY_DELAY);
+      }
+    }
+  }
+  
+  throw lastError;
+};
+
+const handleDatabaseError = (error: any, operation: string) => {
+  console.error(`Database error during ${operation}:`, {
+    message: error.message,
+    code: error.code,
+    stack: error.stack,
+    details: error.details
+  });
+  
+  if (error.message?.includes('connection')) {
+    throw new Error(`Database connection error during ${operation}. Please check your database configuration.`);
+  }
+  
+  throw new Error(`Database operation failed: ${operation}. ${error.message || 'Unknown error'}`);
+};
+
+export const getUserProgress = async () => {
+  try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error("Database connection is not available");
+    }
+
+    const { userId } = await auth();
+    if (!userId) {
+      return null;
+    }
+
+    const data = await db.query.userProgress.findFirst({
+      where: eq(userProgress.userId, userId),
+      with: {
+        activeCourse: true,
+        lastActiveUnit: true,
+        lastLesson: true,
+        courseProgresses: {
+          with: {
+            course: true
+          }
+        }
+      }
+    });
+
+    if (!data) {
+      const newUserProgress = await db.insert(userProgress).values({
+        userId,
+        userName: "User",
+        userImageSrc: "/mascot.svg",
+        hearts: 5,
+        points: 0,
+      }).returning();
+
+      return newUserProgress[0];
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in getUserProgress:", error);
+    throw error;
+  }
+};
+
+export const getUserCourseProgress = async (courseId: number) => {
+  return retryOperation(async () => {
+    const { userId } = await auth();
+    if (!userId) {
+      return null;
+    }
+
+    const data = await db.query.userCourseProgress.findFirst({
+      where: and(
+        eq(userCourseProgress.userId, userId),
+        eq(userCourseProgress.courseId, courseId)
+      ),
+      with: {
+        course: {
+          with: {
+            units: {
+              with: {
+                lessons: {
+                  with: {
+                    challenges: {
+                      with: {
+                        challengeProgress: {
+                          where: eq(challengeProgress.userId, userId)
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!data) {
+      return null;
+    }
+
+    // Calculate total challenges and completed challenges
+    let totalChallenges = 0;
+    let completedChallenges = 0;
+
+    data.course.units.forEach(unit => {
+      unit.lessons.forEach(lesson => {
+        lesson.challenges.forEach(challenge => {
+          totalChallenges++;
+          if (challenge.challengeProgress?.some(progress => progress.completed)) {
+            completedChallenges++;
+          }
+        });
+      });
+    });
+
+    // Calculate progress percentage
+    const progress = totalChallenges > 0
+      ? Math.round((completedChallenges / totalChallenges) * 100)
+      : 0;
+
+    // Update progress in database if it has changed
+    if (progress !== data.progress) {
+      await db.update(userCourseProgress)
+        .set({ progress })
+        .where(and(
+          eq(userCourseProgress.userId, userId),
+          eq(userCourseProgress.courseId, courseId)
+        ));
+    }
+
+    return {
+      ...data,
+      progress,
+      totalChallenges,
+      completedChallenges
+    };
+  }, "getUserCourseProgress");
+};
+
+export const getAllUserCourseProgresses = async () => {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return [];
+    }
+
+    const data = await db.query.userCourseProgress.findMany({
+      where: eq(userCourseProgress.userId, userId),
+      with: {
+        course: true,
+      },
+    });
+
+    return data;
+  } catch (error) {
+    handleDatabaseError(error, "fetch all user course progress");
+    return [];
+  }
+};
+
+export const updateUserCourseProgress = async (courseId: number, data: {
+  lastActiveUnitId?: number;
+  lastLessonId?: number;
+  progress?: number;
+  points?: number;
+  completed?: boolean;
+}) => {
+  const { userId } = await auth();
+  
   if (!userId) {
     return null;
   }
-
-  const data = await db.query.userProgress.findFirst({
-    where: eq(userProgress.userId, userId),
-    with: {
-      activeCourse: true,
-    },
+  
+  const existingProgress = await db.query.userCourseProgress.findFirst({
+    where: and(
+      eq(userCourseProgress.userId, userId),
+      eq(userCourseProgress.courseId, courseId)
+    ),
   });
-
-  return data;
-});
-
-export const getUnits = cache(async () => {
-  const { userId } = await auth();
-  const userProgress = await getUserProgress();
-
-  if (!userId || !userProgress?.activeCourseId) {
-    return [];
+  
+  if (existingProgress) {
+    await db
+      .update(userCourseProgress)
+      .set({ 
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(userCourseProgress.userId, userId),
+          eq(userCourseProgress.courseId, courseId)
+        )
+      );
+  } else {
+    await db
+      .insert(userCourseProgress)
+      .values({
+        userId,
+        courseId,
+        ...data,
+      });
   }
+  
+  return true;
+};
 
-  const data = await db.query.units.findMany({
-    orderBy: (units, { asc }) => [asc(units.order)],
-    where: eq(units.courseId, userProgress.activeCourseId),
-    with: {
-      course: true,
-      lessons: {
-        orderBy: (lessons, { asc }) => [asc(lessons.order)],
-        with: {
-          challenges: {
-            orderBy: (challenges, { asc }) => [asc(challenges.order)],
-            with: {
-              challengeProgress: {
-                where: eq(challengeProgress.userId, userId)
+export const updateLastActiveUnit = async (unitId: number) => {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    return null;
+  }
+  
+  const userProgressData = await getUserProgress();
+  if (!userProgressData?.activeCourseId) {
+    return null;
+  }
+  
+  await db
+    .update(userProgress)
+    .set({ 
+      lastActiveUnitId: unitId,
+    })
+    .where(eq(userProgress.userId, userId));
+  
+  await updateUserCourseProgress(userProgressData.activeCourseId, {
+    lastActiveUnitId: unitId
+  });
+    
+  return true;
+};
+
+export const getUnits = async () => {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return [];
+    }
+
+    const userProgressData = await getUserProgress();
+    if (!userProgressData?.activeCourseId) {
+      return [];
+    }
+
+    const data = await db.query.units.findMany({
+      where: eq(units.courseId, userProgressData.activeCourseId),
+      orderBy: [asc(units.order)],
+      with: {
+        course: true,
+        lessons: {
+          with: {
+            challenges: {
+              with: {
+                challengeProgress: {
+                  where: eq(challengeProgress.userId, userId)
+                }
               }
             }
           }
         }
       }
-    }
-  });
-
-  const filteredData = data.filter(unit => unit.courseId === userProgress.activeCourseId);
-
-  const normalizedData = filteredData.map((unit) => {
-    const lessonsWithCompletedStatus = unit.lessons.map((lesson) => {
-      if (lesson.challenges.length === 0) {
-        return { ...lesson, completed: false };
-      }
-
-      const allCompletedChallenges = lesson.challenges.every((challenge) => {
-        return challenge.challengeProgress
-          && challenge.challengeProgress.length > 0
-          && challenge.challengeProgress.every((progress) => progress.completed);
-      });
-
-      return { ...lesson, completed: allCompletedChallenges };
     });
 
-    return { 
+    // Process lessons completion status and add courseName
+    return data.map(unit => ({
       ...unit,
-      lessons: lessonsWithCompletedStatus,
-      courseName: unit.course.title
-    };
-  });
-
-  return normalizedData;
-});
-
-export const getChapters = cache(async (unitId: number) => {
-  const { userId } = await auth();
-  const userProgress = await getUserProgress();
-
-  if (!userId || !userProgress?.activeCourseId) {
-    return [];
+      courseName: unit.course.title,
+      lessons: unit.lessons.map(lesson => ({
+        ...lesson,
+        completed: lesson.challenges.every(challenge => 
+          challenge.challengeProgress?.some(progress => progress.completed)
+        )
+      }))
+    }));
+  } catch (error) {
+    console.error("Error in getUnits:", error);
+    throw error;
   }
+};
 
-  const data = await db.query.chapters.findMany({
-    orderBy: (chapters, { asc }) => [asc(chapters.order)],
-    where: eq(chapters.unitId, unitId),
-    with: {
-      unit: {
-        with: {
-          course: true
-        }
-      },
-      lessons: {
-        orderBy: (lessons, { asc }) => [asc(lessons.order)],
-        with: {
-          challenges: {
-            orderBy: (challenges, { asc }) => [asc(challenges.order)],
-            with: {
-              challengeProgress: {
-                where: eq(challengeProgress.userId, userId)
+export const getChapters = async (unitId: number) => {
+  try {
+    const { userId } = auth();
+    if (!userId) {
+      return [];
+    }
+
+    const data = await db.query.chapters.findMany({
+      where: eq(chapters.unitId, unitId),
+      orderBy: [asc(chapters.order)],
+      with: {
+        unit: {
+          with: {
+            course: true
+          }
+        },
+        lessons: {
+          with: {
+            challenges: {
+              with: {
+                challengeProgress: {
+                  where: eq(challengeProgress.userId, userId)
+                }
               }
             }
           }
         }
       }
-    }
-  });
-
-  const normalizedData = data.map((chapter) => {
-    const lessonsWithCompletedStatus = chapter.lessons.map((lesson) => {
-      if (!lesson.challenges || lesson.challenges.length === 0) {
-        return { ...lesson, completed: false };
-      }
-
-      const allCompletedChallenges = lesson.challenges.every((challenge) => {
-        return challenge.challengeProgress
-          && challenge.challengeProgress.length > 0
-          && challenge.challengeProgress.every((progress) => progress.completed);
-      });
-
-      return { ...lesson, completed: allCompletedChallenges };
     });
 
-    return { ...chapter, lessons: lessonsWithCompletedStatus };
-  });
-
-  return normalizedData;
-});
+    // Process lessons completion status
+    return data.map(chapter => ({
+      ...chapter,
+      lessons: chapter.lessons.map(lesson => ({
+        ...lesson,
+        completed: lesson.challenges.every(challenge => 
+          challenge.challengeProgress?.some(progress => progress.completed)
+        )
+      }))
+    }));
+  } catch (error) {
+    console.error("Error in getChapters:", error);
+    throw error;
+  }
+};
 
 export const getCourses = cache(async () => {
   const data = await db.query.courses.findMany();
@@ -163,17 +387,17 @@ export const getCourseById = cache(async (courseId: number) => {
   return data;
 });
 
-export const getCourseProgress = cache(async () => {
+export const getCourseProgress = async () => {
   const { userId } = await auth();
-  const userProgress = await getUserProgress();
+  const userProgressData = await getUserProgress();
 
-  if (!userId || !userProgress?.activeCourseId) {
+  if (!userId || !userProgressData?.activeCourseId) {
     return null;
   }
 
   const unitsInActiveCourse = await db.query.units.findMany({
     orderBy: (units, { asc }) => [asc(units.order)],
-    where: eq(units.courseId, userProgress.activeCourseId),
+    where: eq(units.courseId, userProgressData.activeCourseId),
     with: {
       lessons: {
         orderBy: (lessons, { asc }) => [asc(lessons.order)],
@@ -191,8 +415,35 @@ export const getCourseProgress = cache(async () => {
     },
   });
 
-  const firstUncompletedLesson = unitsInActiveCourse
-    .flatMap((unit) => unit.lessons)
+  type Lesson = {
+    id: number;
+    title: string;
+    order: number;
+    unit: {
+      id: number;
+      title: string;
+      description: string;
+      order: number;
+    };
+    challenges: {
+      challengeProgress?: { completed: boolean }[];
+    }[];
+  };
+
+  let targetLessons: Lesson[] = [];
+
+  if (userProgressData.lastActiveUnitId) {
+    const activeUnit = unitsInActiveCourse.find(unit => unit.id === userProgressData.lastActiveUnitId);
+    if (activeUnit) {
+      targetLessons = activeUnit.lessons;
+    }
+  }
+
+  if (targetLessons.length === 0) {
+    targetLessons = unitsInActiveCourse.flatMap(unit => unit.lessons);
+  }
+  
+  const firstUncompletedLesson = targetLessons
     .find((lesson) => {
       return lesson.challenges.some((challenge) => {
         return !challenge.challengeProgress 
@@ -205,7 +456,7 @@ export const getCourseProgress = cache(async () => {
     activeLesson: firstUncompletedLesson,
     activeLessonId: firstUncompletedLesson?.id,
   };
-});
+};
 
 export const getLesson = cache(async (id?: number) => {
   const { userId } = await auth();
@@ -252,27 +503,41 @@ export const getLesson = cache(async (id?: number) => {
   return { ...data, challenges: normalizedChallenges }
 });
 
-export const getLessonPercentage = cache(async () => {
-  const courseProgress = await getCourseProgress();
+export const getLessonPercentage = async () => {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return 0;
+    }
 
-  if (!courseProgress?.activeLessonId) {
+    const userProgressData = await getUserProgress();
+    if (!userProgressData?.activeCourseId) {
+      return 0;
+    }
+
+    const units = await getUnits();
+    if (!units || units.length === 0) {
+      return 0;
+    }
+
+    let totalLessons = 0;
+    let completedLessons = 0;
+
+    units.forEach(unit => {
+      unit.lessons.forEach(lesson => {
+        totalLessons++;
+        if (lesson.completed) {
+          completedLessons++;
+        }
+      });
+    });
+
+    return totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  } catch (error) {
+    console.error("Error in getLessonPercentage:", error);
     return 0;
   }
-
-  const lesson = await getLesson(courseProgress.activeLessonId);
-
-  if (!lesson) {
-    return 0;
-  }
-
-  const completedChallenges = lesson.challenges
-    .filter((challenge) => challenge.completed);
-  const percentage = Math.round(
-    (completedChallenges.length / lesson.challenges.length) * 100,
-  );
-
-  return percentage;
-});
+};
 
 const DAY_IN_MS = 86_400_000;
 export const getUserSubscription = cache(async () => {
@@ -296,7 +561,7 @@ export const getUserSubscription = cache(async () => {
   };
 });
 
-export const getTopTenUsers = cache(async () => {
+export const getTopTenUsers = async () => {
   const { userId } = await auth();
 
   if (!userId) {
@@ -315,4 +580,69 @@ export const getTopTenUsers = cache(async () => {
   });
 
   return data;
-});
+};
+
+export const setActiveCourse = async (courseId: number) => {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return null;
+    }
+
+    // Get or create user progress
+    let userProgressData = await getUserProgress();
+    
+    if (!userProgressData) {
+      userProgressData = (await db.insert(userProgress).values({
+        userId,
+        userName: "User",
+        userImageSrc: "/mascot.svg",
+        hearts: 5,
+        points: 0,
+        activeCourseId: courseId,
+      }).returning())[0];
+    } else {
+      // Update active course
+      userProgressData = (await db
+        .update(userProgress)
+        .set({ 
+          activeCourseId: courseId,
+          updatedAt: new Date(),
+        })
+        .where(eq(userProgress.userId, userId))
+        .returning())[0];
+    }
+
+    // Get or create user course progress
+    let userCourseProgressData = await db.query.userCourseProgress.findFirst({
+      where: and(
+        eq(userCourseProgress.userId, userId),
+        eq(userCourseProgress.courseId, courseId)
+      ),
+    });
+
+    if (!userCourseProgressData) {
+      userCourseProgressData = (await db.insert(userCourseProgress).values({
+        userId,
+        courseId,
+        progress: 0,
+        points: 0,
+      }).returning())[0];
+    }
+
+    // Get course details
+    const courseData = await db.query.courses.findFirst({
+      where: eq(courses.id, courseId),
+    });
+
+    return {
+      ...userProgressData,
+      activeCourse: courseData,
+      courseProgress: userCourseProgressData,
+    };
+
+  } catch (error) {
+    handleDatabaseError(error, "set active course");
+  }
+};

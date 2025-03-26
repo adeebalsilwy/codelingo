@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
 import { isAdmin } from "@/lib/admin-server";
-import db from "@/db/drizzle";
+import db from "@/db/client";
 import { units } from "@/db/schema";
 
 export async function GET(

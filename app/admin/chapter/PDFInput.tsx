@@ -78,7 +78,7 @@ const PDFInput = (props: any) => {
         onFileSelect(file);
       }
     },
-    [notify, tempPreview, field]
+    [notify, tempPreview, field, props]
   );
 
   // Cleanup preview URL when component unmounts

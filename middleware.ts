@@ -1,6 +1,7 @@
 import { authMiddleware } from "@clerk/nextjs";
+import { NextResponse } from "next/server";
 
-// See https://clerk.com/docs/references/nextjs/auth-middleware for more information about configuring your middleware
+// Configure Clerk middleware with our custom functionality
 export default authMiddleware({
   publicRoutes: [
     "/",
@@ -8,17 +9,39 @@ export default authMiddleware({
     "/api/webhook",
     "/learn",
     "/chat",
-    "/code-editor"
+    "/code-editor",
+    "/courses",
+    "/guide"
   ],
-  ignoredRoutes: [
-    "/((?!api|trpc))(_next.*|.+.[w]+$)",
-  ]
+  afterAuth(auth, req) {
+    // Get the response from the auth middleware
+    const response = NextResponse.next();
+    
+    // Check if there are any stored cookies for course progress
+    const activeCourseId = req.cookies.get("activeCourseId")?.value;
+    
+    // If we have a course ID and the user is going to the learn page, we can use it
+    if (activeCourseId && req.nextUrl.pathname === "/learn") {
+      // Clone the response and set the active course ID cookie
+      const newResponse = NextResponse.next();
+      newResponse.cookies.set("activeCourseId", activeCourseId, { 
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+      return newResponse;
+    }
+    
+    return response;
+  }
 });
 
+// See https://clerk.com/docs/references/nextjs/auth-middleware for more information about configuring your middleware
 export const config = {
   matcher: [
     "/((?!.*\\..*|_next).*)",
     "/",
     "/(api|trpc)(.*)",
   ],
-};
+}; 

@@ -1,108 +1,113 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Promo } from "@/components/promo";
-import { Quests } from "@/components/quests";
-import { FeedWrapper } from "@/components/feed-wrapper";
-import { UserProgress } from "@/components/user-progress";
-import { StickyWrapper } from "@/components/sticky-wrapper";
-import { lessons, units as unitsSchema } from "@/db/schema";
-import { 
+import { Suspense } from "react";
+import { headers } from "next/headers";
+import { getDictionary } from "@/app/i18n/server";
+
+import {
   getCourseProgress, 
   getLessonPercentage, 
   getUnits, 
   getUserProgress,
-  getUserSubscription
 } from "@/db/queries";
 
-import { Unit } from "./unit";
-import { Header } from "./header";
+import ClientLearningPage from "./client-page";
+import { Unit, Chapter, Lesson, CourseProgress, UserProgress } from '@/types';
 
-const LearnPage = async () => {
-  const userProgressData = getUserProgress();
-  const courseProgressData = getCourseProgress();
-  const lessonPercentageData = getLessonPercentage();
-  const unitsData = getUnits();
-  const userSubscriptionData = getUserSubscription();
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
-  const [
-    userProgress,
-    units,
-    courseProgress,
-    lessonPercentage,
-    userSubscription,
-  ] = await Promise.all([
-    userProgressData,
-    unitsData,
-    courseProgressData,
-    lessonPercentageData,
-    userSubscriptionData,
-  ]);
-
-  if (!userProgress || !userProgress.activeCourse) {
-    redirect("/courses");
-  }
-
-  if (!courseProgress) {
-    redirect("/courses");
-  }
-
-  if (units.length > 0 && units[0].courseId !== userProgress.activeCourseId) {
-    redirect("/courses");
-  }
-
-  const isPro = !!userSubscription?.isActive;
-
-  return (
-    <>
-      {/* Mobile Change Course Button */}
-      <div className="lg:hidden fixed bottom-20 right-4 z-50">
-        <Link href="/courses">
-          <Button 
-            size="lg"
-            variant="primary"
-            className="shadow-lg rounded-full p-3 h-auto"
-          >
-            <BookOpen className="h-6 w-6" />
-          </Button>
-        </Link>
-      </div>
-
-      <div className="flex flex-row-reverse gap-[48px] px-6">
-        <StickyWrapper>
-          <UserProgress
-            activeCourse={userProgress.activeCourse}
-            hearts={userProgress.hearts}
-            points={userProgress.points}
-            hasActiveSubscription={isPro}
-          />
-          {!isPro && (
-            <Promo />
-          )}
-          <Quests points={userProgress.points} />
-        </StickyWrapper>
-        <FeedWrapper>
-          <Header title={userProgress.activeCourse.title} />
-          {units.map((unit) => (
-            <div key={unit.id} className="mb-10">
-              <Unit
-                id={unit.id}
-                order={unit.order}
-                description={unit.description}
-                title={unit.title}
-                lessons={unit.lessons}
-                activeLesson={courseProgress.activeLesson as typeof lessons.$inferSelect & {
-                  unit: typeof unitsSchema.$inferSelect;
-                } | undefined}
-                activeLessonPercentage={lessonPercentage}
-              />
-            </div>
-          ))}
-        </FeedWrapper>
-      </div>
-    </>
-  );
+type SearchParams = {
+  courseId?: string;
 };
- 
-export default LearnPage;
+
+type LearnPageProps = {
+  searchParams: SearchParams;
+};
+
+export default async function LearnPage({
+  searchParams
+}: {
+  searchParams: { courseId?: string }
+}) {
+  const dict = await getDictionary();
+  const { courseId } = searchParams;
+
+  if (!courseId) {
+    redirect('/courses');
+  }
+
+  const [userProgress, units, courseProgress, lessonPercentage] = (await Promise.all([
+    getUserProgress(),
+    getUnits(),
+    getCourseProgress(),
+    getLessonPercentage()
+  ])) as unknown as [UserProgress | null, Unit[], CourseProgress | null, number];
+
+  // Redirect if no user progress or active course
+  if (!userProgress?.activeCourseId) {
+    redirect('/courses');
+  }
+
+  // Calculate progress based on lessons in each unit
+  const calculateUnitProgress = (unit: Unit) => {
+    if (!unit.lessons || unit.lessons.length === 0) return 0;
+    const completedLessons = unit.lessons.filter(lesson => lesson.completed).length;
+    return Math.round((completedLessons / unit.lessons.length) * 100);
+  };
+
+  // Calculate total course progress
+  const totalLessons = units.reduce((total, unit) => total + unit.lessons.length, 0);
+  const completedLessons = units.reduce((total, unit) => 
+    total + unit.lessons.filter(lesson => lesson.completed).length, 0
+  );
+  const courseProgressPercentage = totalLessons > 0 
+    ? Math.round((completedLessons / totalLessons) * 100)
+    : 0;
+
+  // Find last active lesson or first incomplete lesson
+  const findLastOrIncompleteLesson = () => {
+    for (const unit of units) {
+      const unitProgress = calculateUnitProgress(unit);
+      if (unitProgress < 100) {
+        // Find first incomplete lesson in this unit
+        const firstIncompleteLesson = unit.lessons.find(lesson => !lesson.completed);
+        if (firstIncompleteLesson) {
+          return {
+            unitId: unit.id,
+            lessonId: firstIncompleteLesson.id
+          };
+        }
+      }
+    }
+    // If all lessons are completed, return the last lesson
+    if (units.length > 0) {
+      const lastUnit = units[units.length - 1];
+      const lastLesson = lastUnit.lessons[lastUnit.lessons.length - 1];
+      return {
+        unitId: lastUnit.id,
+        lessonId: lastLesson.id
+      };
+    }
+    return null;
+  };
+
+  const activeLesson = findLastOrIncompleteLesson();
+
+  if (activeLesson) {
+    redirect(`/learn/${activeLesson.unitId}?courseId=${courseId}`);
+  }
+
+  // If no active lesson found (empty course)
+  return (
+    <div className="h-full flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-2">
+          {dict['lessons.none_available']}
+        </h1>
+        <p className="text-gray-500">
+          {dict['lessons.course_empty']}
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { I18nProvider } from "@/app/i18n/client";
+import { ThemeProvider } from "@/app/theme-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -25,8 +26,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, [mounted]);
 
   return (
-    <I18nProvider>
-      {children}
-    </I18nProvider>
+    <ThemeProvider>
+      <I18nProvider>
+        {children}
+      </I18nProvider>
+    </ThemeProvider>
   );
 } 

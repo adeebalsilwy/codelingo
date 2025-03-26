@@ -8,7 +8,7 @@
  */
 
 import { config } from 'dotenv';
-import db from "../db/drizzle";
+import db from "../db/client";
 import { admins } from "../db/schema";
 import { eq } from "drizzle-orm";
 

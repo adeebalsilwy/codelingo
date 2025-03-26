@@ -10,7 +10,7 @@ import { challenges } from "@/db/schema";
 type Props = {
   id: number;
   imageSrc: string | null;
-  audioSrc: string | null;
+  audioSrc?: string | null;
   text: string;
   shortcut: string;
   selected?: boolean;
@@ -32,7 +32,9 @@ export const Card = ({
   disabled,
   type,
 }: Props) => {
-  const [audio, _, controls] = useAudio({ src: audioSrc || "" });
+  const [audio, _, controls] = useAudio({ 
+    src: audioSrc || '/silence.mp3' // Provide a fallback audio or empty audio file
+  });
 
   const handleClick = useCallback(() => {
     if (disabled) return;

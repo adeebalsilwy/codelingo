@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-import db from "@/db/drizzle";
+import db from "@/db/client";
 import { getUserProgress, getUserSubscription } from "@/db/queries";
 import { challengeProgress, challenges, userProgress } from "@/db/schema";
 
@@ -23,11 +23,21 @@ export const upsertChallengeProgress = async (challengeId: number) => {
   }
 
   const challenge = await db.query.challenges.findFirst({
-    where: eq(challenges.id, challengeId)
+    where: eq(challenges.id, challengeId),
+    with: {
+      challengeOptions: true // Fetch challenge options to validate
+    }
   });
 
   if (!challenge) {
     throw new Error("Challenge not found");
+  }
+
+  // Validate challenge has proper options if it's a SELECT type
+  if (challenge.type === "SELECT" && 
+      (!challenge.challengeOptions || challenge.challengeOptions.length === 0)) {
+    console.error(`Challenge ${challengeId} has no options but is of type SELECT`);
+    return { error: "invalid_challenge" };
   }
 
   const lessonId = challenge.lessonId;
@@ -52,6 +62,7 @@ export const upsertChallengeProgress = async (challengeId: number) => {
   if (isPractice) {
     await db.update(challengeProgress).set({
       completed: true,
+      updatedAt: new Date() // Ensure updatedAt is refreshed
     })
     .where(
       eq(challengeProgress.id, existingChallengeProgress.id)
@@ -60,6 +71,7 @@ export const upsertChallengeProgress = async (challengeId: number) => {
     await db.update(userProgress).set({
       hearts: Math.min(currentUserProgress.hearts + 1, 5),
       points: currentUserProgress.points + 10,
+      updatedAt: new Date() // Ensure updatedAt is refreshed
     }).where(eq(userProgress.userId, userId));
 
     revalidatePath("/learn");
@@ -67,17 +79,26 @@ export const upsertChallengeProgress = async (challengeId: number) => {
     revalidatePath("/quests");
     revalidatePath("/leaderboard");
     revalidatePath(`/lesson/${lessonId}`);
-    return;
+    return { success: true, practice: true };
   }
 
-  await db.insert(challengeProgress).values({
+  // Store the challenge progress
+  const insertResult = await db.insert(challengeProgress).values({
     challengeId,
     userId,
     completed: true,
-  });
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }).returning();
 
+  if (!insertResult || insertResult.length === 0) {
+    throw new Error("Failed to insert challenge progress");
+  }
+
+  // Update user points
   await db.update(userProgress).set({
     points: currentUserProgress.points + 10,
+    updatedAt: new Date() // Ensure updatedAt is refreshed
   }).where(eq(userProgress.userId, userId));
 
   revalidatePath("/learn");
@@ -85,4 +106,6 @@ export const upsertChallengeProgress = async (challengeId: number) => {
   revalidatePath("/quests");
   revalidatePath("/leaderboard");
   revalidatePath(`/lesson/${lessonId}`);
+  
+  return { success: true };
 };

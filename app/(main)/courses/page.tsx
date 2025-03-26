@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, BookOpen, Star } from "lucide-react";
 import Link from "next/link";
@@ -68,7 +68,7 @@ const CoursesPage = () => {
   }, [isLoaded, isSignedIn, router, language]);
 
   // Function to fetch all necessary data
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // Don't fetch if not authenticated
       if (!isSignedIn) {
@@ -158,13 +158,13 @@ const CoursesPage = () => {
         if (errorMessage.includes('Network error')) {
           setTimeout(() => {
             fetchData();
-          }, 3000); // Retry after 3 seconds
+          }, 3000);
         }
       }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isSignedIn, language]);
 
   // Fetch data on mount and when language or auth state changes
   useEffect(() => {

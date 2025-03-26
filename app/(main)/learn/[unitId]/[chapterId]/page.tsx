@@ -5,12 +5,13 @@ import { getChapters } from "@/db/queries";
 import { BookOpen, PlayCircle, ArrowRight, Clock, CheckCircle, BookOpenCheck } from "lucide-react";
 import { YouTubeEmbed } from "@/app/components/YouTubeEmbed";
 
-interface PageProps {
+type PageProps = {
   params: {
     unitId: string;
     chapterId: string;
   };
-}
+  searchParams?: { [key: string]: string | string[] | undefined };
+};
 
 // Force dynamic rendering and disable caching
 export const dynamic = 'force-dynamic';

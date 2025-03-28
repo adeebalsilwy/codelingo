@@ -2,16 +2,15 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getChapters } from "@/db/queries";
-import { BookOpen, PlayCircle, ArrowRight, Clock, CheckCircle, BookOpenCheck } from "lucide-react";
+import {
+  BookOpen,
+  PlayCircle,
+  ArrowRight,
+  Clock,
+  CheckCircle,
+  BookOpenCheck,
+} from "lucide-react";
 import { YouTubeEmbed } from "@/app/components/YouTubeEmbed";
-
-type PageProps = {
-  params: {
-    unitId: string;
-    chapterId: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-};
 
 // Force dynamic rendering and disable caching
 export const dynamic = 'force-dynamic';
@@ -29,7 +28,13 @@ function LoadingFallback() {
   );
 }
 
-const ChapterPage = async ({ params }: PageProps) => {
+const ChapterPage = async ({
+  params,
+  searchParams,
+}: {
+  params: { unitId: string; chapterId: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) => {
   const unitId = parseInt(params.unitId);
   const chapterId = parseInt(params.chapterId);
 
@@ -47,7 +52,9 @@ const ChapterPage = async ({ params }: PageProps) => {
     redirect("/");
   }
 
-  const currentChapterIndex = chapters.findIndex((chapter) => chapter.id === chapterId);
+  const currentChapterIndex = chapters.findIndex(
+    (chapter) => chapter.id === chapterId
+  );
   const nextChapter = chapters[currentChapterIndex + 1];
   const previousChapter = chapters[currentChapterIndex - 1];
 
@@ -61,11 +68,17 @@ const ChapterPage = async ({ params }: PageProps) => {
               {/* Breadcrumb */}
               <div className="px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-primary/10">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Link href={`/learn/${unitId}`} className="hover:text-primary transition-colors font-medium">
+                  <Link
+                    href={`/learn/${unitId}`}
+                    className="hover:text-primary transition-colors font-medium"
+                  >
                     {currentChapter.unit.course.title}
                   </Link>
                   <span>›</span>
-                  <Link href={`/learn/${unitId}`} className="hover:text-primary transition-colors font-medium">
+                  <Link
+                    href={`/learn/${unitId}`}
+                    className="hover:text-primary transition-colors font-medium"
+                  >
                     {currentChapter.unit.title}
                   </Link>
                 </div>
@@ -93,7 +106,11 @@ const ChapterPage = async ({ params }: PageProps) => {
               {/* Chapter Description */}
               <div className="p-8 bg-gradient-to-b from-white to-gray-50/50">
                 <div className="prose prose-slate max-w-none">
-                  <div dangerouslySetInnerHTML={{ __html: currentChapter.description }} />
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: currentChapter.description,
+                    }}
+                  />
                 </div>
               </div>
 
@@ -110,7 +127,11 @@ const ChapterPage = async ({ params }: PageProps) => {
               {currentChapter.content && (
                 <div className="px-8 pb-8">
                   <div className="prose prose-slate max-w-none">
-                    <div dangerouslySetInnerHTML={{ __html: currentChapter.content }} />
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: currentChapter.content,
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -120,7 +141,10 @@ const ChapterPage = async ({ params }: PageProps) => {
                 <div className="flex justify-between items-center">
                   {previousChapter && (
                     <Link href={`/learn/${unitId}/${previousChapter.id}`}>
-                      <Button variant="secondaryOutline" className="flex items-center gap-2">
+                      <Button
+                        variant="secondaryOutline"
+                        className="flex items-center gap-2"
+                      >
                         <ArrowRight className="h-4 w-4 rotate-180" />
                         الفصل السابق
                       </Button>
@@ -153,7 +177,7 @@ const ChapterPage = async ({ params }: PageProps) => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="space-y-3">
                 {currentChapter.lessons.map((lesson, index) => (
                   <Link key={lesson.id} href={`/lesson/${lesson.id}`}>
@@ -163,11 +187,23 @@ const ChapterPage = async ({ params }: PageProps) => {
                         className="w-full justify-between items-center h-auto p-4 text-base font-normal border-2 hover:bg-primary/5"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`flex-shrink-0 w-8 h-8 rounded-full ${lesson.completed ? 'bg-primary text-white' : 'bg-primary/10 text-primary'} flex items-center justify-center font-semibold`}>
-                            {lesson.completed ? <CheckCircle className="h-5 w-5" /> : index + 1}
+                          <div
+                            className={`flex-shrink-0 w-8 h-8 rounded-full ${
+                              lesson.completed
+                                ? "bg-primary text-white"
+                                : "bg-primary/10 text-primary"
+                            } flex items-center justify-center font-semibold`}
+                          >
+                            {lesson.completed ? (
+                              <CheckCircle className="h-5 w-5" />
+                            ) : (
+                              index + 1
+                            )}
                           </div>
                           <div className="flex flex-col items-start gap-1">
-                            <span className="text-left font-medium">{lesson.title}</span>
+                            <span className="text-left font-medium">
+                              {lesson.title}
+                            </span>
                             {lesson.challenges.length > 0 && (
                               <span className="text-xs text-muted-foreground">
                                 {lesson.challenges.length} تحديات

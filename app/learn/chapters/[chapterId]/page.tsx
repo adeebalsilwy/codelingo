@@ -45,9 +45,9 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
           </div>
         </div>
 
-        {chapter.video_youtube && (
+        {chapter.videoYoutube && (
           <div className="aspect-video">
-            <YouTubeEmbed url={chapter.video_youtube} />
+            <YouTubeEmbed url={chapter.videoYoutube} />
           </div>
         )}
 

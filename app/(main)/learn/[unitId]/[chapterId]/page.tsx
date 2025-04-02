@@ -5,14 +5,6 @@ import { getChapters } from "@/db/queries";
 import { BookOpen, PlayCircle, ArrowRight, Clock, CheckCircle, BookOpenCheck } from "lucide-react";
 import { YouTubeEmbed } from "@/app/components/YouTubeEmbed";
 
-type PageProps = {
-  params: {
-    unitId: string;
-    chapterId: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-};
-
 // Force dynamic rendering and disable caching
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -29,7 +21,12 @@ function LoadingFallback() {
   );
 }
 
-const ChapterPage = async ({ params }: PageProps) => {
+export default async function ChapterPage({
+  params,
+}: {
+  params: { unitId: string; chapterId: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
   const unitId = parseInt(params.unitId);
   const chapterId = parseInt(params.chapterId);
 
@@ -190,6 +187,4 @@ const ChapterPage = async ({ params }: PageProps) => {
       </div>
     </div>
   );
-};
-
-export default ChapterPage;
+}

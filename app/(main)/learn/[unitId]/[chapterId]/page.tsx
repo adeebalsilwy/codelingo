@@ -12,6 +12,14 @@ import {
 } from "lucide-react";
 import { YouTubeEmbed } from "@/app/components/YouTubeEmbed";
 
+interface PageProps {
+  params: {
+    unitId: string;
+    chapterId: string;
+  };
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
 // Force dynamic rendering and disable caching
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

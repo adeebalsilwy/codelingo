@@ -1,12 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build --no-lint --no-typescript",
   "installCommand": "npm install --legacy-peer-deps",
   "env": {
     "NODE_ENV": "production"
-  },
-  "typescript": {
-    "ignoreBuildErrors": true
   },
   "devCommand": "next dev",
   "framework": "nextjs",

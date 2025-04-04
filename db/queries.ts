@@ -198,6 +198,79 @@ export const getAllUserCourseProgresses = async () => {
   }
 };
 
+/**
+ * Calcular el progreso de un curso específico para un usuario
+ * Calculate course progress for a specific user
+ */
+export const calculateCourseProgress = async (userId: string, courseId: number): Promise<number> => {
+  try {
+    console.log(`Calculating progress for user ${userId} in course ${courseId}`);
+    
+    // Get all lessons in the course through units
+    const courseData = await db.query.courses.findFirst({
+      where: eq(courses.id, courseId),
+      with: {
+        units: {
+          with: {
+            lessons: {
+              with: {
+                challenges: {
+                  with: {
+                    challengeProgress: {
+                      where: eq(challengeProgress.userId, userId)
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!courseData || !courseData.units || courseData.units.length === 0) {
+      console.log(`No course data found for course ${courseId}`);
+      return 0;
+    }
+
+    // Calculate total lessons and completed lessons
+    let totalLessons = 0;
+    let completedLessons = 0;
+
+    courseData.units.forEach(unit => {
+      unit.lessons.forEach(lesson => {
+        totalLessons++;
+        
+        // A lesson is completed if all its challenges are completed
+        const isLessonCompleted = lesson.challenges.length > 0 && 
+          lesson.challenges.every(challenge => 
+            challenge.challengeProgress && 
+            challenge.challengeProgress.some(progress => progress.completed)
+          );
+        
+        if (isLessonCompleted) {
+          completedLessons++;
+        }
+      });
+    });
+
+    const progressPercentage = totalLessons > 0 
+      ? Math.round((completedLessons / totalLessons) * 100)
+      : 0;
+
+    console.log(`Course ${courseId} progress: ${progressPercentage}% (${completedLessons}/${totalLessons} lessons)`);
+    
+    return progressPercentage;
+  } catch (error) {
+    console.error(`Error calculating course progress for user ${userId} in course ${courseId}:`, error);
+    return 0;
+  }
+};
+
+/**
+ * Actualizar el progreso del curso para un usuario específico
+ * Update course progress for a specific user
+ */
 export const updateUserCourseProgress = async (courseId: number, data: {
   lastActiveUnitId?: number;
   lastLessonId?: number;
@@ -211,6 +284,14 @@ export const updateUserCourseProgress = async (courseId: number, data: {
     return null;
   }
   
+  // Calculate current progress if not provided
+  let updatedData = { ...data };
+  if (updatedData.progress === undefined) {
+    const calculatedProgress = await calculateCourseProgress(userId, courseId);
+    updatedData.progress = calculatedProgress;
+    updatedData.completed = calculatedProgress === 100;
+  }
+  
   const existingProgress = await db.query.userCourseProgress.findFirst({
     where: and(
       eq(userCourseProgress.userId, userId),
@@ -222,7 +303,7 @@ export const updateUserCourseProgress = async (courseId: number, data: {
     await db
       .update(userCourseProgress)
       .set({ 
-        ...data,
+        ...updatedData,
         updatedAt: new Date()
       })
       .where(
@@ -237,7 +318,7 @@ export const updateUserCourseProgress = async (courseId: number, data: {
       .values({
         userId,
         courseId,
-        ...data,
+        ...updatedData,
       });
   }
   

@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/db/client";
 import { userCourseProgress, userProgress } from "@/db/schema";
+import { calculateCourseProgress } from "@/db/queries";
 
 // Runtime configuration for Next.js 15+
 export const runtime = 'nodejs';
@@ -89,16 +90,42 @@ export async function POST(req: Request) {
     });
 
     if (existingProgress) {
+      // Calculate current progress
+      const calculatedProgress = await calculateCourseProgress(userId, courseId);
+      
+      // Update progress if it's different
+      if (existingProgress.progress !== calculatedProgress) {
+        await db.update(userCourseProgress)
+          .set({
+            progress: calculatedProgress,
+            completed: calculatedProgress === 100,
+            updatedAt: new Date()
+          })
+          .where(and(
+            eq(userCourseProgress.userId, userId),
+            eq(userCourseProgress.courseId, courseId)
+          ));
+          
+        return NextResponse.json({
+          ...existingProgress,
+          progress: calculatedProgress,
+          completed: calculatedProgress === 100
+        });
+      }
+      
       return NextResponse.json(existingProgress);
     }
+
+    // Calculate initial progress
+    const calculatedProgress = await calculateCourseProgress(userId, courseId);
 
     // Create new progress and update active course
     const [newProgress] = await Promise.all([
       db.insert(userCourseProgress).values({
         userId,
         courseId,
-        progress: 0,
-        completed: false,
+        progress: calculatedProgress,
+        completed: calculatedProgress === 100,
         points: 0
       }).returning(),
       db.update(userProgress)
@@ -136,12 +163,24 @@ export async function PUT(req: Request) {
       )
     });
 
+    // Calculate current progress if not provided
+    let progressToUpdate = progress;
+    let completedToUpdate = completed;
+    
+    if (progressToUpdate === undefined) {
+      const calculatedProgress = await calculateCourseProgress(userId, courseId);
+      progressToUpdate = calculatedProgress;
+      completedToUpdate = calculatedProgress === 100;
+    }
+
     if (existingProgress) {
       // Update existing progress
-      const updateData: any = {};
+      const updateData: any = {
+        updatedAt: new Date()
+      };
       
-      if (progress !== undefined) updateData.progress = progress;
-      if (completed !== undefined) updateData.completed = completed;
+      if (progressToUpdate !== undefined) updateData.progress = progressToUpdate;
+      if (completedToUpdate !== undefined) updateData.completed = completedToUpdate;
       if (lastActiveUnitId !== undefined) updateData.lastActiveUnitId = lastActiveUnitId;
       if (lastLessonId !== undefined) updateData.lastLessonId = lastLessonId;
       if (points !== undefined) updateData.points = points;
@@ -161,8 +200,8 @@ export async function PUT(req: Request) {
       const newProgress = await db.insert(userCourseProgress).values({
         userId,
         courseId,
-        progress: progress || 0,
-        completed: completed || false,
+        progress: progressToUpdate || 0,
+        completed: completedToUpdate || false,
         lastActiveUnitId: lastActiveUnitId || null,
         lastLessonId: lastLessonId || null,
         points: points || 0

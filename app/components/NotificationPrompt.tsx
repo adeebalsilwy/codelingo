@@ -150,15 +150,15 @@ export const NotificationPrompt = () => {
                 <Bell className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white ms-3">
-                {language === 'ar' ? 'تفعيل الإشعارات' : 'Enable Notifications'}
-              </h3>
+          {language === 'ar' ? 'تفعيل الإشعارات' : 'Enable Notifications'}
+        </h3>
             </div>
-            <button 
-              onClick={handleLater}
+          <button
+            onClick={handleLater}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-            >
+          >
               <X className="h-5 w-5" />
-            </button>
+          </button>
           </div>
 
           {notificationStep === 1 ? (
@@ -210,17 +210,17 @@ export const NotificationPrompt = () => {
               </p>
               <div className="flex flex-col gap-2">
                 <Button 
-                  onClick={handleAllow}
+            onClick={handleAllow}
                   className="w-full"
                   variant="default"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
                     <span className="flex items-center gap-2">
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                       {language === 'ar' ? 'جاري التفعيل...' : 'Enabling...'}
-                    </span>
-                  ) : (
+              </span>
+            ) : (
                     language === 'ar' ? 'تفعيل الإشعارات' : 'Enable Notifications'
                   )}
                 </Button>
@@ -232,7 +232,7 @@ export const NotificationPrompt = () => {
                 >
                   {language === 'ar' ? 'ربما لاحقاً' : 'Maybe later'}
                 </Button>
-              </div>
+        </div>
             </>
           )}
         </motion.div>

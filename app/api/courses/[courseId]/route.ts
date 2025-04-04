@@ -32,13 +32,13 @@ export async function GET(
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
-    }
+  }
 
     const courseId = parseInt(context.params.courseId);
     
     if (isNaN(courseId)) {
       return new NextResponse("Invalid course ID", { status: 400 });
-    }
+  }
 
     const course = await db.query.courses.findFirst({
       where: eq(courses.id, courseId),
@@ -47,7 +47,7 @@ export async function GET(
           orderBy: (units, { asc }) => [asc(units.order)]
         }
       }
-    });
+  });
 
     if (!course) {
       return new NextResponse("Course not found", { status: 404 });

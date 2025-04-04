@@ -31,6 +31,12 @@ interface Course {
       completed: boolean;
     }[];
   }[];
+  userCourseProgress?: {
+    progress: number;
+    completed: boolean;
+    lastActiveUnitId?: number | null;
+    lastLessonId?: number | null;
+  }[];
 }
 
 interface CourseProgress {
@@ -164,7 +170,7 @@ const CoursesPage = () => {
         // Try to fetch courses
         let coursesData;
         let userProgressData;
-        let progressesData;
+        let progressesData = [];
         
         const fetchOptions = {
             method: 'GET',
@@ -226,10 +232,17 @@ const CoursesPage = () => {
           throw error;
         }
         
-        // Finally fetch course progress
+        // Fetch all course progresses at once to get data for all courses, not just active
         try {
           logAPICall('/api/user-course-progress', 'REQUEST');
-          const response = await fetchWithRetry('/api/user-course-progress', fetchOptions);
+          const response = await fetchWithRetry('/api/user-course-progress', {
+            method: 'GET',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache',
+              'X-Fetch-All-Courses': 'true' // Add header to indicate we want all courses
+            }
+          });
           
           logAPICall('/api/user-course-progress', `RESPONSE ${response.status}`);
           
@@ -239,11 +252,11 @@ const CoursesPage = () => {
           } else {
             const errorText = await response.text();
             logAPICall('/api/user-course-progress', 'ERROR', { status: response.status, text: errorText });
-            throw new Error(`Failed to fetch course progress: ${response.status}`);
+            console.warn(`Failed to fetch course progress: ${response.status}. Will try individual fetches.`);
           }
         } catch (error) {
           logAPICall('/api/user-course-progress', 'FATAL_ERROR', { error });
-          throw error;
+          console.warn('Error fetching course progresses. Will try individual fetches:', error);
         }
 
         // Validate data
@@ -259,17 +272,152 @@ const CoursesPage = () => {
           throw error;
         }
         
-        if (!Array.isArray(progressesData)) {
-          const error = new Error('Invalid course progress data format');
-          logAPICall('data validation', 'ERROR', { progressesData });
-          throw error;
-        }
-
         logAPICall('fetchData', 'COMPLETE', { 
           courses: coursesData.length, 
           hasUserProgress: !!userProgressData,
           progresses: progressesData.length 
         });
+
+        // If we don't have progress data for all courses, fetch it individually
+        if (progressesData.length < coursesData.length) {
+          // Create a map of courses that already have progress data
+          const existingProgressCourseIds = new Set(progressesData.map((p: any) => p.courseId));
+          
+          // Create promises to fetch progress data for courses without existing progress
+          const missingProgressPromises = coursesData
+            .filter(course => !existingProgressCourseIds.has(course.id))
+            .map(async (course) => {
+              try {
+                logAPICall(`/api/user-course-progress for course ${course.id}`, 'REQUEST');
+                const response = await fetchWithRetry('/api/user-course-progress', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
+                  },
+                  body: JSON.stringify({ 
+                    courseId: course.id,
+                    forceCalculate: true // Add parameter to force calculation
+                  })
+                });
+                
+                if (response.ok) {
+                  const data = await response.json();
+                  logAPICall(`/api/user-course-progress for course ${course.id}`, 'SUCCESS');
+                  return data;
+                }
+                return null;
+              } catch (error) {
+                logAPICall(`/api/user-course-progress for course ${course.id}`, 'ERROR', { error });
+                return null;
+              }
+            });
+          
+          // Wait for all missing progress data to be fetched
+          const missingProgressResults = await Promise.all(missingProgressPromises);
+          const validMissingProgresses = missingProgressResults.filter(Boolean);
+          
+          // Add the missing progress data to the existing progress data
+          if (validMissingProgresses.length > 0) {
+            progressesData = [...progressesData, ...validMissingProgresses];
+            logAPICall('fetchData', 'FETCHED_MISSING_PROGRESSES', { 
+              count: validMissingProgresses.length 
+            });
+          }
+        }
+
+        // Merge the course progress data with the courses data
+        if (Array.isArray(progressesData) && progressesData.length > 0 && Array.isArray(coursesData)) {
+          const progressMap = new Map();
+          progressesData.forEach(progress => {
+            if (progress && progress.courseId) {
+              progressMap.set(progress.courseId, progress);
+            }
+          });
+
+          // Update courses with progress data
+          coursesData = coursesData.map(course => {
+            const progress = progressMap.get(course.id);
+            if (progress) {
+              return {
+                ...course,
+                userCourseProgress: [{
+                  progress: progress.progress,
+                  completed: progress.completed,
+                  lastActiveUnitId: progress.lastActiveUnitId,
+                  lastLessonId: progress.lastLessonId
+                }]
+              };
+            }
+            return course;
+          });
+
+          console.log('Courses with progress:', coursesData.map(c => ({
+            id: c.id,
+            title: c.title,
+            progress: c.userCourseProgress?.[0]?.progress || 0
+          })));
+        }
+
+        // Direct API calls for each non-active course if no progress or zero progress
+        const activeCourseId = userProgressData?.activeCourseId;
+        const nonActiveCoursesWithNoProgress = coursesData.filter(course => {
+          // If it's not the active course and has no progress data
+          const hasNoProgress = !course.userCourseProgress || 
+                                course.userCourseProgress.length === 0 || 
+                                course.userCourseProgress[0].progress === 0;
+          return course.id !== activeCourseId && hasNoProgress;
+        });
+        
+        if (nonActiveCoursesWithNoProgress.length > 0) {
+          console.log(`Found ${nonActiveCoursesWithNoProgress.length} non-active courses with no progress - fetching data...`);
+          
+          // Update coursesData and userCourseProgresses with direct fetch results
+          for (const course of nonActiveCoursesWithNoProgress) {
+            try {
+              const response = await fetchWithRetry('/api/user-course-progress', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Cache-Control': 'no-cache',
+                  'X-Force-Calculate': 'true' // Special header to force calculation
+                },
+                body: JSON.stringify({ courseId: course.id })
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                console.log(`Direct API call: Course ${course.id} has ${data.progress}% progress`);
+                
+                // Update in progressesData
+                const progressIndex = progressesData.findIndex((p: any) => p.courseId === course.id);
+                if (progressIndex >= 0) {
+                  progressesData[progressIndex] = data;
+                } else {
+                  progressesData.push(data);
+                }
+                
+                // Update in coursesData
+                coursesData = coursesData.map(c => {
+                  if (c.id === course.id) {
+                    return {
+                      ...c,
+                      userCourseProgress: [{
+                        progress: data.progress,
+                        completed: data.completed,
+                        lastActiveUnitId: data.lastActiveUnitId,
+                        lastLessonId: data.lastLessonId
+                      }]
+                    };
+                  }
+                  return c;
+                });
+              }
+            } catch (error) {
+              console.error(`Error in direct progress fetch for course ${course.id}:`, error);
+            }
+          }
+        }
 
         // Update state
         setCoursesData(coursesData);
@@ -346,8 +494,8 @@ const CoursesPage = () => {
       
       // Automatically refresh data when connection is restored
       if (mounted && isSignedIn) {
-        fetchData();
-      }
+      fetchData();
+    }
     };
     
     const handleOffline = () => {
@@ -392,73 +540,250 @@ const CoursesPage = () => {
     }
   }, [language, mounted, isSignedIn, fetchData]);
 
+  // Manually fetch course progress for each course if needed
+  const fetchCourseProgress = useCallback(async () => {
+    if (!isSignedIn || coursesData.length === 0) return;
+    
+    try {
+      console.log("Manually fetching course progress for all courses...");
+      
+      // First, check which courses need progress data
+      const coursesNeedingProgress = coursesData.filter(course => 
+        // Either no userCourseProgress property or it's empty
+        !course.userCourseProgress || course.userCourseProgress.length === 0
+      );
+      
+      if (coursesNeedingProgress.length === 0) {
+        console.log("All courses already have progress data");
+        return;
+      }
+      
+      console.log(`Fetching progress for ${coursesNeedingProgress.length} courses...`);
+      
+      // Create promises for fetching progress of all courses in parallel
+      const progressPromises = coursesNeedingProgress.map(async (course) => {
+        try {
+          const response = await fetchWithRetry(`/api/user-course-progress`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache'
+            },
+            body: JSON.stringify({ courseId: course.id })
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`Fetched progress for course ${course.id}: ${data.progress}%`);
+            return data;
+          }
+          console.log(`Failed to fetch progress for course ${course.id}`);
+          return null;
+        } catch (error) {
+          console.error(`Error fetching progress for course ${course.id}:`, error);
+    return null;
+  }
+      });
+      
+      const results = await Promise.all(progressPromises);
+      const newProgresses = results.filter(Boolean);
+      
+      if (newProgresses.length > 0) {
+        console.log(`Fetched ${newProgresses.length} new course progresses`);
+        
+        // Update state with new progresses
+        setUserCourseProgresses(prevProgresses => {
+          // Create a map of existing progresses by courseId
+          const existingMap = new Map(prevProgresses.map(p => [p.courseId, p]));
+          
+          // Update or add new progresses
+          newProgresses.forEach(progress => {
+            existingMap.set(progress.courseId, progress);
+          });
+          
+          // Convert map back to array
+          return Array.from(existingMap.values());
+        });
+        
+        // Refresh courses with new progress data
+        setCoursesData(prevCourses => 
+          prevCourses.map(course => {
+            const newProgress = newProgresses.find(p => p.courseId === course.id);
+            if (newProgress) {
+              return {
+                ...course,
+                userCourseProgress: [{
+                  progress: newProgress.progress,
+                  completed: newProgress.completed,
+                  lastActiveUnitId: newProgress.lastActiveUnitId,
+                  lastLessonId: newProgress.lastLessonId
+                }]
+              };
+            }
+            return course;
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching course progress:", error);
+    }
+  }, [isSignedIn, coursesData, fetchWithRetry]);
+
+  // Use effect to fetch course progress after courses are loaded
+  useEffect(() => {
+    if (mounted && isSignedIn && coursesData.length > 0 && !isLoading) {
+      // Check if we're missing progress data for any courses
+      const missingProgressCount = coursesData.filter(course => 
+        !course.userCourseProgress || course.userCourseProgress.length === 0
+      ).length;
+      
+      if (missingProgressCount > 0) {
+        console.log(`Missing progress data for ${missingProgressCount} courses - fetching now...`);
+        fetchCourseProgress();
+      }
+    }
+  }, [mounted, isSignedIn, coursesData.length, isLoading, fetchCourseProgress]);
+
+  // Fetch progress for a specific course directly when needed
+  const fetchProgressForCourse = useCallback(async (courseId: number): Promise<CourseProgress | null> => {
+    if (!isSignedIn) return null;
+    
+    try {
+      const response = await fetchWithRetry(`/api/user-course-progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+        body: JSON.stringify({ courseId })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Update course progresses state
+        setUserCourseProgresses(prev => {
+          const newProgresses = [...prev];
+          const index = newProgresses.findIndex(p => p.courseId === courseId);
+          if (index >= 0) {
+            newProgresses[index] = data;
+          } else {
+            newProgresses.push(data);
+          }
+          return newProgresses;
+        });
+        
+        // Update courses data with new progress
+        setCoursesData(prevCourses => 
+          prevCourses.map(course => {
+            if (course.id === courseId) {
+              return {
+                ...course,
+                userCourseProgress: [{
+                  progress: data.progress,
+                  completed: data.completed,
+                  lastActiveUnitId: data.lastActiveUnitId,
+                  lastLessonId: data.lastLessonId
+                }]
+              };
+            }
+            return course;
+          })
+        );
+        
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error fetching progress for course ${courseId}:`, error);
+      return null;
+    }
+  }, [isSignedIn, fetchWithRetry]);
+
   /**
    * حساب تقدم الكورس من البيانات المتاحة
    * Calculate course progress from available data
    */
-  const getCourseProgress = useCallback((courseId: number): CourseProgress => {
-    // First, check if we have progress info from the server
-    const progress = userCourseProgresses.find(p => p.courseId === courseId);
-
-    // Get the course data
-    const course = coursesData.find(c => c.id === courseId);
+  const getCourseProgress = (course: Course): CourseProgress => {
+    // Debug info
+    const isActive = userProgressData?.activeCourseId === course.id;
+    console.log(`Calculating progress for course ${course.id}: ${course.title} (Active: ${isActive})`);
     
-    // If no course found or no units defined, return default progress
-    if (!course || !course.units || !Array.isArray(course.units)) {
-      // Return either the server progress or a default object
-      return progress ? {
-        ...progress,
-        progress: progress.progress || 0,
-        completed: progress.completed || false
-      } : { 
-        courseId, 
-        progress: 0, 
-        completed: false, 
-        lastActiveUnitId: null, 
-        lastLessonId: null 
+    // First check if we have progress in the userCourseProgresses state
+    const progressFromState = userCourseProgresses.find(p => p.courseId === course.id);
+    if (progressFromState) {
+      console.log(`Using progress from state for course ${course.id}: ${progressFromState.progress}%`);
+      return progressFromState;
+    }
+    
+    // Then check if we have server progress data attached to the course
+    if (course.userCourseProgress && course.userCourseProgress.length > 0) {
+      const serverProgress = course.userCourseProgress[0];
+      console.log(`Using server progress from course object for course ${course.id}: ${serverProgress.progress}%`);
+      
+      return {
+        courseId: course.id,
+        progress: serverProgress.progress,
+        completed: serverProgress.completed,
+        lastActiveUnitId: serverProgress.lastActiveUnitId || null,
+        lastLessonId: serverProgress.lastLessonId || null
       };
     }
-
-    // Calculate total lessons and completed lessons across all units
+    
+    // If we're here and this is NOT the active course, fetch its progress data 
+    // This is a fallback mechanism to ensure non-active courses get their progress
+    if (!isActive && !isLoading && mounted) {
+      console.log(`No progress data found for non-active course ${course.id}. Fetching...`);
+      // Use a timeout to avoid blocking rendering
+      setTimeout(() => {
+        fetchProgressForCourse(course.id);
+      }, 100);
+    }
+    
+    // Otherwise calculate manually from lessons
+    console.log(`Calculating manual progress for course ${course.id} from lessons data`);
+    
+    // Handle courses with no units
+    if (!course.units || course.units.length === 0) {
+      console.log(`Course ${course.id} has no units, progress 0%`);
+      return {
+        courseId: course.id,
+        progress: 0,
+        completed: false,
+        lastActiveUnitId: null,
+        lastLessonId: null
+      };
+    }
+    
     let totalLessons = 0;
     let completedLessons = 0;
-
+    
+    // Count all lessons across units
     course.units.forEach(unit => {
-      // Check if unit.lessons exists and is an array
-      if (unit && unit.lessons && Array.isArray(unit.lessons)) {
-        // Only count valid lessons (defensive check)
-        const validLessons = unit.lessons.filter(lesson => lesson && typeof lesson === 'object');
-        totalLessons += validLessons.length;
-        
-        // Count completed lessons with proper validation
-        completedLessons += validLessons.filter(lesson => 
-          lesson && typeof lesson.completed === 'boolean' && lesson.completed
-        ).length;
+      if (unit.lessons && unit.lessons.length > 0) {
+        unit.lessons.forEach(lesson => {
+          totalLessons++;
+          if (lesson.completed) {
+            completedLessons++;
+          }
+        });
       }
     });
-
+    
     // Calculate progress percentage
-    const calculatedProgress = totalLessons > 0 
+    const progress = totalLessons > 0 
       ? Math.round((completedLessons / totalLessons) * 100)
       : 0;
-
-    console.log(`Course ${courseId} progress: ${calculatedProgress}% (${completedLessons}/${totalLessons} lessons)`);
-
-    // If we have server progress and it's more accurate (non-zero), use it
-    // Otherwise, use our calculated progress
-    const finalProgress = (progress && typeof progress.progress === 'number' && progress.progress > 0)
-      ? progress.progress
-      : calculatedProgress;
-
-    // Return only the properties defined in CourseProgress interface
+    
+    console.log(`Course ${course.id} manual progress: ${progress}% (${completedLessons}/${totalLessons} lessons)`);
+    
     return {
-      courseId,
-      progress: finalProgress,
-      completed: finalProgress === 100,
-      lastActiveUnitId: progress?.lastActiveUnitId || null,
-      lastLessonId: progress?.lastLessonId || null
+      courseId: course.id,
+      progress: progress,
+      completed: progress === 100,
+      lastActiveUnitId: null,
+      lastLessonId: null
     };
-  }, [coursesData, userCourseProgresses]);
+  };
 
   /**
    * حساب تقدم وحدة معينة
@@ -718,6 +1043,18 @@ const CoursesPage = () => {
       // Then fetch fresh data
       await fetchData();
       
+      // After data is loaded, ensure we fetch progress for all courses
+      setTimeout(() => {
+        if (coursesData.length > 0) {
+          console.log("Fetching progress for all courses after refresh...");
+          coursesData.forEach((course, index) => {
+            setTimeout(() => {
+              fetchProgressForCourse(course.id);
+            }, index * 200); // Stagger requests
+          });
+        }
+      }, 500);
+      
       toast.success(
         language === 'ar'
           ? 'تم تحديث البيانات بنجاح'
@@ -733,7 +1070,7 @@ const CoursesPage = () => {
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchData, language, isRefreshing, fetchWithRetry]);
+  }, [fetchData, language, isRefreshing, fetchWithRetry, coursesData, fetchProgressForCourse]);
 
   // Don't render anything while checking auth
  
@@ -884,8 +1221,24 @@ const CoursesPage = () => {
             {!isLoading && coursesData.length > 0 && (
             <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
               {coursesData.map((course) => {
-                const progress = getCourseProgress(course.id);
+                // Get the progress for this course
+                const progress = getCourseProgress(course);
                 const isActive = userProgressData?.activeCourseId === course.id;
+                
+                // If progress is 0, and this course doesn't have userCourseProgress data, 
+                // trigger a fetch for its progress (but don't block rendering)
+                if (progress.progress === 0 && 
+                    (!course.userCourseProgress || course.userCourseProgress.length === 0) && 
+                    !userCourseProgresses.some(p => p.courseId === course.id)) {
+                  // Use a setTimeout to avoid blocking rendering
+                  setTimeout(() => {
+                    fetchProgressForCourse(course.id);
+                  }, 100);
+                }
+                
+                // Debug log for progress data
+                console.log(`Rendering course ${course.id}: ${course.title}`);
+                console.log(`Progress: ${progress.progress}%, Active: ${isActive}, From state: ${userCourseProgresses.some(p => p.courseId === course.id)}, From course: ${!!course.userCourseProgress}`);
                 
                 return (
                   <Card

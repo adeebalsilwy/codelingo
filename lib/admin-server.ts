@@ -39,6 +39,6 @@ export async function checkIsAdmin(userId: string | null) {
 
 // Server-side admin check wrapper
 export async function isAdmin() {
-  const { userId } = auth();
+  const { userId } = await auth();
   return checkIsAdmin(userId);
 } 

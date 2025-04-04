@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
 import { getCourses } from "@/db/queries";
 
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });

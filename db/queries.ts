@@ -320,7 +320,7 @@ export const getUnits = async () => {
 
 export const getChapters = async (unitId: number) => {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return [];
     }

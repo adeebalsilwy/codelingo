@@ -12,14 +12,6 @@ import {
 } from "lucide-react";
 import { YouTubeEmbed } from "@/app/components/YouTubeEmbed";
 
-interface PageProps {
-  params: {
-    unitId: string;
-    chapterId: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
-
 // Force dynamic rendering and disable caching
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -36,7 +28,11 @@ function LoadingFallback() {
   );
 }
 
-const ChapterPage = async ({ params }: PageProps) => {
+export default async function Page({
+  params,
+}: {
+  params: { unitId: string; chapterId: string };
+}) {
   const unitId = parseInt(params.unitId);
   const chapterId = parseInt(params.chapterId);
 

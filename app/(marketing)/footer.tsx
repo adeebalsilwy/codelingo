@@ -40,21 +40,21 @@ export const Footer = () => {
   const isRtl = dir === "rtl";
 
   return (
-    <footer className="w-full border-t-2 border-slate-200 py-8 px-4">
-      {/* <div className="max-w-screen-lg mx-auto">
-        <h2 className="text-2xl font-bold text-center mb-8">
+    <footer className="w-full border-t-2 border-slate-200 dark:border-slate-800 py-6 sm:py-8 px-2 sm:px-4">
+      <div className="max-w-screen-lg mx-auto">
+        <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8">
           {language === 'ar' ? 'الدورات المتاحة' : 'Available Courses'}
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {courses.map((course) => (
             <Link 
               key={course.path} 
               href={course.path}
               className="group hover:scale-105 transition-transform duration-200"
             >
-              <div className="bg-white rounded-lg shadow-md p-4 flex flex-col gap-3">
-                <div className="relative h-40">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 border border-gray-100 dark:border-gray-700">
+                <div className="relative h-32 sm:h-40">
                   <Image 
                     src={course.icon}
                     alt={course.name[language as keyof typeof course.name]}
@@ -62,11 +62,11 @@ export const Footer = () => {
                     className="object-cover rounded-md"
                   />
                 </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-lg">
+                <div className="space-y-1 sm:space-y-2">
+                  <h3 className="font-semibold text-base sm:text-lg">
                     {course.name[language as keyof typeof course.name]}
                   </h3>
-                  <p className="text-sm text-neutral-600">
+                  <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
                     {course.description[language as keyof typeof course.description]}
                   </p>
                 </div>
@@ -75,15 +75,15 @@ export const Footer = () => {
           ))}
         </div>
 
-        <div className="text-center text-sm text-neutral-500 mt-8">
-          <p className="mb-2">
-            {language === 'ar' ? 'تعلم البرمجة بسهولة مع كودلينجو' : 'Learn Programming Easily with CodeLingo'}
+        <div className="text-center text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-6 sm:mt-8">
+          <p className="mb-1 sm:mb-2">
+            {language === 'ar' ? 'تعلم البرمجة بسهولة مع إيدو برو' : 'Learn Programming Easily with Edu PRO'}
           </p>
           <p>
-            © {new Date().getFullYear()} CodeLingo
+            © {new Date().getFullYear()} Edu PRO
           </p>
         </div>
-      </div> */}
+      </div>
     </footer>
   );
 };

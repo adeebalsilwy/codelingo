@@ -7,6 +7,8 @@ import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs";
 
 export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
+export const dynamic = 'force-dynamic';
 
 // Add OPTIONS method for CORS
 export async function OPTIONS() {
@@ -50,7 +52,7 @@ const availableCourses = [
 
 export async function GET() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -106,7 +108,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }

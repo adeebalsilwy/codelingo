@@ -4,13 +4,31 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/db/client";
 import { userCourseProgress, userProgress } from "@/db/schema";
 
+// Runtime configuration for Next.js 15+
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
+export const dynamic = 'force-dynamic';
+
 // Simulated user course progress data store (replace with your database)
 const userCourseProgressStore = new Map();
+
+// Add OPTIONS method for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Total-Count, Content-Range',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
 
 // الحصول على تقدم المستخدم في جميع الكورسات
 export async function GET() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -40,7 +58,7 @@ export async function GET() {
 // الحصول على تقدم المستخدم في كورس محدد
 export async function POST(req: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -97,7 +115,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });

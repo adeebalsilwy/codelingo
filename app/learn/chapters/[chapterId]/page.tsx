@@ -5,14 +5,12 @@ import { chapters } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { YouTubeEmbed } from "@/app/components/YouTubeEmbed";
 
-interface ChapterPageProps {
-  params: {
-    chapterId: string;
-  };
-}
-
-export default async function ChapterPage({ params }: ChapterPageProps) {
-  const { userId } = auth();
+export default async function Page({
+  params,
+}: {
+  params: { chapterId: string };
+}) {
+  const { userId } = await auth();
   if (!userId) {
     return redirect("/");
   }

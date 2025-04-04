@@ -16,85 +16,105 @@ import { Unit, Chapter, Lesson, CourseProgress, UserProgress } from '@/types';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
-type SearchParams = {
-  courseId?: string;
-};
-
-type LearnPageProps = {
-  searchParams: SearchParams;
-};
-
 export default async function LearnPage({
-  searchParams
+  searchParams,
 }: {
   searchParams: { courseId?: string }
 }) {
   const dict = await getDictionary();
-  const { courseId } = searchParams;
+  let courseId = searchParams.courseId;
 
-  if (!courseId) {
-    redirect('/courses');
+  // First, get the user progress to check for an active course
+  const userProgress = await getUserProgress();
+  
+  // If no course ID is provided in the URL but we have an active course, use that instead
+  if (!courseId && userProgress?.activeCourseId) {
+    courseId = String(userProgress.activeCourseId);
+    console.log(`No courseId provided, using active course: ${courseId}`);
+  } else if (!courseId) {
+    // If no course ID provided and no active course, redirect to courses page
+    console.log('No courseId provided and no active course found');
+    return redirect('/courses');
   }
 
-  const [userProgress, units, courseProgress, lessonPercentage] = (await Promise.all([
-    getUserProgress(),
+  // Now we have a courseId (either from URL or user's active course)
+  const [units, courseProgress, lessonPercentage] = (await Promise.all([
     getUnits(),
     getCourseProgress(),
     getLessonPercentage()
-  ])) as unknown as [UserProgress | null, Unit[], CourseProgress | null, number];
+  ])) as unknown as [Unit[], CourseProgress | null, number];
 
-  // Redirect if no user progress or active course
+  // Redirect if no user progress or active course (extra safety check)
   if (!userProgress?.activeCourseId) {
-    redirect('/courses');
+    console.log('No active course in user progress');
+    return redirect('/courses');
   }
 
   // Calculate progress based on lessons in each unit
   const calculateUnitProgress = (unit: Unit) => {
-    if (!unit.lessons || unit.lessons.length === 0) return 0;
-    const completedLessons = unit.lessons.filter(lesson => lesson.completed).length;
-    return Math.round((completedLessons / unit.lessons.length) * 100);
+    if (!unit.lessons || !Array.isArray(unit.lessons) || unit.lessons.length === 0) return 0;
+    
+    // Only count valid lessons
+    const validLessons = unit.lessons.filter(lesson => lesson && typeof lesson === 'object');
+    if (validLessons.length === 0) return 0;
+    
+    const completedLessons = validLessons.filter(lesson => 
+      lesson && typeof lesson.completed === 'boolean' && lesson.completed
+    ).length;
+    
+    return Math.round((completedLessons / validLessons.length) * 100);
   };
 
   // Calculate total course progress
-  const totalLessons = units.reduce((total, unit) => total + unit.lessons.length, 0);
-  const completedLessons = units.reduce((total, unit) => 
-    total + unit.lessons.filter(lesson => lesson.completed).length, 0
-  );
+  const totalLessons = units.reduce((total, unit) => {
+    if (!unit.lessons || !Array.isArray(unit.lessons)) return total;
+    return total + unit.lessons.filter(lesson => lesson && typeof lesson === 'object').length;
+  }, 0);
+  
+  const completedLessons = units.reduce((total, unit) => {
+    if (!unit.lessons || !Array.isArray(unit.lessons)) return total;
+    return total + unit.lessons.filter(lesson => 
+      lesson && typeof lesson.completed === 'boolean' && lesson.completed
+    ).length;
+  }, 0);
+  
   const courseProgressPercentage = totalLessons > 0 
     ? Math.round((completedLessons / totalLessons) * 100)
     : 0;
 
-  // Find last active lesson or first incomplete lesson
-  const findLastOrIncompleteLesson = () => {
-    for (const unit of units) {
-      const unitProgress = calculateUnitProgress(unit);
-      if (unitProgress < 100) {
-        // Find first incomplete lesson in this unit
-        const firstIncompleteLesson = unit.lessons.find(lesson => !lesson.completed);
-        if (firstIncompleteLesson) {
-          return {
-            unitId: unit.id,
-            lessonId: firstIncompleteLesson.id
-          };
-        }
-      }
-    }
-    // If all lessons are completed, return the last lesson
-    if (units.length > 0) {
-      const lastUnit = units[units.length - 1];
-      const lastLesson = lastUnit.lessons[lastUnit.lessons.length - 1];
-      return {
-        unitId: lastUnit.id,
-        lessonId: lastLesson.id
-      };
-    }
-    return null;
-  };
+  console.log(`Course progress: ${courseProgressPercentage}% (${completedLessons}/${totalLessons} lessons)`);
 
-  const activeLesson = findLastOrIncompleteLesson();
+  // Filter units for the current course
+  const courseUnits = units.filter(unit => unit.courseId === parseInt(courseId));
+  
+  if (courseUnits.length === 0) {
+    console.log(`No units found for course ID: ${courseId}`);
+    return redirect('/courses');
+  }
 
-  if (activeLesson) {
-    redirect(`/learn/${activeLesson.unitId}?courseId=${courseId}`);
+  // Find last active unit from user progress
+  let targetUnitId = userProgress.lastActiveUnitId;
+  
+  // If there's no last active unit or it doesn't belong to this course,
+  // find the first incomplete lesson or the first unit
+  if (!targetUnitId || !courseUnits.some(unit => unit.id === targetUnitId)) {
+    // Find an incomplete unit
+    const firstIncompleteUnit = courseUnits.find(unit => 
+      calculateUnitProgress(unit) < 100
+    );
+    
+    if (firstIncompleteUnit) {
+      targetUnitId = firstIncompleteUnit.id;
+    } else if (courseUnits.length > 0) {
+      // If all units are complete, use the first one
+      targetUnitId = courseUnits[0].id;
+    }
+  }
+
+  // If we found a target unit, redirect to it
+  if (targetUnitId) {
+    console.log(`Redirecting to unit: ${targetUnitId} for course: ${courseId}`);
+    return redirect(`/learn/${targetUnitId}?courseId=${courseId}`);
   }
 
   // If no active lesson found (empty course)

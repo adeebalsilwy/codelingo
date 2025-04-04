@@ -3,8 +3,8 @@
 import { Admin, Resource } from "react-admin";
 import { School, Book, Class, Assignment, QuestionAnswer, Extension } from "@mui/icons-material";
 
-import { adminTheme } from "./theme";
 import { dataProvider } from "./dataProvider";
+import { AdminThemeProvider } from "./theme-provider";
 import { CourseList } from "./course/list";
 import { CourseEdit } from "./course/edit";
 import { CourseCreate } from "./course/create";
@@ -31,57 +31,59 @@ import { ChapterCreate } from "./chapter/create";
 
 const App = () => {
   return (
-    <Admin theme={adminTheme} dataProvider={dataProvider} requireAuth>
-      <Resource
-        name="courses"
-        list={CourseList}
-        create={CourseCreate}
-        edit={CourseEdit}
-        recordRepresentation="title"
-        icon={School}
-      />
-      <Resource
-        name="units"
-        list={UnitList}
-        create={UnitCreate}
-        edit={UnitEdit}
-        recordRepresentation="title"
-        icon={Book}
-      />
-      <Resource
-        name="chapters"
-        list={ChapterList}
-        create={ChapterCreate}
-        edit={ChapterEdit}
-        recordRepresentation="title"
-        icon={Class}
-      />
-      <Resource
-        name="lessons"
-        list={LessonList}
-        create={LessonCreate}
-        edit={LessonEdit}
-        recordRepresentation="title"
-        icon={Assignment}
-      />
-      <Resource
-        name="challenges"
-        list={ChallengeList}
-        create={ChallengeCreate}
-        edit={ChallengeEdit}
-        recordRepresentation="question"
-        icon={QuestionAnswer}
-      />
-      <Resource
-        name="challengeOptions"
-        list={ChallengeOptionList}
-        create={ChallengeOptionCreate}
-        edit={ChallengeOptionEdit}
-        recordRepresentation="text"
-        options={{ label: "Challenge Options" }}
-        icon={Extension}
-      />
-    </Admin>
+    <AdminThemeProvider>
+      <Admin dataProvider={dataProvider} requireAuth>
+        <Resource
+          name="courses"
+          list={CourseList}
+          create={CourseCreate}
+          edit={CourseEdit}
+          recordRepresentation="title"
+          icon={School}
+        />
+        <Resource
+          name="units"
+          list={UnitList}
+          create={UnitCreate}
+          edit={UnitEdit}
+          recordRepresentation="title"
+          icon={Book}
+        />
+        <Resource
+          name="chapters"
+          list={ChapterList}
+          create={ChapterCreate}
+          edit={ChapterEdit}
+          recordRepresentation="title"
+          icon={Class}
+        />
+        <Resource
+          name="lessons"
+          list={LessonList}
+          create={LessonCreate}
+          edit={LessonEdit}
+          recordRepresentation="title"
+          icon={Assignment}
+        />
+        <Resource
+          name="challenges"
+          list={ChallengeList}
+          create={ChallengeCreate}
+          edit={ChallengeEdit}
+          recordRepresentation="question"
+          icon={QuestionAnswer}
+        />
+        <Resource
+          name="challengeOptions"
+          list={ChallengeOptionList}
+          create={ChallengeOptionCreate}
+          edit={ChallengeOptionEdit}
+          recordRepresentation="text"
+          options={{ label: "Challenge Options" }}
+          icon={Extension}
+        />
+      </Admin>
+    </AdminThemeProvider>
   );
 };
 

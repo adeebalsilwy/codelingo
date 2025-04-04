@@ -4,12 +4,30 @@ import { db } from "@/db/client";
 import { userProgress, userCourseProgress } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
+// For proper handling of headers in Next.js 15+
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
+export const dynamic = 'force-dynamic';
+
 // Simulated user progress data store (replace with your database)
 const userProgressStore = new Map();
 
+// Add OPTIONS method for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Total-Count, Content-Range',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
 export async function GET() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -46,7 +64,7 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -99,7 +117,7 @@ export async function PUT(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });

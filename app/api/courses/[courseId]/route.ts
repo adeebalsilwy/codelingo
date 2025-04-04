@@ -1,63 +1,85 @@
 import { eq } from "drizzle-orm";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
 import { isAdmin } from "@/lib/admin-server";
 import db from "@/db/client";
 import { courses } from "@/db/schema";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { courseId: string } }
+  request: NextRequest,
+  context: { params: { courseId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
-  }
+    }
 
     const course = await db.query.courses.findFirst({
-      where: eq(courses.id, parseInt(params.courseId)),
+      where: eq(courses.id, parseInt(context.params.courseId)),
       with: {
         units: {
           orderBy: (units, { asc }) => [asc(units.order)]
         }
       }
-  });
+    });
+
+    if (!course) {
+      return new NextResponse("Course not found", { status: 404 });
+    }
 
     return NextResponse.json(course);
   } catch (error) {
-    console.error("[COURSE_ID]", error);
+    console.error("[COURSE_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
 
-export const PUT = async (
-  req: Request,
-  { params }: { params: { courseId: number } },
-) => {
+export async function PUT(
+  request: NextRequest,
+  context: { params: { courseId: string } }
+) {
   if (!isAdmin()) {
     return new NextResponse("Unauthorized", { status: 403 });
   }
 
-  const body = await req.json();
-  const data = await db.update(courses).set({
-    ...body,
-  }).where(eq(courses.id, params.courseId)).returning();
+  try {
+    const { title, description, imageSrc } = await request.json();
 
-  return NextResponse.json(data[0]);
-};
+    const course = await db
+      .update(courses)
+      .set({
+        title,
+        description,
+        imageSrc,
+      })
+      .where(eq(courses.id, parseInt(context.params.courseId)))
+      .returning();
 
-export const DELETE = async (
-  req: Request,
-  { params }: { params: { courseId: number } },
-) => {
+    return NextResponse.json(course[0]);
+  } catch (error) {
+    console.error("[COURSE_PUT]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { courseId: string } }
+) {
   if (!isAdmin()) {
     return new NextResponse("Unauthorized", { status: 403 });
   }
 
-  const data = await db.delete(courses)
-    .where(eq(courses.id, params.courseId)).returning();
+  try {
+    await db
+      .delete(courses)
+      .where(eq(courses.id, parseInt(context.params.courseId)));
 
-  return NextResponse.json(data[0]);
-};
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    console.error("[COURSE_DELETE]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}

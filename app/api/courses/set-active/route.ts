@@ -4,9 +4,14 @@ import { userProgress, userCourseProgress } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
+// Runtime configurations for Next.js 15+
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }

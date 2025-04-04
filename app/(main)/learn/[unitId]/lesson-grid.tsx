@@ -163,13 +163,13 @@ export const LessonGrid = ({ chapters }: LessonGridProps) => {
             className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-100 dark:border-gray-700"
           >
             {/* Chapter header with progress indicator */}
-            <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
+            <div className="p-3 sm:p-6 border-b border-gray-100 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-3 sm:mb-4 flex-wrap sm:flex-nowrap gap-2">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <div 
                     onClick={() => goToUnit(chapter.unitId)}
                     className={`
-                      w-12 h-12 rounded-full flex items-center justify-center cursor-pointer
+                      w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center cursor-pointer
                       transition-all duration-300 hover:scale-105
                       ${progress === 100 
                         ? 'bg-[#58CC02]/20 text-[#58CC02] hover:bg-[#58CC02]/30' 
@@ -179,35 +179,36 @@ export const LessonGrid = ({ chapters }: LessonGridProps) => {
                     `}
                   >
                     {progress === 100 ? (
-                      <Trophy className="h-6 w-6" />
+                      <Trophy className="h-5 w-5 sm:h-6 sm:w-6" />
                     ) : progress > 50 ? (
-                      <Beaker className="h-6 w-6" />
+                      <Beaker className="h-5 w-5 sm:h-6 sm:w-6" />
                     ) : (
-                      <BookOpen className="h-6 w-6" />
+                      <BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />
                     )}
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-[#235390] dark:text-white">{chapter.title}</h3>
-                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <h3 className="text-base sm:text-xl font-bold text-[#235390] dark:text-white">{chapter.title}</h3>
+                    <div className="flex items-center flex-wrap gap-1 sm:gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                       <span>{chapter.lessons.length} {t('chapters.lessons_plural')}</span>
-                      <span>•</span>
+                      <span className="hidden xs:inline">•</span>
                       <span>{completedLessons} {t('chapters.completed')}</span>
-                      <span>•</span>
+                      <span className="hidden xs:inline">•</span>
                       <span>{progress}% {t('chapters.progress')}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
                   {/* Read Chapter Button */}
                   {(chapter.content || chapter.videoYoutube) && (
                     <Button
                       onClick={() => goToChapter(chapter.unitId, chapter.id)}
-                      className="flex items-center gap-2 bg-[#235390] hover:bg-[#235390]/90 text-white"
+                      className="flex items-center gap-1 sm:gap-2 bg-[#235390] hover:bg-[#235390]/90 text-white h-8 sm:h-10 px-2 sm:px-4 text-xs sm:text-sm"
+                      size="sm"
                     >
-                      <BookOpenCheck className="h-4 w-4" />
+                      <BookOpenCheck className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span>{t('chapters.read')}</span>
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   )}
                   
@@ -215,15 +216,16 @@ export const LessonGrid = ({ chapters }: LessonGridProps) => {
                   <Button
                     variant="ghost"
                     onClick={() => toggleChapter(chapter.id)}
-                    className="p-2"
+                    className="p-1 sm:p-2 h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center"
+                    size="sm"
                   >
-                    <ChevronDown className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`h-4 w-4 sm:h-5 sm:w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                   </Button>
                 </div>
               </div>
 
               {/* Progress bar */}
-              <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-1.5 sm:h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-[#58CC02] transition-all duration-500"
                   style={{ width: `${progress}%` }}
@@ -232,14 +234,14 @@ export const LessonGrid = ({ chapters }: LessonGridProps) => {
 
               {/* Chapter description - only shown when expanded */}
               {isExpanded && chapter.description && (
-                <p className="text-gray-600 dark:text-gray-300 mt-4">{chapter.description}</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-3 sm:mt-4">{chapter.description}</p>
               )}
             </div>
 
             {/* Lessons grid - only shown when expanded */}
             {isExpanded && (
-              <div className="p-6 bg-gray-50 dark:bg-gray-900/50">
-                <div className="grid gap-4 md:grid-cols-2">
+              <div className="p-3 sm:p-6 bg-gray-50 dark:bg-gray-900/50">
+                <div className="grid gap-2 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                   {chapter.lessons.map((lesson, index) => {
                     const lessonType = index % 3 === 0 ? 'challenge' : index % 2 === 0 ? 'quiz' : 'practice';
                     const isLocked = isLessonLocked(chapter, index);

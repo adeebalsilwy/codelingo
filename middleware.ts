@@ -1,6 +1,10 @@
 import { authMiddleware } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 
+// Runtime configuration for middleware
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // Configure Clerk middleware with our custom functionality
 export default authMiddleware({
   publicRoutes: [

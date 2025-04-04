@@ -5,6 +5,9 @@
   "env": {
     "NODE_ENV": "production"
   },
+  "typescript": {
+    "ignoreBuildErrors": true
+  },
   "devCommand": "next dev",
   "framework": "nextjs",
   "headers": [

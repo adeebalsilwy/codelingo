@@ -17,6 +17,14 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
+// Define correct interface for page props
+interface PageProps {
+  params: {
+    unitId: string;
+    chapterId: string;
+  };
+}
+
 function LoadingFallback() {
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -28,11 +36,7 @@ function LoadingFallback() {
   );
 }
 
-export default async function Page({
-  params,
-}: {
-  params: { unitId: string; chapterId: string };
-}) {
+export default async function Page({ params }: PageProps) {
   const unitId = parseInt(params.unitId);
   const chapterId = parseInt(params.chapterId);
 

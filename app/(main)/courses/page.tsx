@@ -78,56 +78,6 @@ const CoursesPage = () => {
   const retryCount = useRef(0);
   const maxRetries = 3;
 
-  // Monitor online/offline status
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOffline(false);
-      toast.success(
-        language === 'ar'
-          ? 'تم استعادة الاتصال'
-          : 'Connection restored'
-      );
-      
-      // Automatically refresh data when connection is restored
-      if (mounted && isSignedIn) {
-        fetchData();
-      }
-    };
-    
-    const handleOffline = () => {
-      setIsOffline(true);
-      toast.error(
-        language === 'ar'
-          ? 'انقطع الاتصال بالإنترنت'
-          : 'You are offline'
-      );
-    };
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    // Check initial status
-    setIsOffline(!window.navigator.onLine);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [language, mounted, isSignedIn]);
-
-  // Check authentication and redirect if not authenticated
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      console.log("User not signed in, redirecting to homepage");
-      router.push('/');
-      toast.error(
-        language === 'ar'
-          ? 'يجب تسجيل الدخول للوصول إلى الدورات'
-          : 'You must be logged in to access courses'
-      );
-    }
-  }, [isLoaded, isSignedIn, router, language]);
-
   /**
    * تسجيل طلبات API
    * Log API calls for debugging and monitoring
@@ -370,6 +320,56 @@ const CoursesPage = () => {
       setIsLoading(false);
     }
   }, [isSignedIn, language, isOffline, logAPICall, maxRetries, mounted, fetchWithRetry]);
+
+  // Check authentication and redirect if not authenticated
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      console.log("User not signed in, redirecting to homepage");
+      router.push('/');
+      toast.error(
+        language === 'ar'
+          ? 'يجب تسجيل الدخول للوصول إلى الدورات'
+          : 'You must be logged in to access courses'
+      );
+    }
+  }, [isLoaded, isSignedIn, router, language]);
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      toast.success(
+        language === 'ar'
+          ? 'تم استعادة الاتصال'
+          : 'Connection restored'
+      );
+      
+      // Automatically refresh data when connection is restored
+      if (mounted && isSignedIn) {
+        fetchData();
+      }
+    };
+    
+    const handleOffline = () => {
+      setIsOffline(true);
+      toast.error(
+        language === 'ar'
+          ? 'انقطع الاتصال بالإنترنت'
+          : 'You are offline'
+      );
+    };
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Check initial status
+    setIsOffline(!window.navigator.onLine);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [language, mounted, isSignedIn, fetchData]);
 
   // Component mounted effect (after fetchData is defined)
   useEffect(() => {

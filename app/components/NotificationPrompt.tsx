@@ -39,7 +39,7 @@ export const NotificationPrompt = () => {
   }, []);
 
   const sendWelcomeNotification = (language: Language) => {
-    const title = language === 'ar' ? '🎉 أهلاً بك في مجتمع لينغو!' : '🎉 Welcome to Lingo community!';
+    const title = language === 'ar' ? '🎉 أهلاً بك في مجتمع إيدو برو!' : '🎉 Welcome to Edu PRO community!';
     const body = language === 'ar' 
       ? 'شكراً لانضمامك! سنرسل لك إشعارات محفزة لمساعدتك على الاستمرار في التعلم'
       : 'Thank you for joining! We\'ll send you motivational notifications to help you stay on track';

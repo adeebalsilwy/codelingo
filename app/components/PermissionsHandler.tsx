@@ -145,9 +145,34 @@ export const PermissionsHandler = () => {
               await navigator.clipboard.writeText('تجربة صلاحية الكتابة للحافظة');
               granted = true;
             } else {
-              // اختبار القراءة من الحافظة (قد تفشل في بعض المتصفحات)
-              const text = await navigator.clipboard.readText();
-              granted = true;
+              // تحسين طريقة طلب إذن القراءة من الحافظة
+              try {
+                // محاولة استخدام واجهة Permissions API أولاً
+                const permissionStatus = await navigator.permissions.query({
+                  name: 'clipboard-read' as PermissionName
+                });
+                
+                if (permissionStatus.state === 'granted') {
+                  granted = true;
+                } else if (permissionStatus.state === 'prompt') {
+                  // إذا كان الإذن في حالة الطلب، نحاول القراءة لتحفيز ظهور الطلب
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    granted = true;
+                  } catch (readError) {
+                    console.log('طلب إذن القراءة من الحافظة قيد المعالجة', readError);
+                  }
+                }
+              } catch (permissionError) {
+                console.warn('واجهة Permissions API غير مدعومة للحافظة، محاولة القراءة المباشرة');
+                // محاولة مباشرة لقراءة الحافظة
+                try {
+                  const text = await navigator.clipboard.readText();
+                  granted = true;
+                } catch (readError) {
+                  console.warn('فشلت قراءة الحافظة المباشرة:', readError);
+                }
+              }
             }
           } catch (e) {
             console.error('خطأ في اختبار صلاحية الحافظة:', e);

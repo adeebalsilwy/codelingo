@@ -58,6 +58,15 @@ declare global {
       setNotificationInterval: (hours: number) => Promise<boolean>;
       sendMessageToSW: (message: any) => Promise<any>;
     };
+    APP_VERSION?: {
+      version: string;
+      buildDate: string;
+      changelog: {
+        ar: string[];
+        en: string[];
+      };
+      isDevelopment: boolean;
+    };
   }
 }
 
@@ -71,6 +80,8 @@ const SettingsPage = () => {
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState<boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [appVersion, setAppVersion] = useState<string>("1.0.0");
+  const [buildDate, setBuildDate] = useState<string>("");
   const [permissions, setPermissions] = useState<PermissionStatus>({
     microphone: 'unknown',
     camera: 'unknown',
@@ -439,6 +450,15 @@ const SettingsPage = () => {
     }
   };
 
+  // أضف استدعاء للحصول على الإصدار
+  useEffect(() => {
+    // التحقق من إصدار التطبيق
+    if (typeof window !== 'undefined' && window.APP_VERSION) {
+      setAppVersion(window.APP_VERSION.version);
+      setBuildDate(window.APP_VERSION.buildDate);
+    }
+  }, []);
+
   // don't render anything while checking auth
   // التحقق من بعض المتطلبات قبل العرض
   
@@ -599,8 +619,17 @@ const SettingsPage = () => {
                 <span className="text-sm">
                   {t('settings.version')}
                 </span>
-                <span className="text-sm">1.2.0</span>
+                <span className="text-sm">{appVersion}</span>
               </div>
+              
+              {buildDate && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">
+                    {language === 'ar' ? 'تاريخ الإصدار' : 'Build date'}
+                  </span>
+                  <span className="text-sm">{buildDate}</span>
+                </div>
+              )}
               
               <div className="flex items-center justify-between">
                 <span className="text-sm">

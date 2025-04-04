@@ -1,5 +1,5 @@
 // اسم التخزين المؤقت
-const CACHE_NAME = 'lingo-cache-v2';
+const CACHE_NAME = 'edu-pro-cache-v3';
 const OFFLINE_URL = '/offline.html';
 
 // الملفات التي سيتم تخزينها مؤقتًا للاستخدام في وضع عدم الاتصال
@@ -10,6 +10,8 @@ const urlsToCache = [
   '/offline.html',
   '/manifest.json',
   '/manifest-ar.json',
+  '/app-permissions.js',
+  '/app-version.js',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
   '/logo1.jpg',

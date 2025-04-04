@@ -5,7 +5,7 @@ import { cookies, headers } from 'next/headers';
 const translations: Record<Language, Record<string, string>> = {
   en: {
     // General
-    'app.title': 'Lingo',
+    'app.title': 'Edu PRO',
     'app.description': 'Learn programming languages easily',
     
     // Navigation
@@ -44,7 +44,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   ar: {
     // General
-    'app.title': 'لينجو',
+    'app.title': 'إيدو برو',
     'app.description': 'تعلم لغات البرمجة بسهولة',
     
     // Navigation

@@ -113,6 +113,7 @@ export default function RootLayout({
           <meta name="apple-mobile-web-app-title" content="Edu PRO" />
           
           <script src="/app-permissions.js" defer></script>
+          <script src="/app-version.js" defer></script>
         </head>
         <body className={font.className}>
           <Providers>

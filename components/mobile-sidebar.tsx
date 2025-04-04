@@ -70,7 +70,7 @@ export const MobileSidebar = () => {
               "text-gray-900 dark:text-white",
               isRtl ? "text-right" : "text-left"
             )}>
-              {language === 'ar' ? 'لينجو' : 'Lingo'}
+              {language === 'ar' ? 'إيدو برو' : 'Edu PRO'}
             </h2>
             <p className={cn(
               "text-sm text-gray-500 dark:text-gray-400",

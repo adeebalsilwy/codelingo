@@ -361,13 +361,46 @@ class AppPermissions {
       let granted = false;
       
       if (type === 'clipboard-read') {
-        // محاولة قراءة الحافظة للتحقق من الإذن
-        await navigator.clipboard.readText();
-        granted = true;
+        try {
+          // محاولة قراءة الحافظة باستخدام الوعد المباشر للتأكد من طلب الصلاحية
+          const permissionStatus = await navigator.permissions.query({
+            name: 'clipboard-read'
+          });
+          
+          // إذا تم طلب الإذن، استخدم حالة الإذن
+          if (permissionStatus.state === 'granted') {
+            granted = true;
+          } else if (permissionStatus.state === 'prompt') {
+            // إذا كان متوفراً للطلب، حاول القراءة للتحفيز على طلب الإذن
+            try {
+              await navigator.clipboard.readText();
+              granted = true;
+            } catch (readError) {
+              console.log('Permission prompt shown for clipboard-read:', readError);
+              // هنا لا نعتبرها فشلاً، لأن المستخدم قد يكون في عملية السماح
+              granted = false;
+            }
+          }
+        } catch (permissionError) {
+          console.warn('Permissions API not supported for clipboard, trying direct read method', permissionError);
+          // انتقل إلى الطريقة البديلة - محاولة مباشرة للقراءة
+          try {
+            await navigator.clipboard.readText();
+            granted = true;
+          } catch (readError) {
+            console.warn('Direct clipboard read failed:', readError);
+            granted = false;
+          }
+        }
       } else if (type === 'clipboard-write') {
         // محاولة الكتابة في الحافظة للتحقق من الإذن
-        await navigator.clipboard.writeText('test');
-        granted = true;
+        try {
+          await navigator.clipboard.writeText('test');
+          granted = true;
+        } catch (writeError) {
+          console.warn('Clipboard write permission denied:', writeError);
+          granted = false;
+        }
       }
       
       localStorage.setItem(`permission_${type}`, granted ? 'granted' : 'denied');

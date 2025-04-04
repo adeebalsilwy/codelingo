@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build --no-lint --no-typescript",
+  "version": 3,
+  "buildCommand": "npm run build",
   "installCommand": "npm install --legacy-peer-deps",
   "env": {
     "NODE_ENV": "production"

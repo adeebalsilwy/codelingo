@@ -30,15 +30,29 @@ export async function ensureDefaultAdmins() {
 export async function checkIsAdmin(userId: string | null) {
   if (!userId) return false;
 
-  const admin = await db.query.admins.findFirst({
-    where: eq(admins.userId, userId),
-  });
+  try {
+    const admin = await db.query.admins.findFirst({
+      where: eq(admins.userId, userId),
+    });
 
-  return !!admin;
+    return !!admin;
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    return false;
+  }
 }
 
 // Server-side admin check wrapper
 export async function isAdmin() {
-  const { userId } = await auth();
-  return checkIsAdmin(userId);
+  try {
+    const authResult = await auth();
+    const userId = authResult.userId;
+    
+    if (!userId) return false;
+    
+    return checkIsAdmin(userId);
+  } catch (error) {
+    console.error("Error in isAdmin:", error);
+    return false;
+  }
 } 

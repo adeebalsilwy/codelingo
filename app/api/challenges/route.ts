@@ -5,12 +5,32 @@ import { isAdmin } from "@/lib/admin-server";
 import { challenges } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-export const GET = async (req: Request) => {
-  if (!isAdmin()) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+// إضافة إعدادات runtime وdynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
+// إضافة معالج OPTIONS لطلبات CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Total-Count, Content-Range, Range',
+      'Access-Control-Expose-Headers': 'Content-Range, X-Total-Count',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
+export const GET = async (req: Request) => {
   try {
+    // تصحيح استدعاء isAdmin ليكون متزامنًا
+    const adminStatus = await isAdmin();
+    if (!adminStatus) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
 
@@ -85,22 +105,32 @@ export const GET = async (req: Request) => {
   } catch (error) {
     console.error('Error fetching challenges:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch challenges' },
+      { error: `Failed to fetch challenges: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }
 };
 
 export const POST = async (req: Request) => {
-  if (!isAdmin()) {
-    return new NextResponse("Unauthorized", { status: 401 });
+  try {
+    // تصحيح استدعاء isAdmin ليكون متزامنًا
+    const adminStatus = await isAdmin();
+    if (!adminStatus) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const body = await req.json();
+
+    const data = await db.insert(challenges).values({
+      ...body,
+    }).returning();
+
+    return NextResponse.json(data[0]);
+  } catch (error) {
+    console.error('Error creating challenge:', error);
+    return NextResponse.json(
+      { error: `Failed to create challenge: ${error instanceof Error ? error.message : 'Unknown error'}` },
+      { status: 500 }
+    );
   }
-
-  const body = await req.json();
-
-  const data = await db.insert(challenges).values({
-    ...body,
-  }).returning();
-
-  return NextResponse.json(data[0]);
 };

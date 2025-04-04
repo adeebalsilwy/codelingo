@@ -5,6 +5,16 @@ import { NextResponse } from "next/server";
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Helper function to add CORS headers
+const addCorsHeaders = (response: NextResponse) => {
+  response.headers.set('Access-Control-Allow-Origin', '*');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Total-Count, Content-Range, Range, Accept, X-Requested-With');
+  response.headers.set('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count, Content-Length');
+  response.headers.set('Access-Control-Max-Age', '86400');
+  return response;
+};
+
 // Configure Clerk middleware with our custom functionality
 export default authMiddleware({
   publicRoutes: [
@@ -18,15 +28,17 @@ export default authMiddleware({
     "/guide"
   ],
   async afterAuth(auth, req) {
+    // Handle preflight OPTIONS requests
+    if (req.method === 'OPTIONS' && req.nextUrl.pathname.startsWith('/api/')) {
+      return addCorsHeaders(new NextResponse(null, { status: 204 }));
+    }
+    
     // Get the response from the auth middleware
     const response = NextResponse.next();
     
     // Add CORS headers for API routes
     if (req.nextUrl.pathname.startsWith('/api/')) {
-      response.headers.set('Access-Control-Allow-Origin', '*');
-      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Total-Count, Content-Range');
-      response.headers.set('Access-Control-Max-Age', '86400');
+      addCorsHeaders(response);
     }
     
     // Check if there are any stored cookies for course progress
@@ -47,10 +59,7 @@ export default authMiddleware({
       
       // Add the CORS headers to the new response too
       if (req.nextUrl.pathname.startsWith('/api/')) {
-        newResponse.headers.set('Access-Control-Allow-Origin', '*');
-        newResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        newResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Total-Count, Content-Range');
-        newResponse.headers.set('Access-Control-Max-Age', '86400');
+        addCorsHeaders(newResponse);
       }
       
       // If we have a course ID from the URL, update the cookie

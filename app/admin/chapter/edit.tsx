@@ -1,4 +1,4 @@
-import { Edit, TextInput, ReferenceInput, NumberInput, required, SelectInput, SimpleForm } from "react-admin";
+import { Edit, TextInput, ReferenceInput, NumberInput, required, SelectInput, SimpleForm, useNotify, useRedirect } from "react-admin";
 import { FC, useState } from "react";
 import { MyRichTextInput } from "./myreach";
 import Image from 'next/image';
@@ -59,8 +59,25 @@ const YouTubeInput: FC<{ source: string }> = ({ source }) => {
 };
 
 export const ChapterEdit = () => {
+  const notify = useNotify();
+  const redirect = useRedirect();
+  const [loading, setLoading] = useState(false);
+
+  const onSuccess = () => {
+    notify('Chapter updated successfully');
+    setLoading(false);
+  };
+
+  const onError = (error: any) => {
+    notify(`Error: ${error.message || 'Failed to update chapter'}`, { type: 'error' });
+    setLoading(false);
+  };
+
   return (
-    <Edit>
+    <Edit 
+      mutationOptions={{ onSuccess, onError }}
+      component="div" 
+    >
       <SimpleForm>
         <div style={{ display: 'grid', gap: '1.5rem', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
           <TextInput

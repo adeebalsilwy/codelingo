@@ -6,6 +6,24 @@ import { isAdmin } from "@/lib/admin-server";
 import { units, userProgress } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+// إضافة إعدادات runtime وdynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+// إضافة معالج OPTIONS لطلبات CORS prefligh
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Total-Count, Content-Range, Range',
+      'Access-Control-Expose-Headers': 'Content-Range, X-Total-Count',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
 export const GET = async (req: Request) => {
   const { userId } = await auth();
   
@@ -178,3 +196,4 @@ export const POST = async (req: Request) => {
 
   return NextResponse.json(data[0]);
 };
+

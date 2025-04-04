@@ -5,12 +5,31 @@ import { isAdmin } from "@/lib/admin-server";
 import { lessons } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-export const GET = async (req: Request) => {
-  if (!isAdmin()) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+// Set dynamic to force dynamic rendering
+export const dynamic = 'force-dynamic';
 
+// Add OPTIONS handler for CORS preflight requests
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Total-Count, Content-Range, Range',
+      'Access-Control-Expose-Headers': 'Content-Range, X-Total-Count',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
+export const GET = async (req: Request) => {
   try {
+    // Must await isAdmin() call
+    const adminStatus = await isAdmin();
+    if (!adminStatus) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
 
@@ -91,22 +110,32 @@ export const GET = async (req: Request) => {
   } catch (error) {
     console.error('Error fetching lessons:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch lessons' },
+      { error: `Failed to fetch lessons: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }
 };
 
 export const POST = async (req: Request) => {
-  if (!isAdmin()) {
-    return new NextResponse("Unauthorized", { status: 401 });
+  try {
+    // Must await isAdmin() call
+    const adminStatus = await isAdmin();
+    if (!adminStatus) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const body = await req.json();
+
+    const data = await db.insert(lessons).values({
+      ...body,
+    }).returning();
+
+    return NextResponse.json(data[0]);
+  } catch (error) {
+    console.error('Error creating lesson:', error);
+    return NextResponse.json(
+      { error: `Failed to create lesson: ${error instanceof Error ? error.message : 'Unknown error'}` },
+      { status: 500 }
+    );
   }
-
-  const body = await req.json();
-
-  const data = await db.insert(lessons).values({
-    ...body,
-  }).returning();
-
-  return NextResponse.json(data[0]);
 };

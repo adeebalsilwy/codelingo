@@ -426,7 +426,7 @@ class AppPermissions {
       await this.serviceWorkerRegistration.showNotification(options.title, {
         body: options.body,
         icon: options.icon || '/logo1.jpg',
-        badge: options.badge || '/icons/icon-192x192.png',
+        badge: options.badge || '/logo1.jpg',
         tag: options.tag,
         vibrate: options.vibrate || [100, 50, 100],
         data: options.data || {}
@@ -458,7 +458,7 @@ class AppPermissions {
         options: {
           body: options.body,
           icon: options.icon || '/logo1.jpg',
-          badge: options.badge || '/icons/icon-192x192.png',
+          badge: options.badge || '/logo1.jpg',
           tag: options.tag,
           vibrate: options.vibrate || [100, 50, 100],
           data: options.data || {}

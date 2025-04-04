@@ -228,11 +228,11 @@ export const AutoNotifications = () => {
       body,
       tag: 'encouragement',
       vibrate: [100, 50, 100, 50, 100]
-    });
-  };
+      });
+    };
 
   // This component doesn't render anything
   return null;
-};
+}; 
 
 export default AutoNotifications; 

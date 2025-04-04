@@ -52,7 +52,7 @@ export const NotificationPrompt = () => {
           options: {
             body,
             icon: '/logo1.jpg',
-            badge: '/icons/icon-192x192.png',
+            badge: '/logo1.jpg',
             vibrate: [100, 50, 100, 150, 100],
             tag: 'welcome',
             actions: [

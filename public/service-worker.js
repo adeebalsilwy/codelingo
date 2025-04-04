@@ -262,7 +262,7 @@ const sendRandomMotivationalNotification = (language = 'ar') => {
   // إرسال الإشعار
   self.registration.showNotification(title, {
     body,
-    icon: '/icons/icon-192x192.png',
+    icon: '/logo1.jpg',
     badge: '/logo1.jpg',
     vibrate: [100, 50, 100],
     data: {

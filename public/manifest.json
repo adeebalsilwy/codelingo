@@ -6,6 +6,28 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1E88E5",
+  "orientation": "portrait",
+  "categories": ["education", "programming"],
+  "shortcuts": [
+    {
+      "name": "الدورات",
+      "url": "/courses",
+      "description": "استعرض الدورات المتاحة"
+    },
+    {
+      "name": "التعلم",
+      "url": "/learn",
+      "description": "انتقل إلى صفحة التعلم"
+    }
+  ],
+  "permissions": [
+    "clipboard-read",
+    "clipboard-write",
+    "microphone",
+    "camera",
+    "notifications",
+    "storage"
+  ],
   "icons": [
     {
       "src": "/logo1.jpg",
@@ -19,5 +41,17 @@
       "type": "image/jpeg",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "text/plain": [".txt"],
+        "text/html": [".html"],
+        "application/json": [".json"]
+      }
+    }
+  ],
+  "prefer_related_applications": false,
+  "scope": "/"
 }

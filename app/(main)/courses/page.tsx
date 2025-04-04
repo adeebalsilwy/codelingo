@@ -399,7 +399,7 @@ const CoursesPage = () => {
   const getCourseProgress = useCallback((courseId: number): CourseProgress => {
     // First, check if we have progress info from the server
     const progress = userCourseProgresses.find(p => p.courseId === courseId);
-    
+
     // Get the course data
     const course = coursesData.find(c => c.id === courseId);
     
@@ -764,7 +764,7 @@ const CoursesPage = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex flex-col lg:flex-row">
         {/* Mobile Sidebar - Only visible on mobile */}
-        
+
         {/* Main Content */}
         <main className="flex-1 px-2 py-4 sm:px-4 md:py-8 lg:px-8">
           <div className="max-w-[1400px] mx-auto">

@@ -66,6 +66,12 @@ export const Sidebar = ({ className }: Props) => {
       href: "/chat",
       color: "text-pink-500"
     },
+    {
+      icon: "/settings.svg",
+      label: language === 'ar' ? 'الإعدادات' : 'Settings',
+      href: "/settings",
+      color: "text-teal-500"
+    },
   ];
 
   if (mounted && isAdmin) {

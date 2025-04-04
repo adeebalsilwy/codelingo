@@ -7,6 +7,7 @@ import { HeartsModal } from "@/components/modals/hearts-modal";
 import { PracticeModal } from "@/components/modals/practice-modal";
 import { NotificationPrompt } from "@/app/components/NotificationPrompt";
 import { PWAInstallPrompt } from "@/app/components/PWAInstallPrompt";
+import { PermissionsHandler } from "@/app/components/PermissionsHandler";
 import { Providers } from "@/app/providers";
 import { AutoNotifications } from "@/app/components/AutoNotifications";
 import "./globals.css";
@@ -110,6 +111,8 @@ export default function RootLayout({
           <meta name="mobile-web-app-capable" content="yes" />
           <meta name="application-name" content="Edu PRO" />
           <meta name="apple-mobile-web-app-title" content="Edu PRO" />
+          
+          <script src="/app-permissions.js" defer></script>
         </head>
         <body className={font.className}>
           <Providers>
@@ -120,6 +123,7 @@ export default function RootLayout({
             <PracticeModal />
             <NotificationPrompt />
             <PWAInstallPrompt />
+            <PermissionsHandler />
             <AutoNotifications />
           </Providers>
           <script
@@ -156,6 +160,24 @@ export default function RootLayout({
                     });
                   });
                 }
+
+                // تهيئة وضع عدم الاتصال
+                window.addEventListener('offline', function() {
+                  console.log('App is offline');
+                  const event = new CustomEvent('appOffline');
+                  window.dispatchEvent(event);
+                });
+
+                window.addEventListener('online', function() {
+                  console.log('App is online');
+                  const event = new CustomEvent('appOnline');
+                  window.dispatchEvent(event);
+                });
+
+                // استمع لأحداث الصلاحيات
+                document.addEventListener('permissionchange', function(e) {
+                  console.log('Permission changed:', e.detail);
+                });
               `,
             }}
           />

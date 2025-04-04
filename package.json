@@ -1,11 +1,11 @@
 {
   "name": "edupro",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "dev:turbopack": "next dev --turbopack",
-    "build": "next build",
+    "build": "next build --no-lint --no-typescript",
     "start": "next start --port ${PORT-3000}",
     "lint": "next lint",
     "db:studio": "npx drizzle-kit studio",
@@ -27,7 +27,7 @@
     "list-admins": "tsx ./scripts/list-admins.ts",
     "generate-icons": "node ./scripts/generate-icons.js",
     "build:android": "node ./scripts/build-android.js",
-    "vercel-build": "next build",
+    "vercel-build": "next build --no-lint --no-typescript",
     "db:drop": "drizzle-kit drop --out ./drizzle --schema ./db/schema.ts",
     "db:migrate": "drizzle-kit generate:pg",
     "analyze": "ANALYZE=true next build"

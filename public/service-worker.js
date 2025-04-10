@@ -127,9 +127,76 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// تحديد موعد الإشعارات القادمة
+// متغيرات وإعدادات الإشعارات
 let nextNotificationTime = null;
 let notificationScheduler = null;
+let lastUserInteraction = Date.now();
+let notificationInterval = 12 * 60 * 60 * 1000; // 12 ساعة افتراضية
+let userPreferredLanguage = 'ar';
+let lastNotificationSent = null;
+
+// تخزين ذاكرة التخزين مؤقت للإعدادات المختلفة
+const STORAGE_KEY = 'sw-notification-settings';
+
+// استرجاع الإعدادات من IndexedDB
+const getStoredSettings = () => {
+  return new Promise((resolve) => {
+    if (!('indexedDB' in self)) {
+      resolve({});
+      return;
+    }
+    
+    const request = indexedDB.open('settings-store', 1);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings', { keyPath: 'id' });
+      }
+    };
+    
+    request.onerror = () => resolve({});
+    
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+      const transaction = db.transaction(['settings'], 'readonly');
+      const store = transaction.objectStore('settings');
+      const getRequest = store.get(STORAGE_KEY);
+      
+      getRequest.onerror = () => resolve({});
+      getRequest.onsuccess = () => {
+        const settings = getRequest.result || {};
+        resolve(settings);
+      };
+    };
+  });
+};
+
+// حفظ الإعدادات في IndexedDB
+const storeSettings = (settings) => {
+  if (!('indexedDB' in self)) return;
+  
+  const request = indexedDB.open('settings-store', 1);
+  
+  request.onupgradeneeded = (event) => {
+    const db = event.target.result;
+    if (!db.objectStoreNames.contains('settings')) {
+      db.createObjectStore('settings', { keyPath: 'id' });
+    }
+  };
+  
+  request.onsuccess = (event) => {
+    const db = event.target.result;
+    const transaction = db.transaction(['settings'], 'readwrite');
+    const store = transaction.objectStore('settings');
+    
+    store.put({
+      id: STORAGE_KEY,
+      ...settings,
+      lastUpdate: Date.now()
+    });
+  };
+};
 
 // قائمة الإشعارات الحافزة والعاطفية
 const motivationalNotifications = {
@@ -218,44 +285,73 @@ const storeNotification = (title, options) => {
       title,
       ...options,
       read: false,
-      timestamp: new Date().getTime()
+      timestamp: Date.now()
     });
   };
 };
 
 // جدولة إشعار دوري عشوائي
-const scheduleNextPeriodicNotification = (interval = 12 * 60 * 60 * 1000) => {
+const scheduleNextPeriodicNotification = async (interval = 12 * 60 * 60 * 1000) => {
   // إلغاء أي إشعار مجدول سابقًا
   if (notificationScheduler) {
     clearTimeout(notificationScheduler);
   }
   
+  // تحديث فترة الإشعارات
+  notificationInterval = interval;
+  
   // تحديد وقت الإشعار القادم (الافتراضي: 12 ساعة)
   nextNotificationTime = Date.now() + interval;
   
+  // حفظ الإعدادات
+  const settings = await getStoredSettings();
+  storeSettings({
+    ...settings,
+    notificationInterval: interval,
+    nextNotificationTime
+  });
+  
   // جدولة الإشعار القادم
   notificationScheduler = setTimeout(() => {
-    // التحقق من لغة المستخدم
-    self.clients.matchAll().then(clients => {
-      if (clients.length > 0) {
-        clients[0].postMessage({ type: 'GET_LANGUAGE' });
-      } else {
-        // إذا لم يكن هناك عميل نشط، استخدم الإشعار باللغة العربية
-        sendRandomMotivationalNotification('ar');
-      }
-    });
+    // التحقق من الوقت منذ آخر تفاعل
+    const timeSinceLastInteraction = Date.now() - lastUserInteraction;
+    const minimumInactivityPeriod = 3 * 60 * 60 * 1000; // 3 ساعات كحد أدنى من عدم النشاط
+    
+    if (timeSinceLastInteraction >= minimumInactivityPeriod) {
+      // التحقق من لغة المستخدم المفضلة
+      sendRandomMotivationalNotification(userPreferredLanguage);
+    } else {
+      // اجدول مرة أخرى بعد فترة قصيرة
+      setTimeout(() => {
+        sendRandomMotivationalNotification(userPreferredLanguage);
+      }, minimumInactivityPeriod - timeSinceLastInteraction);
+    }
   }, interval);
-  
-  // حفظ وقت الإشعار القادم في التخزين المحلي
-  if ('localStorage' in self) {
-    self.localStorage.setItem('nextNotificationTime', nextNotificationTime.toString());
-  }
   
   console.log('[Service Worker] Next notification scheduled at:', new Date(nextNotificationTime));
 };
 
+// تحديث وقت آخر تفاعل للمستخدم
+const updateLastUserInteraction = () => {
+  lastUserInteraction = Date.now();
+  
+  // حفظ آخر وقت تفاعل
+  getStoredSettings().then(settings => {
+    storeSettings({
+      ...settings,
+      lastUserInteraction
+    });
+  });
+};
+
 // إرسال إشعار تحفيزي عشوائي
 const sendRandomMotivationalNotification = (language = 'ar') => {
+  // لا نرسل إذا تم إرسال إشعار بالفعل خلال الساعة الماضية
+  if (lastNotificationSent && Date.now() - lastNotificationSent < 60 * 60 * 1000) {
+    scheduleNextPeriodicNotification(notificationInterval);
+    return;
+  }
+  
   // اختيار إشعار عشوائي من القائمة
   const notifications = motivationalNotifications[language] || motivationalNotifications.ar;
   const randomIndex = Math.floor(Math.random() * notifications.length);
@@ -283,8 +379,19 @@ const sendRandomMotivationalNotification = (language = 'ar') => {
       }
     ]
   }).then(() => {
+    // تحديث وقت آخر إرسال إشعار
+    lastNotificationSent = Date.now();
+    
+    // حفظ الإعدادات
+    getStoredSettings().then(settings => {
+      storeSettings({
+        ...settings,
+        lastNotificationSent
+      });
+    });
+    
     // جدولة الإشعار التالي
-    scheduleNextPeriodicNotification();
+    scheduleNextPeriodicNotification(notificationInterval);
   });
   
   // تخزين الإشعار
@@ -305,8 +412,21 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'LANGUAGE_INFO') {
     const { language } = event.data;
     if (language) {
-      sendRandomMotivationalNotification(language);
+      userPreferredLanguage = language;
+      
+      // حفظ اللغة المفضلة
+      getStoredSettings().then(settings => {
+        storeSettings({
+          ...settings,
+          userPreferredLanguage
+        });
+      });
     }
+  }
+
+  // تحديث وقت آخر تفاعل للمستخدم
+  if (event.data && event.data.type === 'USER_INTERACTION') {
+    updateLastUserInteraction();
   }
 
   // ضبط وتيرة الإشعارات
@@ -368,6 +488,19 @@ self.addEventListener('message', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
+  // تحديث وقت التفاعل
+  updateLastUserInteraction();
+  
+  // إرسال إشعار إلى العميل أن المستخدم تفاعل مع الإشعار
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'NOTIFICATION_CLICKED',
+        data: event.notification.data
+      });
+    });
+  });
+  
   // التعامل مع الإجراءات المختلفة
   if (event.action === 'open') {
     // فتح التطبيق في نافذة موجودة أو إنشاء نافذة جديدة
@@ -396,10 +529,86 @@ self.addEventListener('notificationclick', (event) => {
   }
 });
 
-// عند تثبيت SW للمرة الأولى، قم بجدولة الإشعار الأول
+// تنفيذ في حالة عدم وجود العميل نشط
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'check-and-notify') {
+    event.waitUntil(async () => {
+      // التحقق من وقت آخر إشعار تم إرساله
+      const settings = await getStoredSettings();
+      const timeSinceLastNotification = settings.lastNotificationSent 
+        ? Date.now() - settings.lastNotificationSent
+        : Infinity;
+      
+      const minTimeBetweenNotifications = 3 * 60 * 60 * 1000; // 3 ساعات كحد أدنى
+      
+      if (timeSinceLastNotification >= minTimeBetweenNotifications) {
+        // نرسل إشعاراً إذا مر وقت كافٍ منذ آخر إشعار
+        sendRandomMotivationalNotification(
+          settings.userPreferredLanguage || userPreferredLanguage
+        );
+      }
+    });
+  }
+});
+
+// عند تثبيت SW للمرة الأولى، قم باسترجاع الإعدادات وجدولة الإشعار الأول
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    // بدء جدولة الإشعارات بعد التنشيط
-    scheduleNextPeriodicNotification(3 * 60 * 60 * 1000) // أول إشعار بعد 3 ساعات
+    // استرجاع الإعدادات المخزنة
+    getStoredSettings().then(settings => {
+      // تطبيق الإعدادات المخزنة إن وجدت
+      if (settings.notificationInterval) {
+        notificationInterval = settings.notificationInterval;
+      }
+      
+      if (settings.lastUserInteraction) {
+        lastUserInteraction = settings.lastUserInteraction;
+      }
+      
+      if (settings.userPreferredLanguage) {
+        userPreferredLanguage = settings.userPreferredLanguage;
+      }
+      
+      if (settings.lastNotificationSent) {
+        lastNotificationSent = settings.lastNotificationSent;
+      }
+      
+      // بدء جدولة الإشعارات بعد التنشيط
+      return scheduleNextPeriodicNotification(notificationInterval);
+    }).catch(err => {
+      console.error('[Service Worker] Error restoring settings:', err);
+      
+      // استخدام القيم الافتراضية إذا فشلت عملية الاسترجاع
+      return scheduleNextPeriodicNotification(3 * 60 * 60 * 1000); // أول إشعار بعد 3 ساعات
+    })
   );
+  
+  // تسجيل مزامنة دورية إذا كانت مدعومة
+  if ('periodicSync' in self.registration) {
+    event.waitUntil(
+      self.registration.periodicSync.register('check-and-notify', {
+        minInterval: 3 * 60 * 60 * 1000 // كل 3 ساعات
+      }).catch(err => {
+        console.error('[Service Worker] Error registering periodic sync:', err);
+      })
+    );
+  }
+});
+
+// استماع لأحداث التثبيت
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'first-sync-after-install') {
+    // تحديث وقت آخر تفاعل
+    updateLastUserInteraction();
+    
+    // إرسال إشعار ترحيبي بعد 30 دقيقة من التثبيت
+    event.waitUntil(
+      new Promise(resolve => {
+        setTimeout(() => {
+          sendRandomMotivationalNotification(userPreferredLanguage);
+          resolve();
+        }, 30 * 60 * 1000); // 30 دقيقة
+      })
+    );
+  }
 });

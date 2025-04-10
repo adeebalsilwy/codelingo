@@ -431,15 +431,52 @@ const SettingsPage = () => {
     }
   };
 
+  // أضف استدعاء للحصول على الإصدار
+  useEffect(() => {
+    // التحقق من إصدار التطبيق
+    if (typeof window !== 'undefined' && window.APP_VERSION) {
+      setAppVersion(window.APP_VERSION.version);
+      setBuildDate(window.APP_VERSION.buildDate);
+    }
+
+    // تحميل إعدادات الإشعارات من التخزين المحلي
+    const savedInterval = localStorage.getItem('notificationInterval');
+    if (savedInterval) {
+      const hours = parseInt(savedInterval, 10);
+      if (!isNaN(hours) && [3, 6, 12, 24].includes(hours)) {
+        setNotificationInterval(hours);
+      }
+    }
+  }, []);
+
   // تغيير وتيرة الإشعارات
   const handleNotificationIntervalChange = (hours: number) => {
     setNotificationInterval(hours);
     
+    // حفظ في التخزين المحلي
+    localStorage.setItem('notificationInterval', hours.toString());
+    
+    // Notify service worker about the change and trigger notification testing
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({
         type: 'SET_NOTIFICATION_INTERVAL',
         hours
       });
+      
+      // Notification to test the new settings
+      if (window.appPermissions) {
+        const appPermissions = window.appPermissions; // Capture reference
+        setTimeout(() => {
+          appPermissions.sendNotification({
+            title: language === 'ar' ? 'تم تحديث الإعدادات' : 'Settings Updated',
+            body: language === 'ar' 
+              ? `تم ضبط الإشعارات على كل ${hours} ساعة. سنبقيك على اطلاع!`
+              : `Notifications set to every ${hours} hours. We'll keep you updated!`,
+            tag: 'settings-update',
+            data: { type: 'settings-update' }
+          });
+        }, 1500);
+      }
       
       toast({
         title: language === 'ar' ? 'تم تحديث الإشعارات' : 'Notifications updated',
@@ -449,15 +486,6 @@ const SettingsPage = () => {
       });
     }
   };
-
-  // أضف استدعاء للحصول على الإصدار
-  useEffect(() => {
-    // التحقق من إصدار التطبيق
-    if (typeof window !== 'undefined' && window.APP_VERSION) {
-      setAppVersion(window.APP_VERSION.version);
-      setBuildDate(window.APP_VERSION.buildDate);
-    }
-  }, []);
 
   // don't render anything while checking auth
   // التحقق من بعض المتطلبات قبل العرض
@@ -622,14 +650,14 @@ const SettingsPage = () => {
                 <span className="text-sm">{appVersion}</span>
               </div>
               
-              {buildDate && (
+              {/* {buildDate && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm">
                     {language === 'ar' ? 'تاريخ الإصدار' : 'Build date'}
                   </span>
                   <span className="text-sm">{buildDate}</span>
                 </div>
-              )}
+              )} */}
               
               <div className="flex items-center justify-between">
                 <span className="text-sm">

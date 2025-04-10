@@ -320,7 +320,7 @@ const scheduleNextPeriodicNotification = async (interval = 12 * 60 * 60 * 1000) 
     if (timeSinceLastInteraction >= minimumInactivityPeriod) {
       // التحقق من لغة المستخدم المفضلة
       sendRandomMotivationalNotification(userPreferredLanguage);
-    } else {
+      } else {
       // اجدول مرة أخرى بعد فترة قصيرة
       setTimeout(() => {
         sendRandomMotivationalNotification(userPreferredLanguage);
@@ -573,7 +573,7 @@ self.addEventListener('activate', (event) => {
         lastNotificationSent = settings.lastNotificationSent;
       }
       
-      // بدء جدولة الإشعارات بعد التنشيط
+    // بدء جدولة الإشعارات بعد التنشيط
       return scheduleNextPeriodicNotification(notificationInterval);
     }).catch(err => {
       console.error('[Service Worker] Error restoring settings:', err);

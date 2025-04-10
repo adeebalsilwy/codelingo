@@ -103,6 +103,8 @@ export const Sidebar = ({ className }: Props) => {
         <Link
           key={route.href}
           href={route.href}
+          prefetch={true}
+          scroll={false}
           className={cn(
             "flex items-center gap-x-4 text-muted-foreground text-sm font-medium p-3",
             "hover:text-foreground hover:bg-primary/5 dark:hover:bg-primary/10 rounded-lg transition-all",
@@ -110,6 +112,17 @@ export const Sidebar = ({ className }: Props) => {
             pathname === route.href && "text-foreground bg-primary/5 dark:bg-primary/10",
             route.color
           )}
+          onClick={(e) => {
+            // Stop propagation to prevent issues with event bubbling
+            e.stopPropagation();
+            // Add a class to show immediate feedback
+            const target = e.currentTarget;
+            target.classList.add('animate-pulse');
+            // Remove it after animation
+            setTimeout(() => {
+              target.classList.remove('animate-pulse');
+            }, 500);
+          }}
         >
           <div className="relative h-5 w-5 shrink-0">
             <Image

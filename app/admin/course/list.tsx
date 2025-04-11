@@ -9,7 +9,9 @@ import {
   ExportButton, 
   TopToolbar, 
   ImageField,
-  Pagination
+  Pagination,
+  EditButton,
+  DeleteButton
 } from "react-admin";
 import { Card, CardContent } from "@mui/material";
 import RefreshButton from "../utils/RefreshButton";
@@ -45,13 +47,15 @@ export const CourseList = () => {
           debounce={300}
         >
           <Datagrid
-            rowClick="edit"
+            rowClick={false}
             bulkActionButtons={false}
             hover
           >
             <TextField source="id" />
             <TextField source="title" sortable={true} />
             <ImageField source="imageSrc" title="Image" />
+            <EditButton />
+            <DeleteButton />
           </Datagrid>
         </List>
       </CardContent>

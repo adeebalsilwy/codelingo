@@ -388,3 +388,87 @@ export async function POST(req: Request) {
     });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    console.log("[API] DELETE /courses - Processing delete request");
+    
+    // Get URL parameters for single delete
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+    
+    // Handle single delete case
+    if (id) {
+      const courseId = parseInt(id);
+      
+      if (isNaN(courseId)) {
+        return new NextResponse("Invalid course ID", { status: 400 });
+      }
+
+      console.log(`[API] DELETE /courses - Deleting single course with ID: ${courseId}`);
+      
+      // Find current course to ensure it exists
+      const currentCourse = await db.query.courses.findFirst({
+        where: eq(courses.id, courseId)
+      });
+
+      if (!currentCourse) {
+        return new NextResponse("Course not found", { status: 404 });
+      }
+
+      // Delete course
+      await db.delete(courses).where(eq(courses.id, courseId));
+      
+      console.log(`[API] DELETE /courses - Successfully deleted course with ID: ${courseId}`);
+      return new NextResponse(null, { status: 204 });
+    }
+    
+    // Handle bulk delete
+    try {
+      const body = await req.json();
+      
+      if (Array.isArray(body.ids) && body.ids.length > 0) {
+        console.log(`[API] DELETE /courses - Bulk delete for IDs: ${body.ids.join(', ')}`);
+        
+        // Convert all IDs to integers
+        const courseIds = body.ids.map((id: any) => parseInt(id)).filter((id: number) => !isNaN(id));
+        
+        if (courseIds.length === 0) {
+          return new NextResponse("No valid course IDs provided", { status: 400 });
+        }
+        
+        // Filter courses table where id in the list of IDs
+        for (const courseId of courseIds) {
+          await db.delete(courses).where(eq(courses.id, courseId));
+        }
+        
+        console.log(`[API] DELETE /courses - Successfully deleted ${courseIds.length} courses`);
+        return new NextResponse(null, { status: 204 });
+      } else {
+        return new NextResponse("No course IDs provided", { status: 400 });
+      }
+    } catch (parseError) {
+      console.error("[API] DELETE /courses - Failed to parse request body:", parseError);
+      
+      // For DELETE without a body, just return a 204
+      if (parseError instanceof SyntaxError && parseError.message.includes('Unexpected end of JSON input')) {
+        console.log("[API] DELETE /courses - Empty request body, responding with OK");
+        return new NextResponse(null, { status: 204 });
+      }
+      
+      return new NextResponse(`Invalid request body: ${parseError instanceof Error ? parseError.message : 'JSON parsing error'}`, { 
+        status: 400 
+      });
+    }
+  } catch (error) {
+    console.error("[API] DELETE /courses - Unhandled error:", error);
+    return new NextResponse(`Internal Error: ${error instanceof Error ? error.message : 'Unknown error'}`, { 
+      status: 500,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    });
+  }
+}

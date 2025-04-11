@@ -31,22 +31,24 @@ import { ChapterCreate } from "./chapter/create";
 
 import { QueryClient } from 'react-query';
 
-// Configure React Query client with improved cache settings
+// Configure React Query client with balanced cache settings to prevent excessive refreshing
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Set reasonable cache time
-      cacheTime: 0, // 5 minutes
+      // Set reasonable cache time (5 minutes)
+      cacheTime: 0,
       // Don't retry failed queries excessively
       retry: 1,
-      // Refetch data automatically when window regains focus
-      refetchOnWindowFocus: true,
-      // Set reasonable stale time
-      staleTime: 30 * 1000, // 30 seconds
-      // Always refetch on mount
-      refetchOnMount: 'always',
-      // Disable automatic refetching for more stability
+      // Refetch data when window regains focus, but not too aggressively
+      refetchOnWindowFocus: false,
+      // Set reasonable stale time (2 minutes)
+      staleTime: 2 * 60 * 1000,
+      // Don't always refetch on mount
+      refetchOnMount: true,
+      // Disable automatic refetching
       refetchInterval: false,
+      // Use error boundary
+      useErrorBoundary: false,
     },
     mutations: {
       // Use error boundary for mutations
@@ -64,7 +66,6 @@ const App = () => {
         dataProvider={dataProvider} 
         requireAuth
         queryClient={queryClient}
-        // Disable standard cache 
         disableTelemetry
       >
         <Resource

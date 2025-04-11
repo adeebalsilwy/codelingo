@@ -25,37 +25,57 @@ export async function OPTIONS() {
 
 export const GET = async (req: Request) => {
   try {
-    // تصحيح استدعاء isAdmin ليكون متزامنًا
-    const adminStatus = await isAdmin();
-    if (!adminStatus) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
+    // Parse search parameters if any
     const url = new URL(req.url);
-    const id = url.searchParams.get("id");
+    const filterParam = url.searchParams.get('filter');
+    const rangeParam = url.searchParams.get('range');
+    const sortParam = url.searchParams.get('sort');
+    const fetchAllParam = url.searchParams.get('fetchAll'); 
+    
+    console.log(`[API] GET /challenges - Filter: ${filterParam}, Range: ${rangeParam}, Sort: ${sortParam}, FetchAll: ${fetchAllParam}`);
+    
+    // Default values
+    let filter: Record<string, any> = {};
+    let start = 0;
+    let end = 10;
+    let sort = "id";
+    let order = "ASC";
+    const fetchAll = fetchAllParam === 'true';
 
-    if (id) {
-      const challenge = await db.query.challenges.findFirst({
-        where: eq(challenges.id, parseInt(id)),
-        with: {
-          lesson: true,
-          challengeOptions: true
-        }
-      });
-
-      if (!challenge) {
-        return new NextResponse("Challenge not found", { status: 404 });
+    // Parse filter
+    if (filterParam) {
+      try {
+        filter = JSON.parse(filterParam);
+        console.log(`[API] Parsed filter:`, filter);
+      } catch (e) {
+        console.error('Invalid filter parameter:', filterParam, e);
       }
-
-      return NextResponse.json(challenge);
     }
-
-    const { searchParams } = new URL(req.url);
-    const start = parseInt(searchParams.get("_start") || "0");
-    const end = parseInt(searchParams.get("_end") || "10");
-    const sort = searchParams.get("_sort") || "id";
-    const order = searchParams.get("_order")?.toUpperCase() || "ASC";
-    const filter = searchParams.get("filter") ? JSON.parse(searchParams.get("filter") || "{}") : {};
+    
+    // Parse range
+    if (rangeParam) {
+      try {
+        const range = JSON.parse(rangeParam);
+        start = range[0] || 0;
+        end = range[1] || 9;
+        console.log(`[API] Using range: ${start}-${end}`);
+      } catch (e) {
+        console.error('Invalid range parameter:', rangeParam, e);
+      }
+    }
+    
+    // Parse sort
+    if (sortParam) {
+      try {
+        const sortValues = JSON.parse(sortParam);
+        if (Array.isArray(sortValues) && sortValues.length === 2) {
+          sort = sortValues[0] || "id";
+          order = sortValues[1] || "ASC";
+        }
+      } catch (e) {
+        console.error('Invalid sort parameter:', sortParam, e);
+      }
+    }
 
     // Build filter conditions
     const conditions = [];
@@ -74,32 +94,49 @@ export const GET = async (req: Request) => {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const challengesList = await db.query.challenges.findMany({
+    // Prepare query options
+    const queryOptions: any = {
       where: whereClause,
-      offset: start,
-      limit: end - start,
       with: {
         lesson: true,
         challengeOptions: true
       },
-      orderBy: (challenges, { asc: ascFn, desc: descFn }) => [
+      orderBy: (challenges: any, { asc: ascFn, desc: descFn }: { asc: any; desc: any }) => [
         order === "ASC" 
           ? ascFn(challenges[sort as keyof typeof challenges]) 
           : descFn(challenges[sort as keyof typeof challenges])
       ],
-    });
+    };
+    
+    // Add pagination only if not fetching all
+    if (!fetchAll) {
+      queryOptions.offset = start;
+      queryOptions.limit = (end - start) + 1;
+    }
+    
+    console.log(`[API] Executing query with ${fetchAll ? 'NO PAGINATION' : `pagination: offset=${start}, limit=${end - start + 1}`}`);
+
+    const challengesList = await db.query.challenges.findMany(queryOptions);
 
     const totalCountQuery = await db.select({ count: sql<number>`count(*)` })
       .from(challenges)
       .where(whereClause || sql`TRUE`);
 
     const totalCount = Number(totalCountQuery[0].count);
+    
+    console.log(`[API] Found ${challengesList.length} challenges, Total: ${totalCount}`);
+
+    const effectiveEnd = fetchAll ? (totalCount - 1) : Math.min(end, totalCount - 1);
+    const contentRange = `challenges ${start}-${effectiveEnd}/${totalCount}`;
 
     return NextResponse.json(challengesList, {
       headers: {
-        "Content-Range": `challenges ${start}-${end}/${totalCount}`,
+        "Content-Range": contentRange,
         "X-Total-Count": totalCount.toString(),
-        "Access-Control-Expose-Headers": "Content-Range, X-Total-Count"
+        "Access-Control-Expose-Headers": "Content-Range, X-Total-Count",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
       }
     });
   } catch (error) {

@@ -6,11 +6,12 @@ import { challengeOptions } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export const GET = async (req: Request) => {
-  if (!isAdmin()) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
-
   try {
+    const adminStatus = await isAdmin();
+    if (!adminStatus) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+    
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
 
@@ -30,11 +31,54 @@ export const GET = async (req: Request) => {
     }
 
     const { searchParams } = new URL(req.url);
-    const start = parseInt(searchParams.get("_start") || "0");
-    const end = parseInt(searchParams.get("_end") || "10");
-    const sort = searchParams.get("_sort") || "id";
-    const order = searchParams.get("_order")?.toUpperCase() || "ASC";
-    const filter = searchParams.get("filter") ? JSON.parse(searchParams.get("filter") || "{}") : {};
+    
+    // Parse additional parameters
+    const fetchAllParam = searchParams.get("fetchAll");
+    const fetchAll = fetchAllParam === 'true';
+    
+    // Parse range parameter from query string (format: JSON string like '[0, 9]')
+    const rangeParam = searchParams.get("range");
+    let start = 0, end = 10;
+
+    if (rangeParam) {
+      try {
+        const range = JSON.parse(rangeParam);
+        start = range[0] || 0;
+        end = range[1] || 10;
+        console.log(`[API] ChallengeOptions using range: ${start}-${end}, fetchAll: ${fetchAll}`);
+      } catch (e) {
+        console.error('Invalid range parameter:', rangeParam, e);
+      }
+    }
+    
+    // Parse sort parameter (format: JSON string like '["id", "DESC"]')
+    const sortParam = searchParams.get("sort");
+    let sort = "id";
+    let order = "ASC";
+    
+    if (sortParam) {
+      try {
+        const sortValues = JSON.parse(sortParam);
+        if (Array.isArray(sortValues) && sortValues.length === 2) {
+          sort = sortValues[0] || "id";
+          order = sortValues[1] || "ASC";
+        }
+      } catch (e) {
+        console.error('Invalid sort parameter:', sortParam, e);
+      }
+    }
+    
+    // Parse filter parameter (format: JSON object)
+    const filterParam = searchParams.get("filter");
+    let filter: Record<string, any> = {};
+    
+    if (filterParam) {
+      try {
+        filter = JSON.parse(filterParam);
+      } catch (e) {
+        console.error('Invalid filter parameter:', filterParam, e);
+      }
+    }
 
     // Build filter conditions
     const conditions = [];
@@ -53,7 +97,6 @@ export const GET = async (req: Request) => {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    // Handle sorting based on available columns
     let orderByClause;
     switch (sort) {
       case "id":
@@ -74,8 +117,8 @@ export const GET = async (req: Request) => {
 
     const optionsList = await db.query.challengeOptions.findMany({
       where: whereClause,
-      offset: start,
-      limit: end - start,
+      offset: fetchAll ? undefined : start,
+      limit: fetchAll ? undefined : (end - start) + 1,
       with: {
         challenge: true
       },
@@ -87,16 +130,23 @@ export const GET = async (req: Request) => {
       .where(whereClause || sql`TRUE`);
 
     const totalCount = Number(totalCountQuery[0].count);
-
-    const response = NextResponse.json(optionsList);
+    console.log(`[API] Found ${optionsList.length} options, Total: ${totalCount}`);
     
-    // Set required headers for react-admin
-    response.headers.set("Content-Range", `challengeOptions ${start}-${Math.min(end, totalCount)}/${totalCount}`);
-    response.headers.set("Access-Control-Expose-Headers", "Content-Range");
-    response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Total-Count, Content-Range");
+    const effectiveEnd = fetchAll ? (totalCount - 1) : Math.min(end, totalCount - 1);
+    const contentRange = `challengeOptions ${start}-${effectiveEnd}/${totalCount}`;
 
-    return response;
+    return NextResponse.json(optionsList, {
+      headers: {
+        "Content-Range": contentRange,
+        "X-Total-Count": totalCount.toString(),
+        "Access-Control-Expose-Headers": "Content-Range, X-Total-Count",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Total-Count, Content-Range",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
+    });
   } catch (error) {
     console.error('Error fetching challenge options:', error);
     return NextResponse.json(
@@ -107,15 +157,24 @@ export const GET = async (req: Request) => {
 };
 
 export const POST = async (req: Request) => {
-  if (!isAdmin()) {
-    return new NextResponse("Unauthorized", { status: 401 });
+  try {
+    const adminStatus = await isAdmin();
+    if (!adminStatus) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const body = await req.json();
+
+    const data = await db.insert(challengeOptions).values({
+      ...body,
+    }).returning();
+
+    return NextResponse.json(data[0]);
+  } catch (error) {
+    console.error('Error creating challenge option:', error);
+    return NextResponse.json(
+      { error: `Failed to create challenge option: ${error instanceof Error ? error.message : 'Unknown error'}` },
+      { status: 500 }
+    );
   }
-
-  const body = await req.json();
-
-  const data = await db.insert(challengeOptions).values({
-    ...body,
-  }).returning();
-
-  return NextResponse.json(data[0]);
 };

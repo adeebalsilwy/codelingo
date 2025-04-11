@@ -8,7 +8,7 @@ export const challengeTypeEnum = pgEnum("challenge_type", ["SELECT", "ASSIST"]);
 export const courses = pgTable("courses", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
-  imageSrc: text("image_src").notNull(),
+  imageSrc: text("image_src"),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

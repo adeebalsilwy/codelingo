@@ -28,6 +28,35 @@ export default authMiddleware({
     "/guide"
   ],
   async afterAuth(auth, req) {
+    // For API routes, add no-cache headers to prevent caching
+    if (req.nextUrl.pathname.startsWith('/api')) {
+      // Handle OPTIONS requests for CORS
+      if (req.method === 'OPTIONS') {
+        return new NextResponse(null, {
+          status: 204,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Total-Count, Content-Range, Range',
+            'Access-Control-Expose-Headers': 'Content-Range, X-Total-Count',
+            'Access-Control-Max-Age': '86400',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        });
+      }
+
+      // For other API requests
+      const response = NextResponse.next();
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+      return response;
+    }
+
+    // For admin routes, make sure only admins can access
+   
     // Handle preflight OPTIONS requests
     if (req.method === 'OPTIONS' && req.nextUrl.pathname.startsWith('/api/')) {
       return addCorsHeaders(new NextResponse(null, { status: 204 }));

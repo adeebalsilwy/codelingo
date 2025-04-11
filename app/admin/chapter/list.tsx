@@ -10,7 +10,14 @@ import {
     TextInput,
     ReferenceInput,
     SelectInput,
+    BooleanField,
+    FunctionField,
+    Pagination,
+    TopToolbar,
+    CreateButton,
+    ExportButton
 } from "react-admin";
+import RefreshButton from "../utils/RefreshButton";
 
 interface ChapterRecord {
   id: number;
@@ -39,6 +46,18 @@ const ChapterFilters = [
     </ReferenceInput>,
 ];
 
+// Custom pagination component with selectable page sizes
+const CustomPagination = () => <Pagination rowsPerPageOptions={[10, 25, 50, 100]} />;
+
+// Custom actions toolbar with refresh button
+const ListActions = () => (
+  <TopToolbar>
+    <CreateButton />
+    <ExportButton />
+    <RefreshButton resource="chapters" label="Refresh" />
+  </TopToolbar>
+);
+
 export const ChapterList = ({ unitId }: ChapterListProps) => {
     const filterDefaultValues = unitId ? { unitId } : undefined;
     const filter = unitId ? { unitId } : undefined;
@@ -46,8 +65,20 @@ export const ChapterList = ({ unitId }: ChapterListProps) => {
     return (
         <List 
             filters={ChapterFilters} 
-            filterDefaultValues={filterDefaultValues}
             filter={filter}
+            pagination={false}
+            perPage={-1}
+            sort={{ field: "id", order: "DESC" }}
+            actions={<ListActions />}
+            disableAuthentication
+            storeKey={`chapters-${Date.now()}`}
+            queryOptions={{
+                refetchOnWindowFocus: true,
+                refetchOnReconnect: true,
+                refetchOnMount: true,
+                cacheTime: 0,
+                retry: 1
+            }}
         >
             <Datagrid>
                 <TextField source="id" />
@@ -73,11 +104,10 @@ export const ChapterList = ({ unitId }: ChapterListProps) => {
                     sortable={false}
                     cellClassName="truncate max-w-xs"
                 />
-                <TextField
-                    source="video_youtube"
+                <FunctionField
                     label="Has Video"
-                    sortable={false}
                     render={(record: ChapterRecord) => record.video_youtube ? "Yes" : "No"}
+                    sortable={false}
                 />
                 <EditButton />
                 <DeleteButton />

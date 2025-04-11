@@ -8,42 +8,80 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * API للتحقق من حالة اشتراك المستخدم
+ * API to check user subscription status
  */
 export async function GET() {
   try {
     const { userId } = await auth();
 
     if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      console.log("[SUBSCRIPTION_API] Unauthorized request - no user ID");
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }), 
+        { 
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          } 
+        }
+      );
     }
+    
+    console.log(`[SUBSCRIPTION_API] Checking subscription status for user: ${userId}`);
 
-    // التحقق من اشتراك المستخدم في قاعدة البيانات
+    // Query user subscription from database
     const subscription = await db.query.userSubscription.findFirst({
       where: eq(userSubscription.userId, userId),
     });
 
-    // تحديد ما إذا كان الاشتراك نشطًا
+    // Determine if subscription is active
     let isActive = false;
     
     if (subscription) {
-      // التحقق من أن الاشتراك غير منتهي
+      // Check if subscription hasn't expired
       const currentPeriodEnd = subscription.stripeCurrentPeriodEnd;
       isActive = currentPeriodEnd ? new Date(currentPeriodEnd).getTime() > Date.now() : false;
+      
+      console.log(`[SUBSCRIPTION_API] User ${userId} subscription status: ${isActive ? 'active' : 'inactive'}, expires: ${currentPeriodEnd}`);
+    } else {
+      console.log(`[SUBSCRIPTION_API] No subscription found for user: ${userId}`);
     }
 
-    return NextResponse.json({
-      isActive,
-      subscription: subscription || null,
-    });
+    // Add cache control headers to ensure fresh data
+    return NextResponse.json(
+      {
+        isActive,
+        subscription: subscription || null,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, must-revalidate, max-age=0',
+          'Content-Type': 'application/json',
+        }
+      }
+    );
   } catch (error) {
-    console.error("[SUBSCRIPTION]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    console.error("[SUBSCRIPTION_API] Error checking subscription:", error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    return NextResponse.json(
+      { 
+        error: "Failed to check subscription status",
+        message: errorMessage 
+      }, 
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
   }
 }
 
 /**
- * دعم CORS لاستدعاءات مسبقة
+ * Support for CORS preflight requests
  */
 export async function OPTIONS() {
   return new NextResponse(null, {

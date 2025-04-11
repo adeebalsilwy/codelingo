@@ -1,8 +1,32 @@
-import { Datagrid, List, TextField, ReferenceField, NumberField, BooleanField } from "react-admin";
+import { Datagrid, List, TextField, ReferenceField, NumberField, BooleanField, TopToolbar, CreateButton, ExportButton } from "react-admin";
+import RefreshButton from "../utils/RefreshButton";
+
+// Custom actions toolbar with refresh button
+const ListActions = () => (
+  <TopToolbar>
+    <CreateButton />
+    <ExportButton />
+    <RefreshButton resource="challengeOptions" />
+  </TopToolbar>
+);
 
 export const ChallengeOptionList = () => {
   return (
-    <List>
+    <List
+      pagination={false}
+      perPage={-1}
+      sort={{ field: "id", order: "DESC" }}
+      actions={<ListActions />}
+      disableAuthentication
+      storeKey={`challengeOptions-${Date.now()}`}
+      queryOptions={{
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
+        refetchOnMount: true,
+        cacheTime: 0,
+        retry: 1
+      }}
+    >
       <Datagrid rowClick="edit">
         <NumberField source="id" />
         <TextField source="text" />

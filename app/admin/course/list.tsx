@@ -1,5 +1,18 @@
-import { Datagrid, List, TextField, SearchInput, TextInput, FilterForm, CreateButton, ExportButton, TopToolbar, ImageField } from "react-admin";
+import { 
+  Datagrid, 
+  List, 
+  TextField, 
+  SearchInput, 
+  TextInput, 
+  FilterForm, 
+  CreateButton, 
+  ExportButton, 
+  TopToolbar, 
+  ImageField,
+  Pagination
+} from "react-admin";
 import { Card, CardContent } from "@mui/material";
+import RefreshButton from "../utils/RefreshButton";
 
 const filters = [
   <SearchInput key="search" source="q" alwaysOn />,
@@ -11,8 +24,12 @@ const ListActions = () => (
     <FilterForm filters={filters} />
     <CreateButton />
     <ExportButton />
+    <RefreshButton resource="courses" />
   </TopToolbar>
 );
+
+// Custom pagination component with selectable page sizes
+const CustomPagination = () => <Pagination rowsPerPageOptions={[10, 25, 50, 100]} />;
 
 export const CourseList = () => {
   return (
@@ -22,6 +39,10 @@ export const CourseList = () => {
           actions={<ListActions />}
           filters={filters}
           sort={{ field: "id", order: "DESC" }}
+          pagination={false}  
+          perPage={-1}  // Signal to fetch all data
+          // Add debounce to avoid excessive requests
+          debounce={300}
         >
           <Datagrid
             rowClick="edit"
@@ -29,7 +50,7 @@ export const CourseList = () => {
             hover
           >
             <TextField source="id" />
-            <TextField source="title" />
+            <TextField source="title" sortable={true} />
             <ImageField source="imageSrc" title="Image" />
           </Datagrid>
         </List>

@@ -2,7 +2,8 @@
 
 import { toast } from "sonner";
 import Image from "next/image";
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { POINTS_TO_REFILL } from "@/constants";
@@ -21,6 +22,20 @@ export const Items = ({
   hasActiveSubscription,
 }: Props) => {
   const [pending, startTransition] = useTransition();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const searchParams = useSearchParams();
+  
+  // Check for successful payment or cancellation
+  const success = searchParams.get('success');
+  const canceled = searchParams.get('canceled');
+  const sessionId = searchParams.get('session_id');
+  
+  // Show toast messages for payment status
+  if (success && sessionId && !isProcessing) {
+    toast.success("Subscription successful! You now have unlimited hearts.");
+  } else if (canceled && !isProcessing) {
+    toast.error("Subscription was canceled. You can try again anytime.");
+  }
 
   const onRefillHearts = () => {
     if (pending || hearts === 5 || points < POINTS_TO_REFILL) {
@@ -29,19 +44,35 @@ export const Items = ({
 
     startTransition(() => {
       refillHearts()
-        .catch(() => toast.error("Something went wrong"));
+        .then(() => {
+          toast.success("Hearts refilled successfully!");
+        })
+        .catch(() => toast.error("Something went wrong while refilling hearts"));
     });
   };
 
   const onUpgrade = () => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    toast.loading("Preparing subscription...");
+    
     startTransition(() => {
       createStripeUrl()
         .then((response) => {
           if (response.data) {
+            toast.success(response.message || "Redirecting to payment page...");
             window.location.href = response.data;
+          } else {
+            setIsProcessing(false);
+            toast.error("Could not create subscription. Please try again.");
           }
         })
-        .catch(() => toast.error("Something went wrong"));
+        .catch((error) => {
+          setIsProcessing(false);
+          toast.error(error.message || "Something went wrong with the subscription process");
+          console.error("Subscription error:", error);
+        });
     });
   };
 
@@ -96,10 +127,16 @@ export const Items = ({
           <p className="text-neutral-700 text-base lg:text-xl font-bold">
             Unlimited hearts
           </p>
+          {hasActiveSubscription && (
+            <p className="text-green-500 text-sm">
+              Your subscription is active
+            </p>
+          )}
         </div>
         <Button
           onClick={onUpgrade}
-          disabled={pending}
+          disabled={pending || isProcessing}
+          variant={hasActiveSubscription ? "outline" : "default"}
         >
           {hasActiveSubscription ? "settings" : "upgrade"}
         </Button>

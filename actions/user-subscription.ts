@@ -9,50 +9,92 @@ import { getUserSubscription } from "@/db/queries";
 const returnUrl = absoluteUrl("/shop");
 
 export const createStripeUrl = async () => {
-  const { userId } = await auth();
-  const user = await currentUser();
+  try {
+    console.log("[createStripeUrl] Starting subscription creation process");
+    
+    const { userId } = await auth();
+    const user = await currentUser();
 
-  if (!userId || !user) {
-    throw new Error("Unauthorized");
-  }
+    if (!userId || !user) {
+      console.error("[createStripeUrl] Authentication failed - no user found");
+      throw new Error("Unauthorized - Please log in to continue");
+    }
 
-  const userSubscription = await getUserSubscription();
+    // Get current user email
+    const email = user.emailAddresses[0]?.emailAddress;
+    if (!email) {
+      console.error("[createStripeUrl] User has no email address");
+      throw new Error("No email address found for user");
+    }
+    
+    console.log(`[createStripeUrl] Processing for user: ${userId}`);
+    
+    // Check if user already has a subscription
+    const userSubscription = await getUserSubscription();
+    console.log(`[createStripeUrl] Existing subscription status:`, 
+      userSubscription ? 
+      `CustomerId: ${userSubscription.stripeCustomerId}, Active: ${userSubscription.isActive}` : 
+      "No subscription"
+    );
 
-  if (userSubscription && userSubscription.stripeCustomerId) {
-    const stripeSession = await stripe.billingPortal.sessions.create({
-      customer: userSubscription.stripeCustomerId,
-      return_url: returnUrl,
-    });
+    // If user has a Stripe customer ID, redirect to billing portal
+    if (userSubscription && userSubscription.stripeCustomerId) {
+      console.log(`[createStripeUrl] Redirecting to billing portal for existing customer: ${userSubscription.stripeCustomerId}`);
+      const stripeSession = await stripe.billingPortal.sessions.create({
+        customer: userSubscription.stripeCustomerId,
+        return_url: returnUrl,
+      });
 
-    return { data: stripeSession.url };
-  }
+      return { data: stripeSession.url, message: "Redirecting to billing portal" };
+    }
 
-  const stripeSession = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    payment_method_types: ["card"],
-    customer_email: user.emailAddresses[0].emailAddress,
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: "USD",
-          product_data: {
-            name: "Lingo Pro",
-            description: "Unlimited Hearts",
-          },
-          unit_amount: 2000, // $20.00 USD
-          recurring: {
-            interval: "month",
+    // Create a new checkout session for new subscribers
+    console.log(`[createStripeUrl] Creating new checkout session for: ${userId}`);
+    const stripeSession = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      payment_method_types: ["card"],
+      customer_email: email,
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "USD",
+            product_data: {
+              name: "EDU-PRO",
+              description: "Unlimited Hearts",
+            },
+            unit_amount: 2000, // $20.00 USD
+            recurring: {
+              interval: "month",
+            },
           },
         },
+      ],
+      metadata: {
+        userId,
       },
-    ],
-    metadata: {
-      userId,
-    },
-    success_url: returnUrl,
-    cancel_url: returnUrl,
-  });
+      success_url: `${returnUrl}?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${returnUrl}?canceled=true`,
+    });
 
-  return { data: stripeSession.url };
+    console.log(`[createStripeUrl] Successfully created checkout session: ${stripeSession.id}`);
+    return { data: stripeSession.url, message: "Redirecting to checkout" };
+  } catch (error) {
+    console.error("[createStripeUrl] Error creating Stripe session:", error);
+    
+    // Handle specific Stripe errors
+    if (error instanceof Error) {
+      if (error.message.includes('api_key')) {
+        throw new Error("Payment service configuration error. Please contact support.");
+      }
+      
+      if (error.message.includes('customer')) {
+        throw new Error("Customer account error. Please try again or contact support.");
+      }
+      
+      throw new Error(`Payment service error: ${error.message}`);
+    }
+    
+    throw new Error("An unexpected error occurred during payment setup. Please try again.");
+  }
 };

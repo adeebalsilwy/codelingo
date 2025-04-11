@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   typescript: {
     // ⚠️ Dangerously allow production builds to successfully complete even if
     // your project has type errors.
@@ -21,10 +21,15 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.clerk.dev'
       }
-    ]
+    ],
+    // إضافة دعم SVG كصور محسّنة
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // Headers configuration
   async headers() {
+    // Return headers synchronously - no spreading or iterating over headers()
     return [
       {
         source: '/:all*(svg|jpg|png)',
@@ -37,7 +42,7 @@ const nextConfig = {
         ],
       },
       {
-        // Add headers for API routes
+        // Improve headers for API routes including admin endpoints
         source: '/api/:path*',
         headers: [
           {
@@ -63,6 +68,36 @@ const nextConfig = {
           {
             key: 'Access-Control-Allow-Credentials',
             value: 'true',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          }
+        ],
+      },
+      {
+        // Add specific headers for admin API routes
+        source: '/admin/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
           }
         ],
       }
@@ -88,7 +123,10 @@ const nextConfig = {
   },
   compiler: {
     emotion: true
-  }
+  },
+  // تحسين الأداء
+  swcMinify: true, // استخدام SWC Minifier لتحسين الأداء
+  poweredByHeader: false, // إزالة رأس X-Powered-By للأمان
 };
 
 module.exports = nextConfig; 

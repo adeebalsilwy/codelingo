@@ -45,14 +45,43 @@ export async function checkIsAdmin(userId: string | null) {
 // Server-side admin check wrapper
 export async function isAdmin() {
   try {
+    console.log("[isAdmin] Checking admin status");
+    
+    // Make sure we're properly awaiting auth() to avoid race conditions
     const authResult = await auth();
     const userId = authResult.userId;
     
-    if (!userId) return false;
+    console.log(`[isAdmin] User ID from auth: ${userId || 'not available'}`);
     
-    return checkIsAdmin(userId);
+    if (!userId) {
+      console.log("[isAdmin] No user ID, admin check failed");
+      return false;
+    }
+    
+    // Check if user is admin with retry logic
+    let attempts = 0;
+    const maxAttempts = 3;
+    let isAdminResult = false;
+    
+    while (attempts < maxAttempts) {
+      try {
+        isAdminResult = await checkIsAdmin(userId);
+        break; // Exit the loop if successful
+      } catch (retryError) {
+        attempts++;
+        console.error(`[isAdmin] Error on attempt ${attempts}/${maxAttempts}:`, retryError);
+        
+        if (attempts < maxAttempts) {
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 500 * attempts));
+        }
+      }
+    }
+    
+    console.log(`[isAdmin] Admin check result for user ${userId}: ${isAdminResult}`);
+    return isAdminResult;
   } catch (error) {
-    console.error("Error in isAdmin:", error);
+    console.error("[isAdmin] Error checking admin status:", error);
     return false;
   }
 } 

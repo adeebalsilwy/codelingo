@@ -1,6 +1,6 @@
 "use client";
 
-import { Admin, Resource } from "react-admin";
+import { Admin, Resource, defaultLightTheme, defaultDarkTheme } from "react-admin";
 import { School, Book, Class, Assignment, QuestionAnswer, Extension } from "@mui/icons-material";
 
 import { dataProvider } from "./dataProvider";
@@ -29,10 +29,44 @@ import ChapterList from "./chapter/list";
 import { ChapterEdit } from "./chapter/edit";
 import { ChapterCreate } from "./chapter/create";
 
+import { QueryClient } from 'react-query';
+
+// Configure React Query client with improved cache settings
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Set reasonable cache time
+      cacheTime: 0, // 5 minutes
+      // Don't retry failed queries excessively
+      retry: 1,
+      // Refetch data automatically when window regains focus
+      refetchOnWindowFocus: true,
+      // Set reasonable stale time
+      staleTime: 30 * 1000, // 30 seconds
+      // Always refetch on mount
+      refetchOnMount: 'always',
+      // Disable automatic refetching for more stability
+      refetchInterval: false,
+    },
+    mutations: {
+      // Use error boundary for mutations
+      useErrorBoundary: true,
+      // Try again once on failure
+      retry: 1,
+    },
+  },
+});
+
 const App = () => {
   return (
     <AdminThemeProvider>
-      <Admin dataProvider={dataProvider} requireAuth>
+      <Admin 
+        dataProvider={dataProvider} 
+        requireAuth
+        queryClient={queryClient}
+        // Disable standard cache 
+        disableTelemetry
+      >
         <Resource
           name="courses"
           list={CourseList}

@@ -9,10 +9,31 @@ import {
   TextInput,
   ReferenceInput,
   SelectInput,
-  useTranslate
+  useTranslate,
+  Pagination,
+  TopToolbar,
+  CreateButton,
+  ExportButton
 } from "react-admin";
 import { useI18n } from "@/app/i18n/client";
 import { useEffect } from "react";
+import RefreshButton from "../utils/RefreshButton";
+
+// Custom pagination component with selectable page sizes
+const CustomPagination = () => <Pagination rowsPerPageOptions={[10, 25, 50, 100]} />;
+
+// Custom actions toolbar with refresh button
+const ListActions = () => {
+  const { t: i18nT } = useI18n();
+  
+  return (
+    <TopToolbar>
+      <CreateButton label={i18nT('admin.create')} />
+      <ExportButton label={i18nT('admin.export')} />
+      <RefreshButton resource="lessons" label={i18nT('admin.refresh')} />
+    </TopToolbar>
+  );
+};
 
 export const LessonList = () => {
   const { t: i18nT, language, dir } = useI18n();
@@ -50,6 +71,10 @@ export const LessonList = () => {
     <List 
       filters={LessonFilters}
       title={i18nT('admin.lessons')}
+      pagination={false}
+      perPage={-1}
+      sort={{ field: "id", order: "DESC" }}
+      actions={<ListActions />}
     >
       <Datagrid rowClick="edit">
         <TextField source="id" />

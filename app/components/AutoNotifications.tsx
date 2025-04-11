@@ -140,12 +140,17 @@ export const AutoNotifications = () => {
               if (!subscription) {
                 console.log('Attempting to subscribe to push notifications');
                 try {
-                  await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(
-                      'YOUR_VAPID_PUBLIC_KEY' // Replace with your actual VAPID key if you have one
-                    )
-                  });
+                  // Skip actual subscription if we don't have a real VAPID key
+                  const vapidPublicKey = 'YOUR_VAPID_PUBLIC_KEY';
+                  if (vapidPublicKey !== 'YOUR_VAPID_PUBLIC_KEY') {
+                    await registration.pushManager.subscribe({
+                      userVisibleOnly: true,
+                      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+                    });
+                    console.log('Successfully subscribed to push notifications');
+                  } else {
+                    console.log('Skipping push subscription - no VAPID key provided');
+                  }
                 } catch (subscribeError) {
                   console.warn('Push subscription error', subscribeError);
                 }
@@ -166,19 +171,37 @@ export const AutoNotifications = () => {
   // Convert base64 to Uint8Array for push subscription
   const urlBase64ToUint8Array = (base64String: string) => {
     try {
+      // Check if we're using the placeholder key and return empty array
+      if (base64String === 'YOUR_VAPID_PUBLIC_KEY') {
+        console.warn('Using placeholder VAPID key. Replace with actual key for production.');
+        return new Uint8Array();
+      }
+      
+      // Make sure we have a valid base64 string
+      if (!base64String || typeof base64String !== 'string') {
+        return new Uint8Array();
+      }
+      
+      // Normalize the base64 string
       const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
       const base64 = (base64String + padding)
         .replace(/-/g, '+')
         .replace(/_/g, '/');
       
-      const rawData = window.atob(base64);
-      const outputArray = new Uint8Array(rawData.length);
-      
-      for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
+      try {
+        // Decode base64 to binary string
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        
+        return outputArray;
+      } catch (decodeError) {
+        console.error('Error decoding base64 string:', decodeError);
+        return new Uint8Array();
       }
-      
-      return outputArray;
     } catch (error) {
       console.error('Error converting base64 to Uint8Array:', error);
       return new Uint8Array();

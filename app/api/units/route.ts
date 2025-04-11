@@ -46,7 +46,7 @@ export const GET = async (req: Request) => {
         with: {
           course: true,
           lessons: {
-            orderBy: (lessons, { asc }) => [asc(lessons.order)]
+            orderBy: (lessons: any, { asc }: { asc: any }) => [asc(lessons.order)]
           }
         }
       });
@@ -69,7 +69,7 @@ export const GET = async (req: Request) => {
         with: {
           course: true,
           lessons: {
-            orderBy: (lessons, { asc }) => [asc(lessons.order)]
+            orderBy: (lessons: any, { asc }: { asc: any }) => [asc(lessons.order)]
           }
         }
       });
@@ -80,11 +80,52 @@ export const GET = async (req: Request) => {
     // للمسؤولين فقط - الوصول المتقدم مع فلترة وترتيب
     if (await isAdmin()) {
       const { searchParams } = new URL(req.url);
-      const start = parseInt(searchParams.get("_start") || "0");
-      const end = parseInt(searchParams.get("_end") || "10");
-      const sort = searchParams.get("_sort") || "order";
-      const order = searchParams.get("_order")?.toUpperCase() || "ASC";
-      const filter = searchParams.get("filter") ? JSON.parse(searchParams.get("filter") || "{}") : {};
+      
+      // Parse range parameter from query string (format: JSON string like '[0, 9]')
+      const rangeParam = searchParams.get("range");
+      const fetchAllParam = searchParams.get("fetchAll");
+      const fetchAll = fetchAllParam === 'true';
+      let start = 0, end = 10;
+
+      if (rangeParam) {
+        try {
+          const range = JSON.parse(rangeParam);
+          start = range[0] || 0;
+          end = range[1] || 10;
+          console.log(`[API] Using range: ${start}-${end}, fetchAll: ${fetchAll}`);
+        } catch (e) {
+          console.error('Invalid range parameter:', rangeParam, e);
+        }
+      }
+      
+      // Parse sort parameter (format: JSON string like '["id", "DESC"]')
+      const sortParam = searchParams.get("sort");
+      let sort = "order";
+      let order = "ASC";
+      
+      if (sortParam) {
+        try {
+          const sortValues = JSON.parse(sortParam);
+          if (Array.isArray(sortValues) && sortValues.length === 2) {
+            sort = sortValues[0] || "order";
+            order = sortValues[1] || "ASC";
+          }
+        } catch (e) {
+          console.error('Invalid sort parameter:', sortParam, e);
+        }
+      }
+      
+      // Parse filter parameter (format: JSON object)
+      const filterParam = searchParams.get("filter");
+      let filter: Record<string, any> = {};
+      
+      if (filterParam) {
+        try {
+          filter = JSON.parse(filterParam);
+        } catch (e) {
+          console.error('Invalid filter parameter:', filterParam, e);
+        }
+      }
 
       // Build filter conditions
       const conditions = [];
@@ -119,34 +160,50 @@ export const GET = async (req: Request) => {
           orderByClause = asc(units.order);
       }
 
-      const unitsList = await db.query.units.findMany({
+      // Prepare query options
+      const queryOptions: any = {
         where: whereClause,
-        offset: start,
-        limit: end - start,
         with: {
           course: true,
           lessons: {
-            orderBy: (lessons, { asc }) => [asc(lessons.order)]
+            orderBy: (lessons: any, { asc }: { asc: any }) => [asc(lessons.order)]
           }
         },
         orderBy: [orderByClause]
-      });
+      };
+      
+      // Add pagination only if not fetching all
+      if (!fetchAll) {
+        queryOptions.offset = start;
+        queryOptions.limit = (end - start) + 1;
+      }
+      
+      console.log(`[API] Executing units query with ${fetchAll ? 'NO PAGINATION' : `pagination: offset=${start}, limit=${end - start + 1}`}`);
+
+      const unitsList = await db.query.units.findMany(queryOptions);
 
       const totalCountQuery = await db.select({ count: sql<number>`count(*)` })
         .from(units)
         .where(whereClause || sql`TRUE`);
 
       const totalCount = Number(totalCountQuery[0].count);
-
-      const response = NextResponse.json(unitsList);
       
-      // Set required headers for react-admin
-      response.headers.set("Content-Range", `units ${start}-${Math.min(end, totalCount)}/${totalCount}`);
-      response.headers.set("Access-Control-Expose-Headers", "Content-Range");
-      response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-      response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Total-Count, Content-Range");
+      console.log(`[API] Found ${unitsList.length} units, Total: ${totalCount}`);
+      
+      // Calculate effective end based on whether we're fetching all
+      const effectiveEnd = fetchAll ? (totalCount - 1) : Math.min(end, totalCount - 1);
+      const contentRange = `units ${start}-${effectiveEnd}/${totalCount}`;
 
-      return response;
+      // Return with proper headers for react-admin
+      return NextResponse.json(unitsList, {
+        headers: {
+          "Content-Range": contentRange,
+          "X-Total-Count": totalCount.toString(),
+          "Access-Control-Expose-Headers": "Content-Range, X-Total-Count",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Total-Count, Content-Range"
+        }
+      });
     } else {
       // للمستخدمين العاديين - جلب جميع الوحدات المرتبة حسب الترتيب
       // الوصول العادي للمستخدمين: جلب جميع الوحدات للكورس النشط
@@ -164,7 +221,7 @@ export const GET = async (req: Request) => {
         with: {
           course: true,
           lessons: {
-            orderBy: (lessons, { asc }) => [asc(lessons.order)]
+            orderBy: (lessons: any, { asc }: { asc: any }) => [asc(lessons.order)]
           }
         }
       });

@@ -27,7 +27,7 @@ export const createStripeUrl = async () => {
       throw new Error("No email address found for user");
     }
     
-    console.log(`[createStripeUrl] Processing for user: ${userId}`);
+    console.log(`[createStripeUrl] Processing for user: ${userId}, email: ${email}`);
     
     // Check if user already has a subscription
     const userSubscription = await getUserSubscription();
@@ -48,20 +48,35 @@ export const createStripeUrl = async () => {
       return { data: stripeSession.url, message: "Redirecting to billing portal" };
     }
 
+    // Get customer name for better identification
+    const fullName = user.firstName && user.lastName 
+      ? `${user.firstName} ${user.lastName}` 
+      : (user.firstName || email.split('@')[0]);
+
     // Create a new checkout session for new subscribers
-    console.log(`[createStripeUrl] Creating new checkout session for: ${userId}`);
+    console.log(`[createStripeUrl] Creating new checkout session for: ${userId} (${fullName})`);
     const stripeSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
+      client_reference_id: userId,
+      subscription_data: {
+        metadata: {
+          userId,
+          userEmail: email,
+        },
+      },
       line_items: [
         {
           quantity: 1,
           price_data: {
             currency: "USD",
             product_data: {
-              name: "EDU-PRO",
-              description: "Unlimited Hearts",
+              name: "EDU-PRO Premium",
+              description: "Unlimited Hearts and Premium Features",
+              metadata: {
+                userId,
+              },
             },
             unit_amount: 2000, // $20.00 USD
             recurring: {
@@ -72,6 +87,8 @@ export const createStripeUrl = async () => {
       ],
       metadata: {
         userId,
+        userEmail: email,
+        userName: fullName,
       },
       success_url: `${returnUrl}?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${returnUrl}?canceled=true`,

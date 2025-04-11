@@ -42,33 +42,33 @@ const httpClient = async (url: string, options: any = {}) => {
     
     // Log the request details
     console.log(`[httpClient] ${options.method || 'GET'} request to: ${url}`);
-    
-    try {
-      const response = await fetch(url, options);
+
+  try {
+    const response = await fetch(url, options);
       
       // Clear the timeout once we get a response
       clearTimeout(timeoutId);
+    
+    // Handle HTTP errors
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorJson;
+      try {
+        errorJson = JSON.parse(errorText);
+      } catch (e) {
+        // Not JSON
+      }
       
-      // Handle HTTP errors
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorJson;
-        try {
-          errorJson = JSON.parse(errorText);
-        } catch (e) {
-          // Not JSON
-        }
-        
-        // Format error message
-        const errorMessage = errorJson?.error || errorJson?.message || errorText || response.statusText;
-        
-        console.error('API Error:', {
-          status: response.status,
-          message: errorMessage,
-          url,
-          method: options.method || 'GET'
-        });
-        
+      // Format error message
+      const errorMessage = errorJson?.error || errorJson?.message || errorText || response.statusText;
+      
+      console.error('API Error:', {
+        status: response.status,
+        message: errorMessage,
+        url,
+        method: options.method || 'GET'
+      });
+      
         throw new Error(errorMessage || `HTTP Error ${response.status}`);
       }
       
@@ -80,12 +80,12 @@ const httpClient = async (url: string, options: any = {}) => {
           console.error('Error parsing JSON response:', e);
           return {};
         });
-        
-        return { 
-          status: response.status, 
-          headers: response.headers,
-          json 
-        };
+    
+    return { 
+      status: response.status, 
+      headers: response.headers,
+      json 
+    };
       } else {
         // Handle non-JSON responses
         const text = await response.text();
@@ -441,13 +441,13 @@ export const dataProvider: DataProvider = {
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           try {
             const { json } = await httpClient(`${apiUrl}/${resource}/${params.id}`, {
-              method: 'PUT',
-              body: JSON.stringify(newParams.data),
-              headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0',
-              },
+          method: 'PUT',
+          body: JSON.stringify(newParams.data),
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
             });
             
             console.log(`[dataProvider.update] Resource: ${resource}, Updated item ID: ${json.id || params.id || 'unknown'}`);

@@ -21,6 +21,8 @@ export default authMiddleware({
     "/",
     "/api/admin/check",
     "/api/webhook",
+    "/api/webhook/stripe",
+
     "/learn",
     "/chat",
     "/code-editor",

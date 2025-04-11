@@ -22,6 +22,7 @@ export async function GET() {
           status: 401,
           headers: {
             'Content-Type': 'application/json',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
           } 
         }
       );
@@ -52,10 +53,14 @@ export async function GET() {
       {
         isActive,
         subscription: subscription || null,
+        timestamp: new Date().toISOString()
       },
       {
         headers: {
-          'Cache-Control': 'no-store, must-revalidate, max-age=0',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'Date': new Date().toUTCString(),
           'Content-Type': 'application/json',
         }
       }
@@ -68,12 +73,14 @@ export async function GET() {
     return NextResponse.json(
       { 
         error: "Failed to check subscription status",
-        message: errorMessage 
+        message: errorMessage,
+        timestamp: new Date().toISOString()
       }, 
       { 
         status: 500,
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         }
       }
     );

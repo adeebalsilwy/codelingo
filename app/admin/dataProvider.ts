@@ -478,8 +478,8 @@ export const dataProvider: DataProvider = {
   delete: async (resource, params) => {
     try {
       const timestamp = new Date().getTime();
-      // Create URL based on the resource type
-      let url = `${apiUrl}/${resource}?id=${params.id}&_t=${timestamp}`;
+      // Use RESTful URL format
+      const url = `${apiUrl}/${resource}/${params.id}?_t=${timestamp}`;
       
       console.log(`[dataProvider.delete] Deleting ${resource} with ID: ${params.id}`);
       

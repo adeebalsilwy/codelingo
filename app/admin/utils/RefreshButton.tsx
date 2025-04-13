@@ -24,7 +24,10 @@ export const RefreshButton = ({
     notify(resource 
       ? `${resource.charAt(0).toUpperCase() + resource.slice(1)} list refreshed` 
       : 'List refreshed', { type: 'info' });
-  };
+      
+    // Debounce for 2 seconds
+    setTimeout(() => setIsRefreshing(false), 2000);
+  }, [refresh, notify, resource, isRefreshing]);
   
   return (
     <Button

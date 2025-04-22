@@ -11,34 +11,25 @@ import {
 } from "lucide-react";
 import { YouTubeEmbed } from "@/app/components/YouTubeEmbed";
 
-// Force dynamic rendering and disable caching
+// ضبط سلوك الصفحة ليكون ديناميكي
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-// Define correct interface for Next.js 15 page props
-type PageParams = {
+// تعريف معلمات الصفحة
+type ChapterPageParams = {
   unitId: string;
   chapterId: string;
 };
 
-type PageProps = {
-  params: PageParams;
+// نوع Props الرئيسي للصفحة
+type Props = {
+  params: ChapterPageParams;
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
-function LoadingFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <div className="text-gray-500 dark:text-gray-400">Loading unit...</div>
-      </div>
-    </div>
-  );
-}
-
-export default async function Page({ params }: PageProps) {
+// وظيفة الصفحة الرئيسية
+const Page = async ({ params }: Props) => {
   const unitId = parseInt(params.unitId);
   const chapterId = parseInt(params.chapterId);
 
@@ -230,4 +221,6 @@ export default async function Page({ params }: PageProps) {
       </div>
     </div>
   );
-}
+};
+
+export default Page;

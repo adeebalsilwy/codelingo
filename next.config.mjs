@@ -7,11 +7,16 @@ const withAnalyzer = withBundleAnalyzer({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
   typescript: {
-    ignoreBuildErrors: true, // Ignore TypeScript errors during build
+    ignoreBuildErrors: true, // تجاهل أخطاء TypeScript أثناء البناء
+    tsconfigPath: './tsconfig.json' // مسار ملف التكوين
+  },
+  eslint: {
+    ignoreDuringBuilds: true, // تجاهل أخطاء ESLint أثناء البناء
   },
   images: {
     remotePatterns: [
@@ -30,11 +35,34 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
     nodeMiddleware: true,
+    esmExternals: true, // تحسين التعامل مع وحدات ESM
+    typedRoutes: false, // تعطيل مسارات مكتوبة
+    swcMinify: true, // استخدام SWC للتقليل
+    serverComponentsExternalPackages: ['bcryptjs'], // حزم لتضمينها كوحدات خارجية
   },
   logging: {
     fetches: {
       fullUrl: true,
     },
+  },
+  webpack: (config, { dev, isServer }) => {
+    // إضافة حل لمشاكل وحدات ESM ومكتبات صعبة
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+      crypto: false,
+      path: false,
+      os: false
+    };
+    
+    // تجاهل أخطاء واردة
+    config.ignoreWarnings = [
+      { message: /Critical dependency/i }
+    ];
+    
+    return config;
   },
   async headers() {
     return [

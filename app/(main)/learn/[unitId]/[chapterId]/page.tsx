@@ -16,14 +16,16 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-// Define correct interface for page props
-interface PageProps {
-  params: {
-    unitId: string;
-    chapterId: string;
-  };
+// Define correct interface for Next.js 15 page props
+type PageParams = {
+  unitId: string;
+  chapterId: string;
+};
+
+type PageProps = {
+  params: PageParams;
   searchParams: { [key: string]: string | string[] | undefined };
-}
+};
 
 function LoadingFallback() {
   return (

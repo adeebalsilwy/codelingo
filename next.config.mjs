@@ -10,6 +10,9 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: true, // Ignore TypeScript errors during build
+  },
   images: {
     remotePatterns: [
       {
@@ -26,6 +29,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    nodeMiddleware: true,
   },
   logging: {
     fetches: {

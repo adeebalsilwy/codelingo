@@ -10,7 +10,6 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
-  swcMinify: true,
   images: {
     remotePatterns: [
       {
@@ -23,7 +22,7 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   experimental: {
-    optimizeCss: true,
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons', 'framer-motion'],
     serverActions: {
       bodySizeLimit: '2mb',
     },
@@ -107,4 +106,4 @@ const config = withPWA({
   }
 });
 
-export default config;
+export default withAnalyzer(config);

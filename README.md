@@ -73,6 +73,20 @@ npm run db:prod
 
 ### Start the app
 
+To start the application, use the following command:
+
+```shell
+npm start
+```
+
+This command will run the Next.js application on port 3000 by default. You can specify a different port by setting the `PORT` environment variable:
+
+```shell
+PORT=4000 npm start
+```
+
+Alternatively, to run the application in development mode, use:
+
 ```shell
 npm run dev
 ```

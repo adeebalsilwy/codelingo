@@ -9,12 +9,16 @@ export const GET = async (
   req: Request,
   { params }: { params: { challengeId: number } },
 ) => {
-  if (!isAdmin()) {
+  // Await the isAdmin check
+  if (!(await isAdmin())) {
     return new NextResponse("Unauthorized", { status: 403 });
   }
 
+  // Await params to ensure they are ready
+  const challengeId = await params.challengeId;
+
   const data = await db.query.challenges.findFirst({
-    where: eq(challenges.id, params.challengeId),
+    where: eq(challenges.id, challengeId),
   });
 
   return NextResponse.json(data);
@@ -24,16 +28,37 @@ export const PUT = async (
   req: Request,
   { params }: { params: { challengeId: number } },
 ) => {
-  if (!isAdmin()) {
-    return new NextResponse("Unauthorized", { status: 403 });
+  try {
+    // Await the admin check
+    if (!(await isAdmin())) {
+      return new NextResponse("Unauthorized", { status: 403 });
+    }
+
+    // Await the request body
+    const body = await req.json();
+    
+    // Handle date fields properly
+    const sanitizedBody = Object.fromEntries(
+      Object.entries(body).map(([key, value]) => {
+        if (value instanceof Date) {
+          return [key, value.toISOString()];
+        }
+        return [key, value];
+      })
+    );
+
+    // Await params and perform the update
+    const challengeId = await params.challengeId;
+    const data = await db.update(challenges)
+      .set(sanitizedBody)
+      .where(eq(challenges.id, challengeId))
+      .returning();
+
+    return NextResponse.json(data[0]);
+  } catch (error) {
+    console.error("Error updating challenge:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
-
-  const body = await req.json();
-  const data = await db.update(challenges).set({
-    ...body,
-  }).where(eq(challenges.id, params.challengeId)).returning();
-
-  return NextResponse.json(data[0]);
 };
 
 export const DELETE = async (

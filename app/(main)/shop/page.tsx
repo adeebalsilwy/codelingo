@@ -10,6 +10,11 @@ import { getUserProgress, getUserSubscription } from "@/db/queries";
 import { Items } from "./items";
 import { Quests } from "@/components/quests";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const ShopPage = async () => {
   const userProgressData = getUserProgress();
   const userSubscriptionData = getUserSubscription();

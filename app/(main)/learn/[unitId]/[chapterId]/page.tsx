@@ -6,7 +6,6 @@ import {
   BookOpen,
   PlayCircle,
   ArrowRight,
-  Clock,
   CheckCircle,
   BookOpenCheck,
 } from "lucide-react";
@@ -23,6 +22,7 @@ interface PageProps {
     unitId: string;
     chapterId: string;
   };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 function LoadingFallback() {
@@ -49,13 +49,13 @@ export default async function Page({ params }: PageProps) {
     redirect("/");
   }
 
-  const currentChapter = chapters.find((chapter) => chapter.id === chapterId);
+  const currentChapter = chapters.find((chapter: any) => chapter.id === chapterId);
   if (!currentChapter) {
     redirect("/");
   }
 
   const currentChapterIndex = chapters.findIndex(
-    (chapter) => chapter.id === chapterId
+    (chapter: any) => chapter.id === chapterId
   );
   const nextChapter = chapters[currentChapterIndex + 1];
   const previousChapter = chapters[currentChapterIndex - 1];
@@ -181,7 +181,7 @@ export default async function Page({ params }: PageProps) {
               </div>
 
               <div className="space-y-3">
-                {currentChapter.lessons.map((lesson, index) => (
+                {currentChapter.lessons.map((lesson: any, index: number) => (
                   <Link key={lesson.id} href={`/lesson/${lesson.id}`}>
                     <div className="group relative">
                       <Button

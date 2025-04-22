@@ -26,7 +26,6 @@ export const UnitList = () => {
         refetchOnWindowFocus: true,
         refetchOnReconnect: true,
         refetchOnMount: true,
-        cacheTime: 0,
         retry: 1
       }}
     >

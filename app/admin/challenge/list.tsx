@@ -13,16 +13,16 @@ const ListActions = () => (
 export const ChallengeList = () => {
   return (
     <List
-      pagination={false}
-      perPage={-1}
-      sort={{ field: "id", order: "DESC" }}
+     
+      perPage={25}
+     
       actions={<ListActions />}
       disableAuthentication
-      storeKey={`challenges-${Date.now()}`}
+      
       queryOptions={{
         refetchOnWindowFocus: true,
         refetchOnReconnect: true,
-        refetchOnMount: true,
+        refetchOnMount: false,
         cacheTime: 0,
         retry: 1
       }}

@@ -8,6 +8,7 @@ export default authMiddleware({
     "/api/admin/check",
     "/api/webhook",
     "/learn",
+    "/learn/(.*)",
     "/chat",
     "/code-editor",
     "/courses",
@@ -37,10 +38,10 @@ export default authMiddleware({
   }
 });
 
+// Configure which paths this middleware will run on
 export const config = {
   matcher: [
-    "/((?!.*\\..*|_next).*)",
-    "/",
-    "/(api|trpc)(.*)",
+    // Apply middleware to all routes except static files, images, etc
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.svg$).*)",
   ],
 }; 

@@ -14,7 +14,7 @@ export const ChallengeOptionList = () => {
   return (
     <List
       pagination={false}
-      perPage={-1}
+      perPage={25}
       sort={{ field: "id", order: "DESC" }}
       actions={<ListActions />}
       disableAuthentication

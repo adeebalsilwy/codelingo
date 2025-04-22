@@ -29,31 +29,22 @@ import ChapterList from "./chapter/list";
 import { ChapterEdit } from "./chapter/edit";
 import { ChapterCreate } from "./chapter/create";
 
-import { QueryClient } from 'react-query';
+import { QueryClient } from '@tanstack/react-query';
 
 // Configure React Query client with balanced cache settings to prevent excessive refreshing
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Set reasonable cache time (5 minutes)
-      cacheTime: 0,
-      // Don't retry failed queries excessively
+      // v5 uses gcTime instead of cacheTime
+      gcTime: 5 * 60 * 1000,
       retry: 1,
-      // Refetch data when window regains focus, but not too aggressively
       refetchOnWindowFocus: false,
-      // Set reasonable stale time (2 minutes)
       staleTime: 2 * 60 * 1000,
-      // Don't always refetch on mount
       refetchOnMount: true,
-      // Disable automatic refetching
-      refetchInterval: false,
-      // Use error boundary
-      useErrorBoundary: false,
+      // useErrorBoundary is deprecated in v5
     },
     mutations: {
-      // Use error boundary for mutations
-      useErrorBoundary: true,
-      // Try again once on failure
+      // retry configuration is still valid
       retry: 1,
     },
   },

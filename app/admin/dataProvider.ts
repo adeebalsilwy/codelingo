@@ -209,15 +209,17 @@ export const dataProvider: DataProvider = {
     const fetchAll = !params.pagination || params.pagination?.perPage === -1 || params.pagination === false as any;
     
     // Use original pagination or override with a very large value to fetch all
-    const { page, perPage } = fetchAll 
+    const pagination = params.pagination || { page: 1, perPage: 10 };
+    const { page = 1, perPage = 10 } = fetchAll 
       ? { page: 1, perPage: 1000000 } 
-      : params.pagination;
+      : pagination;
       
-    const { field, order } = params.sort;
+    const sort = params.sort || { field: 'id', order: 'ASC' };
+    const { field = 'id', order = 'ASC' } = sort;
     
     // Add a timestamp without caching to always get fresh data
     const timestamp = new Date().getTime();
-    
+  
     const query = {
       filter: JSON.stringify(params.filter || {}),
       sort: JSON.stringify([field, order]),

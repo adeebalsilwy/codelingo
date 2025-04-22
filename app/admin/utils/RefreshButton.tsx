@@ -2,6 +2,7 @@
 
 import { useNotify, useRefresh, Button } from 'react-admin';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { useCallback, useState } from 'react';
 
 interface RefreshButtonProps {
   resource?: string;
@@ -10,7 +11,7 @@ interface RefreshButtonProps {
 
 /**
  * A button component that refreshes the current list view
- * Can be included in custom action bars for all admin list components
+ * with debounce functionality to prevent rapid consecutive calls
  */
 export const RefreshButton = ({ 
   resource,
@@ -18,8 +19,12 @@ export const RefreshButton = ({
 }: RefreshButtonProps) => {
   const refresh = useRefresh();
   const notify = useNotify();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
     refresh();
     notify(resource 
       ? `${resource.charAt(0).toUpperCase() + resource.slice(1)} list refreshed` 
@@ -34,8 +39,9 @@ export const RefreshButton = ({
       onClick={handleRefresh}
       label={label}
       startIcon={<RefreshIcon />}
+      disabled={isRefreshing}
     />
   );
 };
 
-export default RefreshButton; 
+export default RefreshButton;

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>غير متصل بالإنترنت - إيدو برو</title>
+  <link rel="icon" href="/favicon.ico" />
+  <style>
+    :root {
+      --primary-color: #0A84FF;
+      --secondary-color: #2C2C2E;
+      --accent-color: #5E5CE6;
+      --text-color: #333;
+      --light-bg: #F2F2F7;
+      --error-color: #FF3B30;
+    }
+    
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--light-bg);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    header {
+      width: 100%;
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+    }
+    
+    .logo {
+      max-width: 150px;
+      margin-bottom: 1rem;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin: 1.5rem 0;
+      color: var(--secondary-color);
+    }
+    
+    p {
+      font-size: 1.125rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+    
+    .illustration {
+      max-width: 300px;
+      margin: 2rem 0;
+    }
+    
+    .button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+    
+    .button:hover {
+      background-color: var(--accent-color);
+    }
+    
+    .button.secondary {
+      background-color: transparent;
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+      margin-top: 0.5rem;
+    }
+    
+    .button.secondary:hover {
+      background-color: rgba(10, 132, 255, 0.1);
+    }
+    
+    .status-container {
+      margin-top: 2rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--error-color);
+      margin-left: 0.5rem;
+    }
+    
+    footer {
+      width: 100%;
+      background-color: var(--secondary-color);
+      color: white;
+      padding: 1rem;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="/logo1.jpg" alt="إيدو برو" class="logo" />
+  </header>
+  
+  <div class="container">
+    <img src="/hero-programming.svg" alt="غير متصل بالإنترنت" class="illustration" />
+    
+    <h1>أنت حالياً غير متصل بالإنترنت</h1>
+    
+    <p>
+      يبدو أن اتصالك بالإنترنت قد انقطع أو غير متوفر حالياً.
+      يمكنك الوصول إلى المحتوى المحفوظ مسبقاً أثناء كنت متصلاً بالإنترنت.
+    </p>
+    
+    <div class="status-container">
+      <div class="status">
+        <span class="status-indicator"></span>
+        <span>غير متصل بالإنترنت</span>
+      </div>
+      <p>تحقق من اتصالك بالإنترنت وحاول مرة أخرى</p>
+    </div>
+    
+    <button class="button" onclick="window.location.reload()">إعادة المحاولة</button>
+    <button class="button secondary" onclick="window.history.back()">الرجوع للخلف</button>
+  </div>
+  
+  <footer>
+    <p>&copy; 2024 إيدو برو - جميع الحقوق محفوظة</p>
+  </footer>
+  
+  <script>
+    // تحقق من الاتصال بالإنترنت كل 10 ثواني
+    setInterval(() => {
+      if (navigator.onLine) {
+        // إذا عاد الاتصال، أعد تحميل الصفحة
+        window.location.reload();
+      }
+    }, 10000);
+    
+    // استمع لأحداث الاتصال
+    window.addEventListener('online', () => {
+      window.location.reload();
+    });
+  </script>
+</body>
+</html> 

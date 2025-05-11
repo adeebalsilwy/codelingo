@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build:ignore-ts",
+  "installCommand": "npm install --legacy-peer-deps",
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_IGNORE_TS_ERRORS": "true",
+    "NODE_OPTIONS": "--max-old-space-size=4096"
+  },
+  "devCommand": "next dev",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "headers": [
+    {
+      "source": "/service-worker.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/manifest-ar.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/service-worker.js",
+      "destination": "/_next/static/service-worker.js"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+} 

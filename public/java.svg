@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 50 50" width="50px" height="50px">
+  <!-- Background circle -->
+  <circle cx="25" cy="25" r="23" fill="#f8f8f8" stroke="#e76f00" stroke-width="2"/>
+  
+  <!-- Logo image -->
+  <image x="5" y="5" width="40" height="40" xlink:href="/logo1.jpg" />
+  
+  <!-- Java text in Arabic -->
+  <text x="25" y="45" font-family="Arial, sans-serif" font-size="6" text-anchor="middle" font-weight="bold" fill="#e76f00">جافا</text>
+</svg>

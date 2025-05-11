@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="90" height="90" viewBox="0 0 90 90">
+  <!-- Background circle -->
+  <circle cx="45" cy="45" r="42" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2" />
+  
+  <!-- Logo image -->
+  <image x="15" y="10" width="60" height="60" xlink:href="/logo1.jpg" />
+  
+  <!-- Text "الإعدادات" at the bottom -->
+  <text x="45" y="80" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0ea5e9">
+    الإعدادات
+  </text>
+</svg> 

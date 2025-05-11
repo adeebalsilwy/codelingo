@@ -1,0 +1,7 @@
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/(main)/learn/[unitId]/[chapterId]/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'middleware.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'next.config.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tsconfig.json', LF will be replaced by CRLF the next time Git touches it

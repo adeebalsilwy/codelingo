@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="800" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="400" cy="400" r="380" fill="#f0f9ff" />
+  
+  <!-- Code Window -->
+  <rect x="200" y="180" width="400" height="300" rx="12" fill="#ffffff" stroke="#1e293b" stroke-width="3"/>
+  
+  <!-- Window Controls -->
+  <circle cx="230" cy="210" r="8" fill="#ef4444"/>
+  <circle cx="260" cy="210" r="8" fill="#fbbf24"/>
+  <circle cx="290" cy="210" r="8" fill="#22c55e"/>
+  
+  <!-- Code Lines -->
+  <g fill="#94a3b8">
+    <rect x="220" y="250" width="140" height="12" rx="2" fill="#3b82f6"/>
+    <rect x="370" y="250" width="80" height="12" rx="2" fill="#8b5cf6"/>
+    <rect x="220" y="280" width="200" height="12" rx="2"/>
+    <rect x="220" y="310" width="160" height="12" rx="2"/>
+    <rect x="390" y="310" width="100" height="12" rx="2" fill="#3b82f6"/>
+    <rect x="220" y="340" width="180" height="12" rx="2"/>
+    <rect x="220" y="370" width="140" height="12" rx="2" fill="#8b5cf6"/>
+    <rect x="370" y="370" width="120" height="12" rx="2"/>
+    <rect x="220" y="400" width="160" height="12" rx="2" fill="#3b82f6"/>
+  </g>
+
+  <!-- Floating Elements -->
+  <g transform="translate(400, 400)">
+    <!-- HTML Tag -->
+    <path d="M-150 100 L-130 100 L-120 120 L-130 140 L-150 140 L-160 120 Z" fill="#e11d48"/>
+    <!-- CSS Bracket -->
+    <path d="M100 -80 C120 -80 130 -60 130 -40 C130 -20 120 0 100 0" stroke="#8b5cf6" stroke-width="8" fill="none"/>
+    <!-- JS Curly Brace -->
+    <path d="M80 60 C100 60 110 80 110 100 C110 120 100 140 80 140" stroke="#eab308" stroke-width="8" fill="none"/>
+  </g>
+
+  <!-- Decorative Circles -->
+  <circle cx="160" cy="500" r="15" fill="#3b82f6" opacity="0.2"/>
+  <circle cx="640" cy="300" r="20" fill="#8b5cf6" opacity="0.2"/>
+  <circle cx="500" cy="600" r="25" fill="#e11d48" opacity="0.2"/>
+
+  <!-- Code Symbols -->
+  <g fill="#1e293b" font-family="monospace" font-size="40">
+    <text x="150" y="650">&lt;/&gt;</text>
+    <text x="550" y="200">{`{}`}</text>
+    <text x="600" y="550">( )</text>
+  </g>
+
+  <!-- Gradient Overlay -->
+  <circle cx="400" cy="400" r="380" fill="url(#gradient)" opacity="0.1"/>
+  <defs>
+    <radialGradient id="gradient" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </radialGradient>
+  </defs>
+</svg> 

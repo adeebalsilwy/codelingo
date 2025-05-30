@@ -36,14 +36,19 @@ const LessonIdPage = async ({
     redirect("/learn");
   }
 
-  const initialPercentage = lesson.challenges
-    .filter((challenge) => challenge.completed)
-    .length / lesson.challenges.length * 100;
+  // Always start with 0% progress when opening a lesson
+  const initialPercentage = 0;
+
+  // Map all challenges to have completed: false to force restarting the lesson
+  const resetChallenges = lesson.challenges.map(challenge => ({
+    ...challenge,
+    completed: false
+  }));
 
   return ( 
     <Quiz
       initialLessonId={lesson.id}
-      initialLessonChallenges={lesson.challenges}
+      initialLessonChallenges={resetChallenges}
       initialHearts={userProgress.hearts}
       initialPercentage={initialPercentage}
       userSubscription={userSubscription}

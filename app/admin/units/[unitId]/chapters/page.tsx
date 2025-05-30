@@ -5,7 +5,7 @@ import { ChapterList } from '@/app/admin/chapter/list';
 
 export default function UnitChaptersPage() {
   const params = useParams();
-  const unitId = params.unitId;
+  const unitId = params?.unitId as string;
 
   return (
     <div>

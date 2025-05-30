@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sql, and, or, like, desc, asc } from "drizzle-orm";
+import { sql, and, or, like, desc, asc, SQL } from "drizzle-orm";
 import db from "@/db/client";
 import { isAdmin } from "@/lib/admin-server";
 import { challenges } from "@/db/schema";
@@ -78,7 +78,7 @@ export const GET = async (req: Request) => {
     }
 
     // Build filter conditions
-    const conditions = [];
+    const conditions: SQL<unknown>[] = [];
     if (filter.question) {
       conditions.push(like(challenges.question, `%${filter.question}%`));
     }

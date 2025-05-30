@@ -44,74 +44,35 @@ export const Quiz = ({
   const { open: openHeartsModal } = useHeartsModal();
   const { open: openPracticeModal } = usePracticeModal();
 
-  const [finishAudio] = useAudio({ src: "/finish.mp3", autoPlay: true });
-  const [correctAudio, _c, correctControls] = useAudio({ src: "/correct.wav" });
-  const [incorrectAudio, _i, incorrectControls] = useAudio({ src: "/incorrect.wav" });
+  const [finishAudio, finishState, finishControls, finishRef] = useAudio({ src: "/finish.mp3", autoPlay: true });
+  const [correctAudio, correctState, correctControls, correctRef] = useAudio({ src: "/correct.wav" });
+  const [incorrectAudio, incorrectState, incorrectControls, incorrectRef] = useAudio({ src: "/incorrect.wav" });
   
   const [pending, startTransition] = useTransition();
 
   const [lessonId] = useState(initialLessonId);
   const [hearts, setHearts] = useState(initialHearts);
   const [challenges] = useState(() => {
-    // Try to restore completed challenges from localStorage
+    // When opening a lesson, always use the initialLessonChallenges
+    // which now have completed: false to force restarting the lesson
+    
+    // Clear any existing progress in localStorage for this lesson
     if (typeof window !== 'undefined') {
       try {
-        const savedProgress = localStorage.getItem(`lesson_progress_${initialLessonId}`);
-        if (savedProgress) {
-          const { completedChallenges = [] } = JSON.parse(savedProgress);
-          if (completedChallenges.length > 0) {
-            return initialLessonChallenges.map(challenge => ({
-              ...challenge,
-              completed: challenge.completed || completedChallenges.includes(challenge.id)
-            }));
-          }
-        }
+        localStorage.removeItem(`lesson_progress_${initialLessonId}`);
       } catch (error) {
-        console.error("Error reading from localStorage:", error);
+        console.error("Error clearing localStorage:", error);
       }
     }
     
     return initialLessonChallenges;
   });
   
-  const [activeIndex, setActiveIndex] = useState(() => {
-    // Try to restore active index from localStorage
-    if (typeof window !== 'undefined') {
-      try {
-        const savedProgress = localStorage.getItem(`lesson_progress_${initialLessonId}`);
-        if (savedProgress) {
-          const { activeIndex: savedActiveIndex } = JSON.parse(savedProgress);
-          if (savedActiveIndex !== undefined && savedActiveIndex >= 0) {
-            return savedActiveIndex;
-          }
-        }
-      } catch (error) {
-        console.error("Error reading from localStorage:", error);
-      }
-    }
-    
-    const uncompletedIndex = challenges.findIndex((challenge) => !challenge.completed);
-    return uncompletedIndex === -1 ? 0 : uncompletedIndex;
-  });
+  // Always start from the first challenge (index 0) when opening a lesson
+  const [activeIndex, setActiveIndex] = useState(0);
   
-  const [percentage, setPercentage] = useState(() => {
-    // Try to restore progress from localStorage if available
-    if (typeof window !== 'undefined') {
-      try {
-        const savedProgress = localStorage.getItem(`lesson_progress_${initialLessonId}`);
-        if (savedProgress) {
-          const { percentage: savedPercentage } = JSON.parse(savedProgress);
-          if (savedPercentage > 0 && savedPercentage < 100) {
-            return savedPercentage;
-          }
-        }
-      } catch (error) {
-        console.error("Error reading from localStorage:", error);
-      }
-    }
-    
-    return initialPercentage === 100 ? 0 : initialPercentage;
-  });
+  // Always start with 0% progress
+  const [percentage, setPercentage] = useState(0);
   
   const [selectedOption, setSelectedOption] = useState<number>();
   const [status, setStatus] = useState<"correct" | "wrong" | "none">("none");
@@ -196,11 +157,6 @@ export const Quiz = ({
             correctControls.play();
             setStatus("correct");
             setPercentage((prev: number) => prev + 100 / challenges.length);
-
-            // This is a practice
-            if (initialPercentage === 100) {
-              setHearts((prev: number) => Math.min(prev + 1, 5));
-            }
           })
           .catch(() => toast.error("Something went wrong. Please try again."))
       });
@@ -226,9 +182,7 @@ export const Quiz = ({
   };
 
   useMount(() => {
-    if (initialPercentage === 100) {
-      openPracticeModal();
-    }
+    // No need to open practice modal since we're always doing the lesson from scratch
     
     // Save initial state to localStorage to persist progress even if user navigates away
     saveProgressToLocalStorage();
@@ -238,6 +192,8 @@ export const Quiz = ({
     return (
       <>
         {finishAudio}
+        <audio ref={correctRef} style={{ display: 'none' }} />
+        <audio ref={incorrectRef} style={{ display: 'none' }} />
         <Confetti
           width={width}
           height={height}
@@ -289,6 +245,7 @@ export const Quiz = ({
 
   return (
     <>
+      <audio ref={finishRef} style={{ display: 'none' }} />
       {incorrectAudio}
       {correctAudio}
       <Header

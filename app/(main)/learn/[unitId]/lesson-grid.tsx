@@ -37,7 +37,7 @@ export const LessonGrid = ({ chapters }: LessonGridProps) => {
   const { t, dir } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const courseId = searchParams.get('courseId');
+  const courseId = searchParams?.get('courseId');
   const [expandedChapters, setExpandedChapters] = useState<Record<number, boolean>>({});
   const [refreshKey, setRefreshKey] = useState(0);
   const [mounted, setMounted] = useState(false);

@@ -135,7 +135,7 @@ const httpClient = async (url: string, options: any = {}) => {
   }
 };
 
-async function handleImageUpload(file: File): Promise<string> {
+async function handleImageUpload(file: File | null): Promise<string> {
   if (!file) {
     console.log('[handleImageUpload] No file provided, returning default image');
     return '/courses.svg'; // Default image path
@@ -198,16 +198,11 @@ async function handleImageUpload(file: File): Promise<string> {
     } catch (fetchError) {
       clearTimeout(timeoutId);
       console.error('[handleImageUpload] Fetch error:', fetchError);
-      
-      if ((fetchError as Error).name === 'AbortError') {
-        console.warn('[handleImageUpload] Upload request was aborted due to timeout');
-      }
-      
-      return '/courses.svg'; // Use default image if there's a fetch error
+      return '/courses.svg'; // Default on error
     }
   } catch (error) {
-    console.error('[handleImageUpload] General upload error:', error);
-    return '/courses.svg'; // Use default image if there's any error
+    console.error('[handleImageUpload] Error:', error);
+    return '/courses.svg'; // Default on error
   }
 }
 
@@ -395,8 +390,8 @@ export const dataProvider: DataProvider = {
   },
 
   update: async (resource, params) => {
+    let imageUrl;
     let newParams = { ...params };
-    let imageUrl = null;
     
     try {
       console.log(`[dataProvider.update] Updating ${resource} ID: ${params.id}`, params.data);
@@ -443,19 +438,46 @@ export const dataProvider: DataProvider = {
         newParams.data = dataWithoutImage;
       }
 
+      // Clean up data to avoid date serialization errors
+      const cleanedData = { ...newParams.data };
+      
+      // Handle dates and null values properly
+      Object.keys(cleanedData).forEach(key => {
+        const value = cleanedData[key];
+        
+        // Skip null or undefined values
+        if (value === null || value === undefined) {
+          return; // Keep as is
+        }
+        
+        // Format dates so they don't cause toISOString errors
+        if (value instanceof Date) {
+          try {
+            cleanedData[key] = value.toISOString();
+          } catch (e) {
+            // If toISOString fails, convert to string or remove
+            console.error(`[dataProvider.update] Date conversion error for ${key}:`, e);
+            delete cleanedData[key]; // Remove problematic field
+          }
+        }
+      });
+      
+      // Update newParams with cleaned data
+      newParams.data = cleanedData;
+
       // Implement retry logic with exponential backoff
       const maxRetries = 3;
       const executeUpdate = async () => {
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           try {
             const { json } = await httpClient(`${apiUrl}/${resource}/${params.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(newParams.data),
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-          },
+              method: 'PUT',
+              body: JSON.stringify(newParams.data),
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+              },
             });
             
             console.log(`[dataProvider.update] Resource: ${resource}, Updated item ID: ${json.id || params.id || 'unknown'}`);
@@ -511,15 +533,39 @@ export const dataProvider: DataProvider = {
 
   deleteMany: async (resource, params) => {
     try {
-      const query = {
-        filter: JSON.stringify({ id: params.ids }),
-      };
-      const { json } = await httpClient(`${apiUrl}/${resource}?${stringify(query)}`, {
-        method: 'DELETE',
-      });
-      return { data: json || params.ids };
+      console.log(`[dataProvider.deleteMany] Deleting multiple ${resource} with IDs:`, params.ids);
+      
+      // التعامل مع كل عنصر بشكل فردي بدلاً من إرسال طلب واحد
+      const results = await Promise.all(
+        params.ids.map(async (id) => {
+          try {
+            const timestamp = new Date().getTime();
+            const url = `${apiUrl}/${resource}/${id}?_t=${timestamp}`;
+            
+            console.log(`[dataProvider.deleteMany] Deleting ${resource} ID: ${id}`);
+            
+            const { json } = await httpClient(url, {
+              method: 'DELETE',
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+              },
+            });
+            
+            return id;
+          } catch (error) {
+            console.error(`[dataProvider.deleteMany] Error deleting ${resource}/${id}:`, error);
+            // عدم توقف العملية عند فشل حذف عنصر واحد
+            return id;
+          }
+        })
+      );
+      
+      console.log(`[dataProvider.deleteMany] Successfully deleted ${results.length} ${resource} items`);
+      return { data: results };
     } catch (error) {
-      console.error(`Error in deleteMany for ${resource}:`, error);
+      console.error(`[dataProvider.deleteMany] Error in deleteMany for ${resource}:`, error);
       throw error;
     }
   },

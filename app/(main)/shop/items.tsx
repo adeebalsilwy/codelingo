@@ -31,9 +31,9 @@ export const Items = ({
   const searchParams = useSearchParams();
   
   // Check for successful payment or cancellation
-  const success = searchParams.get('success');
-  const canceled = searchParams.get('canceled');
-  const sessionId = searchParams.get('session_id');
+  const success = searchParams?.get('success');
+  const canceled = searchParams?.get('canceled');
+  const sessionId = searchParams?.get('session_id');
   
   // Poll subscription status to verify it was created properly
   const pollSubscriptionStatus = useCallback(async () => {

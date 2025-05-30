@@ -20,20 +20,24 @@ export async function OPTIONS() {
     },
   });
 }
+
 export const GET = async (
   req: NextRequest,
   { params }: { params: { challengeOptionId: string } },
 ) => {
   try {
-    // Await the isAdmin function since it's async
+    // Check admin access
     if (!(await isAdmin())) {
       return new NextResponse("Unauthorized - Admin access required", { status: 403 });
     }
 
-    // Await params before accessing its properties
-    const { challengeOptionId } = await params;
+    const challengeOptionId = parseInt(params.challengeOptionId, 10);
+    if (isNaN(challengeOptionId)) {
+      return new NextResponse("Invalid challenge option ID", { status: 400 });
+    }
+
     const data = await db.query.challengeOptions.findFirst({
-      where: eq(challengeOptions.id, parseInt(challengeOptionId)),
+      where: eq(challengeOptions.id, challengeOptionId),
     });
 
     if (!data) {
@@ -52,14 +56,17 @@ export const PUT = async (
   { params }: { params: { challengeOptionId: string } },
 ) => {
   try {
-    // Await the isAdmin function since it's async
+    // Check admin access
     if (!(await isAdmin())) {
       return new NextResponse("Unauthorized - Admin access required", { status: 403 });
     }
 
+    const challengeOptionId = parseInt(params.challengeOptionId, 10);
+    if (isNaN(challengeOptionId)) {
+      return new NextResponse("Invalid challenge option ID", { status: 400 });
+    }
+
     const body = await req.json();
-    // Await params before accessing its properties
-    const { challengeOptionId } = await params;
     
     // Ensure required fields are present
     if (!body.text) {
@@ -68,15 +75,12 @@ export const PUT = async (
     
     // Find current challenge option to ensure it exists
     const currentOption = await db.query.challengeOptions.findFirst({
-      where: eq(challengeOptions.id, parseInt(challengeOptionId))
+      where: eq(challengeOptions.id, challengeOptionId)
     });
 
     if (!currentOption) {
       return new NextResponse("Challenge option not found", { status: 404 });
     }
-    
-    // Skip any date processing entirely and use the body directly
-    // This avoids any potential toISOString errors
     
     // Update challenge option
     const data = await db.update(challengeOptions).set({
@@ -84,7 +88,7 @@ export const PUT = async (
       correct: body.correct !== undefined ? body.correct : currentOption.correct,
       challengeId: body.challengeId || currentOption.challengeId,
       // Add other fields as needed
-    }).where(eq(challengeOptions.id, parseInt(challengeOptionId))).returning();
+    }).where(eq(challengeOptions.id, challengeOptionId)).returning();
 
     return NextResponse.json(data[0]);
   } catch (error) {
@@ -98,17 +102,19 @@ export const DELETE = async (
   { params }: { params: { challengeOptionId: string } },
 ) => {
   try {
-    // Await the isAdmin function since it's async
+    // Check admin access
     if (!(await isAdmin())) {
       return new NextResponse("Unauthorized - Admin access required", { status: 403 });
     }
 
-    // Await params before accessing its properties
-    const { challengeOptionId } = await params;
+    const challengeOptionId = parseInt(params.challengeOptionId, 10);
+    if (isNaN(challengeOptionId)) {
+      return new NextResponse("Invalid challenge option ID", { status: 400 });
+    }
     
     // Find current challenge option to ensure it exists
     const currentOption = await db.query.challengeOptions.findFirst({
-      where: eq(challengeOptions.id, parseInt(challengeOptionId))
+      where: eq(challengeOptions.id, challengeOptionId)
     });
 
     if (!currentOption) {
@@ -116,7 +122,7 @@ export const DELETE = async (
     }
     
     const data = await db.delete(challengeOptions)
-      .where(eq(challengeOptions.id, parseInt(challengeOptionId))).returning();
+      .where(eq(challengeOptions.id, challengeOptionId)).returning();
 
     return NextResponse.json(data[0]);
   } catch (error) {

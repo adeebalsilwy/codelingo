@@ -170,7 +170,7 @@ const CoursesPage = () => {
         // Try to fetch courses
         let coursesData;
         let userProgressData;
-        let progressesData = [];
+        let progressesData: CourseProgress[] = [];
         
         const fetchOptions = {
             method: 'GET',
@@ -319,7 +319,7 @@ const CoursesPage = () => {
           
           // Add the missing progress data to the existing progress data
           if (validMissingProgresses.length > 0) {
-            progressesData = [...progressesData, ...validMissingProgresses];
+            progressesData = [...progressesData, ...validMissingProgresses] as CourseProgress[];
             logAPICall('fetchData', 'FETCHED_MISSING_PROGRESSES', { 
               count: validMissingProgresses.length 
             });

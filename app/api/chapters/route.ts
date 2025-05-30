@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { chapters } from "@/db/schema";
-import { eq, sql, asc, desc, and, like } from "drizzle-orm";
+import { eq, sql, asc, desc, and, like, SQL } from "drizzle-orm";
 import db from "@/db/client";
 import { parseApiParams, createApiResponse } from "@/app/lib/api-helpers";
 
@@ -27,7 +27,7 @@ export async function GET(
     console.log(`[API] Chapters request with params: fetchAll=${fetchAll}, start=${start}, end=${end}, sort=${sort}, order=${order}`);
 
     // Build filter conditions
-    const conditions = [];
+    const conditions: SQL<unknown>[] = [];
     if (filter.title) {
       conditions.push(like(chapters.title, `%${filter.title}%`));
     }

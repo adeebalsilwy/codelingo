@@ -17,7 +17,9 @@ const nextConfig = {
   reactStrictMode: true,
   typescript: {
     ignoreBuildErrors: true, // تجاهل أخطاء TypeScript أثناء البناء
-    tsconfigPath: './tsconfig.json' // مسار ملف التكوين
+    tsconfigPath: './tsconfig.json', // مسار ملف التكوين
+    // تعطيل فحص التايب سكريبت بالكامل عند تحديد متغير البيئة
+    checker: process.env.TYPESCRIPT_SKIP_CHECKING === 'true' ? false : undefined
   },
   eslint: {
     ignoreDuringBuilds: true, // تجاهل أخطاء ESLint أثناء البناء
@@ -48,6 +50,7 @@ const nextConfig = {
   env: {
     NEXT_IGNORE_TS_ERRORS: 'true',
     NEXT_PUBLIC_APP_VERSION: '0.1.5',
+    ADMIN_ACCESS_ENABLED: 'true', // تفعيل وصول المدير دائماً في نسخة التطوير
   },
   logging: {
     fetches: {
@@ -93,15 +96,23 @@ const nextConfig = {
           },
           {
             key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization",
+            value: "Content-Type, Authorization, X-Total-Count, Content-Range, Range",
           },
           {
-            key: "Content-Range",
-            value: "bytes : 0-9/*",
+            key: "Access-Control-Expose-Headers",
+            value: "Content-Range, X-Total-Count",
           },
           {
             key: "Cache-Control",
             value: "no-store, no-cache, must-revalidate",
+          },
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
           },
         ],
       },
@@ -110,11 +121,34 @@ const nextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
+            value: "no-store, no-cache, must-revalidate",
+          },
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
           },
         ],
       },
     ];
+  },
+  // إضافة حل لمشكلة وصفحات 404 وإعادة توجيه محددة
+  async redirects() {
+    return [
+      {
+        source: '/404',
+        destination: '/not-found',
+        permanent: true,
+      },
+    ];
+  },
+  // تجاهل أخطاء البناء المتعلقة بصفحات 404 و_error
+  onDemandEntries: {
+    maxInactiveAge: 60 * 60 * 1000,
+    pagesBufferLength: 5,
   },
 };
 

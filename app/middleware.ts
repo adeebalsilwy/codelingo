@@ -29,7 +29,7 @@ export default authMiddleware({
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
         path: "/",
-        maxAge: 60 * 60 * 24 * 30, // 30 days
+      //  maxAge: 60 * 60 * 24 * 30, // 30 days
       });
       return newResponse;
     }
@@ -38,10 +38,47 @@ export default authMiddleware({
   }
 });
 
-// Configure which paths this middleware will run on
+// // Configure which paths this middleware will run on
+// export const config = {
+//   matcher: [
+//     // Apply middleware to all routes except static files, images, etc
+//     "/((?!_next/static|_next/image|favicon.ico|.*\\.svg$).*)",
+//   ],
+// }; 
+
+
 export const config = {
   matcher: [
-    // Apply middleware to all routes except static files, images, etc
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.svg$).*)",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     */
+    {
+      source:
+        '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+      missing: [
+        { type: 'header', key: 'next-router-prefetch' },
+        { type: 'header', key: 'purpose', value: 'prefetch' },
+      ],
+    },
+ 
+    {
+      source:
+        '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+      has: [
+        { type: 'header', key: 'next-router-prefetch' },
+        { type: 'header', key: 'purpose', value: 'prefetch' },
+      ],
+    },
+ 
+    {
+      source:
+        '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+      has: [{ type: 'header', key: 'x-present' }],
+      missing: [{ type: 'header', key: 'x-missing', value: 'prefetch' }],
+    },
   ],
-}; 
+}

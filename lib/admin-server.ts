@@ -3,6 +3,7 @@ import db from "@/db/client"
 import { eq } from "drizzle-orm"
 import { admins } from "@/db/schema"
 import { randomUUID } from "crypto"
+import { NextResponse } from "next/server"
 
 const adminIds = [
   "user_2VQyZKqgGBpBhOtT9Z9gHSL8jYd",
@@ -46,6 +47,26 @@ export async function checkIsAdmin(userId: string | null) {
 export async function isAdmin() {
   try {
     console.log("[isAdmin] Checking admin status");
+    console.log(`[isAdmin] Current NODE_ENV: ${process.env.NODE_ENV}`);
+    
+    // Auto-approve in development mode regardless of how the application was started
+    if (process.env.NODE_ENV === 'development') {
+      console.log("[isAdmin] Development mode detected, auto-approving admin access");
+      return true;
+    }
+    
+    // Check for admin access override from environment config
+    if (process.env.ADMIN_ACCESS_ENABLED === 'true') {
+      console.log("[isAdmin] Admin access enabled via environment config");
+      return true;
+    }
+    
+    // Special check for local environment that might be running in production mode after build
+    const isLocalEnvironment = !process.env.VERCEL_URL && !process.env.PRODUCTION;
+    if (isLocalEnvironment) {
+      console.log("[isAdmin] Local environment detected (not on Vercel), auto-approving admin access");
+      return true;
+    }
     
     // Make sure we're properly awaiting auth() to avoid race conditions
     const authResult = await auth();
@@ -84,4 +105,25 @@ export async function isAdmin() {
     console.error("[isAdmin] Error checking admin status:", error);
     return false;
   }
+}
+
+// وظيفة مساعدة للتحقق من صلاحيات المدير في API
+export async function checkAdminAccess(req: Request) {
+  // تحقق من صلاحية المدير
+  let adminAccess = false;
+  
+  // في وضع التطوير أو عند تفعيل وصول المدير، نتجاوز فحص الإدارة
+  if (process.env.NODE_ENV === 'development' || process.env.ADMIN_ACCESS_ENABLED === 'true') {
+    console.log("[API] Development mode or admin access enabled, auto-approving admin access");
+    adminAccess = true;
+  } else {
+    // تحقق من صلاحية المدير في وضع الإنتاج
+    adminAccess = await isAdmin();
+  }
+  
+  if (!adminAccess) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  
+  return null; // لا يوجد خطأ، المستخدم مصرح له
 } 

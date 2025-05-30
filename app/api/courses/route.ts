@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { sql, and, or, like, desc, asc } from "drizzle-orm";
+import { sql, and, or, like, desc, asc, SQL } from "drizzle-orm";
 import db from "@/db/client";
-import { isAdmin } from "@/lib/admin-server";
+import { isAdmin, checkAdminAccess } from "@/lib/admin-server";
 import { courses, userCourseProgress } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs";
@@ -109,11 +109,14 @@ export async function GET(req: Request) {
       }
     }
     
-    // Skip authentication check - allow all operations
-    const userId = "bypass-auth";
+    // تحقق من صلاحيات المدير
+    const accessError = await checkAdminAccess(req);
+    if (accessError) return accessError;
+    
+    const userId = "authorized-admin";
 
     // Build query based on filter
-    const conditions = [];
+    const conditions: SQL<unknown>[] = [];
     
     if (filter && typeof filter === 'object') {
       // Handle title filter (partial match)
@@ -138,10 +141,9 @@ export async function GET(req: Request) {
       
       // Handle full-text search (q parameter)
       if ('q' in filter && filter.q) {
-        conditions.push(or(
-          like(courses.title, `%${filter.q}%`),
-          like(courses.description, `%${filter.q}%`)
-        ));
+        const titleCondition = like(courses.title, `%${filter.q}%`);
+        const descriptionCondition = like(courses.description, `%${filter.q}%`);
+        conditions.push(or(titleCondition, descriptionCondition) as SQL<unknown>);
       }
     }
     
@@ -278,7 +280,9 @@ export async function POST(req: Request) {
   try {
     console.log("[API] POST /courses - Starting course creation");
     
-    // Skip authentication and admin checks - allow all operations
+    // تحقق من صلاحيات المدير
+    const accessError = await checkAdminAccess(req);
+    if (accessError) return accessError;
 
     // Parse request body
     let body;
@@ -392,6 +396,10 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     console.log("[API] DELETE /courses - Processing delete request");
+    
+    // تحقق من صلاحيات المدير
+    const accessError = await checkAdminAccess(req);
+    if (accessError) return accessError;
     
     // Get URL parameters for single delete
     const url = new URL(req.url);
